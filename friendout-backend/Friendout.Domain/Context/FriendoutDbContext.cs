@@ -1,0 +1,236 @@
+using Microsoft.EntityFrameworkCore;
+using Friendout.Domain.Models;
+
+namespace Friendout.Domain.Context
+{
+    public class FriendoutDbContext(DbContextOptions<FriendoutDbContext> options) : DbContext(options)
+    {
+        // DbSets
+        public DbSet<User> Users { get; set; }
+        public DbSet<Account> Accounts { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<Activity> Activities { get; set; }
+        public DbSet<SubActivity> SubActivities { get; set; }
+        public DbSet<UserParticipation> UserParticipation { get; set; }
+        public DbSet<ActivityComment> Comments { get; set; }
+        public DbSet<Image> Images { get; set; }
+        public DbSet<Equipment> Equipment { get; set; }
+        public DbSet<UserEquipment> UserEquipment { get; set; }
+        public DbSet<ActivityEquipment> ActivityEquipment { get; set; }
+        public DbSet<Achievement> Achievements { get; set; }
+        public DbSet<UserAchievement> UserAchievements { get; set; }
+        public DbSet<VerificationToken> VerificationTokens { get; set; }
+        public DbSet<Localisation> Localisations { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configuration de User
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasIndex(e => e.Email).IsUnique();
+
+                entity.HasMany(e => e.Accounts)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Sessions)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.CreatedActivities)
+                    .WithOne(e => e.Creator)
+                    .HasForeignKey(e => e.CreatedBy)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.UserParticipation)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(e => e.Comments)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.UserEquipments)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.UserAchievements)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuration de Account
+            modelBuilder.Entity<Account>(entity =>
+            {
+                entity.HasIndex(e => new { e.Provider, e.ProviderAccountId }).IsUnique();
+                entity.HasIndex(e => e.UserId);
+            });
+
+            // Configuration de Session
+            modelBuilder.Entity<Session>(entity =>
+            {
+                entity.HasIndex(e => e.SessionToken).IsUnique();
+                entity.HasIndex(e => e.UserId);
+            });
+
+            // Configuration de Activity
+            modelBuilder.Entity<Activity>(entity =>
+            {
+                entity.HasIndex(e => e.CreatedBy);
+                entity.HasIndex(e => e.StartAt);
+
+                entity.HasOne(e => e.Image)
+                    .WithMany()
+                    .HasForeignKey(e => e.ImageId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // SubActivities
+                entity.HasMany(e => e.SubActivities)
+                    .WithOne(e => e.Activity)
+                    .HasForeignKey(e => e.ActivityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // RSVPs
+                entity.HasMany(e => e.UserParticipations)
+                    .WithOne(e => e.Activity)
+                    .HasForeignKey(e => e.ActivityId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Comments
+                entity.HasMany(e => e.Comments)
+                    .WithOne(e => e.Activity)
+                    .HasForeignKey(e => e.ActivityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // ActivityEquipment
+                entity.HasMany(e => e.ActivityEquipments)
+                    .WithOne(e => e.Activity)
+                    .HasForeignKey(e => e.ActivityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            // Configuration de SubActivity
+            modelBuilder.Entity<SubActivity>(entity =>
+            {
+                entity.HasIndex(e => e.ActivityId);
+
+                entity.HasMany(e => e.UserParticipations)
+                    .WithOne(e => e.SubActivity)
+                    .HasForeignKey(e => e.SubActivityId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configuration de UserParticipation
+            modelBuilder.Entity<UserParticipation>(entity =>
+            {
+                entity.HasIndex(e => e.ActivityId);
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.Id }).IsUnique();
+
+                entity.HasOne(e => e.Activity)
+                    .WithMany(e => e.UserParticipations)
+                    .HasForeignKey(e => e.ActivityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.SubActivity)
+                    .WithMany(e => e.UserParticipations)
+                    .HasForeignKey(e => e.SubActivityId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.UserParticipation)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            // Configuration Comment
+            modelBuilder.Entity<ActivityComment>(entity =>
+            {
+                entity.HasIndex(e => e.ActivityId);
+            });
+
+            // Configuration de Equipment
+            modelBuilder.Entity<Equipment>(entity =>
+            {
+                entity.HasIndex(e => e.Name).IsUnique();
+
+                entity.HasMany(e => e.UserEquipments)
+                    .WithOne(e => e.Equipment)
+                    .HasForeignKey(e => e.EquipmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.ActivityEquipments)
+                    .WithOne(e => e.Equipment)
+                    .HasForeignKey(e => e.EquipmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuration UserEquipment
+            modelBuilder.Entity<UserEquipment>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.EquipmentId });
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.EquipmentId);
+
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.UserEquipments)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Equipment)
+                    .WithMany(e => e.UserEquipments)
+                    .HasForeignKey(e => e.EquipmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuration ActivityEquipment
+            modelBuilder.Entity<ActivityEquipment>(entity =>
+            {
+                entity.HasIndex(e => new { e.ActivityId, e.EquipmentId }).IsUnique();
+            });
+
+            // Configuration Achievement
+            modelBuilder.Entity<UserAchievement>(entity =>
+            {
+                entity.HasIndex(e => new { e.UserId, e.AchievementId })
+                    .IsUnique();
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.AchievementId);
+
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.UserAchievements)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Achievement)
+                    .WithMany(e => e.UserAchievements)
+                    .HasForeignKey(e => e.AchievementId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuration de VerificationToken
+            modelBuilder.Entity<VerificationToken>(entity =>
+            {
+                entity.HasKey(e => e.Token);
+
+                entity.HasIndex(e => e.Identifier);
+                entity.HasIndex(e => e.Expires);
+            });
+
+
+        }
+    }
+}

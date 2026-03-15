@@ -1,0 +1,34 @@
+import api from "@/lib/api/api";
+import type { User } from "@/features/user/types/user.type";
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const DISCORD_AUTH_URL =
+  import.meta.env.VITE_DISCORD_AUTH_URL ??
+  `${API_BASE_URL.replace(/\/$/, "")}/auth/discord`;
+
+export const authApi = {
+  me: async (): Promise<User | null> => {
+    try {
+      const res = await api.get<User>("/auth/me");
+      return res.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          return null; // user not authenticated
+        }
+      }
+
+      console.error("Failed to fetch user:", error);
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    await api.post("/auth/logout");
+  },
+
+  discordLogin: async () => {
+    window.location.href = DISCORD_AUTH_URL;
+  },
+};

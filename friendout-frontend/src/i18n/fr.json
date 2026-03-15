@@ -1,0 +1,240 @@
+{
+  "login_page": {
+    "title": "Connexion à Friendout",
+    "welcome_sentence": "Avec Friendout, vos plans entre amis deviennent simples",
+    "login_button": "Se connecter avec Discord"
+  },
+  "create_activity_page":{
+    "create" : {
+        "title": "Créer une activité"
+    },
+    "edit" : {
+        "title": "Modifier l'activité"
+    }
+  },
+  "activity_form": {
+    "card_title": "Détails de la sortie",
+    "card_description_create": "Remplissez les informations pour que vos amis rejoignent votre sortie.",
+    "card_description_edit": "Modifiez les informations de votre sortie.",
+    "title_label": "Titre de la sortie *",
+    "title_placeholder": "Ex: Sortie du samedi",
+    "price_label": "Prix estimé (EUR)",
+    "price_placeholder": "Ex: 12.50",
+    "description_label": "Description *",
+    "description_placeholder": "Décrivez votre sortie, ce qui est prévu, etc.",
+    "start_date_label": "Date du début *",
+    "start_time_label": "Heure de début *",
+    "start_time_aria": "Choisir l'heure",
+    "image_label": "Photo ou affiche (optionnel)",
+    "image_upload_hint": "Cliquez pour ajouter une image",
+    "image_choose_button": "Choisir une image",
+    "image_preview_alt": "Aperçu",
+    "button_cancel": "Annuler",
+    "button_create": "Créer la sortie",
+    "button_edit": "Enregistrer",
+    "button_creating": "Création...",
+    "button_saving": "Enregistrement...",
+    "toast": {
+        "image_too_large": "L'image doit faire moins de {{size}}MB",
+        "image_invalid_type": "Le fichier doit être une image",
+        "title_required": "Le titre de la sortie est obligatoire",
+        "description_required": "La description de la sortie est obligatoire",
+        "date_required": "La date est obligatoire",
+        "time_required": "L'heure de début est obligatoire",
+        "time_invalid_format": "Le format de l'heure est invalide",
+        "location_required": "Le lieu est obligatoire",
+        "location_incomplete": "Le lieu renseigné est incomplet",
+        "sub_activity_name_required": "Le nom de la sous-activité {{position}} est obligatoire",
+        "sub_activity_start_required": "L'heure de début de la sous-activité {{position}} est obligatoire",
+        "sub_activity_end_required": "L'heure de fin de la sous-activité {{position}} est obligatoire",
+        "sub_activity_time_invalid": "Le format horaire de la sous-activité {{position}} est invalide",
+        "sub_activity_end_before_start": "La sous-activité {{position}} doit finir après son heure de début",
+        "sub_activity_location_incomplete": "Le lieu de la sous-activité {{position}} est incomplet",
+        "date_must_be_future": "La date et l'heure doivent être dans le futur",
+        "create_success": "Sortie créée avec succès",
+        "edit_success": "Sortie modifiée avec succès",
+        "edit_impossible": "Impossible de modifier cette activité",
+        "save_error": "Erreur lors de l'enregistrement"
+    }
+  },
+  "enhanced_location_input": {
+    "label": "Lieu",
+    "tab_address": "Adresse",
+    "tab_maps_link": "Lien Google Maps",
+    "tab_virtual": "Virtuel",
+    "address_placeholder": "Ex: Cinema Gaumont Parnasse, Paris",
+    "address_open_maps_title": "Voir sur Google Maps",
+    "maps_link_placeholder": "https://maps.google.com/...",
+    "maps_link_test_button": "Tester",
+    "maps_link_test_title": "Tester le lien",
+    "maps_link_valid": "Lien Google Maps valide",
+    "maps_link_detected_place": "Lieu détecté :",
+    "virtual_display_name": "Lieu virtuel"
+},
+"virtual_location_input": {
+    "platform_other": "Autre",
+    "configured_title": "Lieu virtuel configuré",
+    "configuration_title": "Configuration du lieu virtuel",
+    "badge_virtual": "Lieu virtuel",
+    "edit_title": "Modifier",
+    "remove_title": "Supprimer",
+    "platform_label": "Plateforme *",
+    "platform_placeholder": "Choisir une plateforme",
+    "server_name_label": "Nom du serveur ou de la communauté *",
+    "server_name_placeholder": "Ex: Serveur gaming FR",
+    "server_info_label": "Informations complémentaires (optionnel)",
+    "server_info_placeholder": "Ex: Canal #tournois, lien d'invitation, etc.",
+    "button_save": "Enregistrer",
+    "button_cancel": "Annuler"
+},
+"sub_activity_manager": {
+    "section_label": "Sous-activités (optionnel)",
+    "section_description": "Ajoutez plusieurs créneaux avec des lieux différents si besoin",
+    "card_title": "Sous-activité {{index}}",
+    "name_label": "Nom de l'activité *",
+    "price_label": "Prix (EUR)",
+    "location_placeholder": "Ex: Cinema Gaumont Parnasse, Paris",
+    "start_time_label": "Heure de début *",
+    "end_time_label": "Heure de fin *",
+    "duration_label": "Durée",
+    "description_label": "Description",
+    "empty_label": "Aucune sous-activité ajoutée",
+    "time_picker_aria": "Choisir l'heure"
+},
+  "errors": {
+    "discord_access_denied": "Vous ne faite pas partie d'un serveur discord autorisé.",
+    "unknown_error": "Une erreur inconnue est survenue."
+  },
+  "header": {
+    "welcome": "Bienvenue",
+    "welcome_user": "Bienvenue, {{name}}",
+    "create_activity":"Créer une activité",
+    "logout": "Déconnexion",
+    "logo_alt": "Logo Friendout"
+  },
+  "date": {
+    "unknown": "Date inconnue",
+    "invalid": "Date invalide"
+  },
+  "common": {
+    "back": "Retour",
+    "share": "Partager",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "free": "Gratuit",
+    "loading": "Chargement..."
+  },
+  "activity": {
+    "past": "Passée",
+    "equipment_required": "Matériel requis",
+    "sub_activity_one": "sous activité",
+    "sub_activities": "sous activités",
+    "virtual_place": "Lieu virtuel",
+    "open_google_maps": "Ouvrir le lien Google Maps",
+    "view_google_maps": "Voir sur Google Maps",
+    "open": "Ouvrir",
+    "maps": "Maps",
+    "participant": "participant",
+    "participants": "participants",
+    "created_by": "Créé par",
+    "sub_activities_label": "Sous-activités :",
+    "not_specified": "Non renseigné",
+    "end_time_not_specified": "heure de fin non précisée",
+    "more_others": "autres",
+    "no_sub_activity": "Aucune sous-activité",
+    "view_details": "Voir les détails",
+    "no_activity_found": "Aucune sortie trouvée",
+    "try_modify_search": "Essayez de modifier vos critères de recherche.",
+    "search_placeholder": "Rechercher une sortie...",
+    "filter_placeholder": "Filtrer par...",
+    "filter_all": "Toutes les sorties",
+    "filter_upcoming": "À venir",
+    "filter_past": "Passées",
+    "filter_mine": "Mes sorties",
+    "link_copied": "Lien copié dans le presse-papiers !",
+    "confirm_delete": "Êtes-vous sûr de vouloir supprimer cette activité ?",
+    "not_found": "Activité introuvable",
+    "not_found_description": "Cette activité n'existe pas ou a été supprimée.",
+    "not_found_icon_alt": "Introuvable",
+    "response_main_activity": "Réponse pour l'activité principale",
+    "participation_sub_activities": "Participation aux sous-activités",
+    "participation_sub_activities_description": "Cette action mettra à jour toutes les sous-activités.",
+    "cost_summary": "Résumé des coûts",
+    "main_activity": "Activité principale",
+    "sub_activities_short": "Sous-activités",
+    "total": "Total",
+    "all_free": "Tout est gratuit 🎉",
+    "no_expense_planned": "Aucune dépense prévue pour cette activité",
+    "description": "Description",
+    "necessary_equipment": "Matériel nécessaire",
+    "main_activity_label": "Activité principale:",
+    "sub_activities_count": "sous-activité(s)"
+  },
+  "comments": {
+    "title": "Commentaires",
+    "title_count": "Commentaires ({{count}})",
+    "placeholder": "Ajouter un commentaire...",
+    "submit": "Commenter",
+    "sending": "Envoi...",
+    "empty": "Aucun commentaire pour le moment",
+    "modified": "(modifié)",
+    "edit_title": "Modifier le commentaire",
+    "delete_title": "Supprimer le commentaire"
+  },
+  "participants": {
+    "main_activity_title": "Participants activité principale",
+    "none_yet": "Aucun participant pour l'instant",
+    "participating": "Participent",
+    "maybe": "Peut-être",
+    "not_participating": "Ne participent pas"
+  },
+  "participation": {
+    "i_participate": "Je participe",
+    "maybe": "Peut-être",
+    "no": "Non",
+    "closed": "Les participations sont terminée."
+  },
+  "sub_activity": {
+    "details": "Détails de l'activité",
+    "no_description": "Aucune précision supplémentaire pour cette activité.",
+    "participants": "Participants",
+    "more_others": "autres",
+    "no_participant_be_first": "Aucun participant, soyez le premier à participer",
+     "new_subactivity": "Ajouter une sous-activité"
+  },
+  "equipment": {
+    "loading": "Chargement des équipements...",
+    "my_equipment": "Mon matériel",
+    "check_instruction": "Cochez le matériel que vous possédez pour cette activité",
+    "progress": "Progression",
+    "all_equipment_ready": "🎉 Vous avez tout le matériel nécessaire !",
+    "almost_ready": "Presque prêt ! Il ne vous manque que quelques éléments.",
+    "half_equipment": "Vous avez la moitié du matériel, continuez comme ça !",
+    "missing_equipment": "Il vous manque encore pas mal de matériel.",
+    "owned": "Possédé",
+    "checked_count": " sur {{total}} équipements cochés",
+    "auto_saved": "Votre sélection est enregistrée automatiquement"
+  },
+  "equipment_manager": {
+    "section_label": "Matériel nécessaire (optionnel)",
+    "section_description": "Liste des équipements ou objets nécessaires pour cette activité",
+    "input_placeholder": "Ex: Casque, Chaussures de randonnée, Maillot de bain...",
+    "new_button": "Ajouter",
+    "card_title": "Matériel requis ({{count}})",
+    "edit_title": "Modifier",
+    "remove_title": "Supprimer",
+    "empty_label": "Aucun matériel spécifique requis",
+    "empty_examples": "Exemple : \"Casque\", \"Chaussures de randonnée\", \"Maillot de bain\"",
+    "checklist_summary": "{{checked}} sur {{total}} équipements cochés",
+    "error":{
+        "equipment_exist" : "L'equipement existe deja"
+    }
+  },
+  "error404": {
+    "message": "Oups ! La page que vous recherchez n'existe pas.",
+    "back_home": "Retour à l'accueil",
+    "icon_alt": "Erreur 404"
+  }
+}
