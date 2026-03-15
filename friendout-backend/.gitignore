@@ -1,0 +1,23 @@
+# ─── Build outputs ───────────────────────────────────────────────────────────
+**/bin/
+**/obj/
+_tmp_build/
+
+# ─── Secrets (ne jamais commiter) ────────────────────────────────────────────
+Friendout.API/.env
+Friendout.API/.env.local
+Friendout.API/appsettings.Local.json
+
+# ─── Docker secrets ──────────────────────────────────────────────────────────
+../.env.docker
+
+# ─── Fichiers uploadés par les utilisateurs ──────────────────────────────────
+Friendout.API/uploads/
+
+# ─── JetBrains ───────────────────────────────────────────────────────────────
+.idea/
+*.DotSettings.user
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
