@@ -314,7 +314,7 @@ app.MapControllers();
 app.Run();
 
 // ────────────────────────────────────────────────
-// Helpers : .env et configuration
+// Helpers : .env and configuration
 // ────────────────────────────────────────────────
 
 static void LoadEnvFiles()
