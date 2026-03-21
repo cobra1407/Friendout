@@ -19,32 +19,39 @@ interface SubActivityManagerProps {
 interface TimeSelectProps {
     value: string;
     onChange: (nextValue: string) => void;
+    className?: string
 }
 
-function TimeSelect({ value, onChange }: TimeSelectProps) {
+function TimeSelect({ value, onChange, className }: TimeSelectProps) {
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     return (
-        <div className="relative">
-            <Input
-                type="time"
-                step={300}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="pr-8 [&::-webkit-calendar-picker-indicator]:invert"
-                ref={inputRef}
-            />
-            <button
-                type="button"
-                className="absolute top-1/2 right-2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
-                onClick={() => {
-                    if (!inputRef.current) return;
-                    (inputRef.current as any).showPicker?.();
-                    inputRef.current.focus();
-                }}
-                aria-label={getTranslation("sub_activity_manager.time_picker_aria")}
-            >
-            </button>
+        <div className={className}>
+            <div className="relative">
+                <Input
+                    type="time"
+                    step={300}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="pr-10"
+                    ref={inputRef}
+                    aria-label={getTranslation("sub_activity_manager.time_picker_aria")}
+                />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                        if (!inputRef.current) return;
+                        (inputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+                        inputRef.current.focus();
+                    }}
+                    aria-label={getTranslation("sub_activity_manager.time_picker_aria")}
+                >
+                    <Clock className="h-4 w-4" />
+                </Button>
+            </div>
         </div>
     );
 }
@@ -175,6 +182,7 @@ export default function SubActivityManager({ subActivities, onChange }: SubActiv
                                         <TimeSelect
                                             value={subActivity.endTime}
                                             onChange={(value) => updateSubActivity(index, 'endTime', value)}
+                                            className='w-full'
                                         />
                                     </div>
                                     {subActivity.startTime && subActivity.endTime && (
