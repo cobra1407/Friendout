@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { createActivity, updateActivity } from "@/features/activity/api/activity.api"
 import EquipmentManager from "@/features/equipment/component/EquipmentManager"
 import SubActivityManager from "@/features/subActivity/component/SubActivityManager"
-import type { Activity } from "@/features/activity/types/acitivity.type"
+import type { Activity } from "@/features/activity/types/activity.type"
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type"
 import type { SubActivity } from "@/features/subActivity/types/subActivity.type"
 import { LocalisationType } from "@/features/localisation/types/localisation.type"
@@ -345,7 +345,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                         onClick={() => {
                                             if (!timeInputRef.current) return
-                                            ;(timeInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
+                                                ; (timeInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
                                             timeInputRef.current.focus()
                                         }}
                                         aria-label={getTranslation("activity_form.start_time_aria")}

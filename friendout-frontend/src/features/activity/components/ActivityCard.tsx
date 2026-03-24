@@ -2,7 +2,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, MapPin, Euro, Users, ExternalLink, MessageCircle } from 'lucide-react';
-import { type Activity } from '@/features/activity/types/acitivity.type';
+import { type Activity } from '@/features/activity/types/activity.type';
 import { LocalisationType } from '@/features/localisation/types/localisation.type';
 import { getLocalisationDisplayText } from '@/lib/maps';
 import { useEffect, useState } from 'react';

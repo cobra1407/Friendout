@@ -1,7 +1,7 @@
 import { Header } from "@/components/header";
 import ActivityCard from "@/features/activity/components/ActivityCard";
 import { ActivityLayout } from "@/features/activity/layout/activityLayout";
-import type { Activity } from "@/features/activity/types/acitivity.type";
+import type { Activity } from "@/features/activity/types/activity.type";
 import { ActivityToolbar } from "@/features/activity/components/ActivityToolsBar";
 import { getActivities } from "@/features/activity/api/activity.api";
 import { useEffect, useState, useRef } from "react";
