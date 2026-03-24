@@ -166,7 +166,7 @@ public class ActivityController : ControllerBase
             var fileUpload = FileUploadMapper.ToFileUpload(request.ActivityImage);
             var updateActivityDto = ActivityMapper.ToUpdateActivityDto(activityId, request, fileUpload);
 
-            var result = await _activityService.UpdateActivityAync(updateActivityDto, userId);
+            var result = await _activityService.UpdateActivityAsync(updateActivityDto, userId);
             return result.IsSuccess ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
         catch (Exception ex)

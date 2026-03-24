@@ -704,7 +704,7 @@ public class ActivityService : IActivityService
         }
     }
     
-    public async Task<ServiceResult<ActivityDto>> UpdateActivityAync(UpdateActivityDto activityDto, string userId)
+    public async Task<ServiceResult<ActivityDto>> UpdateActivityAsync(UpdateActivityDto activityDto, string userId)
     {
         try
         {

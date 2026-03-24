@@ -287,7 +287,7 @@ public class ActivityServiceTests
         await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateActivityAync_WhenActivityNotFound_ReturnsFailure));
         var service = CreateService(context);
 
-        var result = await service.UpdateActivityAync(new UpdateActivityDto
+        var result = await service.UpdateActivityAsync(new UpdateActivityDto
         {
             Id = "missing",
             Title = "Updated",
@@ -326,7 +326,7 @@ public class ActivityServiceTests
 
         var service = CreateService(context);
 
-        var result = await service.UpdateActivityAync(new UpdateActivityDto
+        var result = await service.UpdateActivityAsync(new UpdateActivityDto
         {
             Id = activity.Id,
             Title = "Updated",
@@ -395,7 +395,7 @@ public class ActivityServiceTests
         var service = CreateService(context);
         var start = DateTime.UtcNow.AddDays(1);
 
-        var result = await service.UpdateActivityAync(new UpdateActivityDto
+        var result = await service.UpdateActivityAsync(new UpdateActivityDto
         {
             Id = activity.Id,
             Title = "Updated title",
@@ -502,7 +502,7 @@ public class ActivityServiceTests
         var service = CreateService(context);
         var newStart = baseStart.AddDays(1);
 
-        var result = await service.UpdateActivityAync(new UpdateActivityDto
+        var result = await service.UpdateActivityAsync(new UpdateActivityDto
         {
             Id = activity.Id,
             Title = "New title",
@@ -632,7 +632,7 @@ public class ActivityServiceTests
 
         var service = CreateService(context);
 
-        var result = await service.UpdateActivityAync(new UpdateActivityDto
+        var result = await service.UpdateActivityAsync(new UpdateActivityDto
         {
             Id = activity.Id,
             Title = "Stable title",

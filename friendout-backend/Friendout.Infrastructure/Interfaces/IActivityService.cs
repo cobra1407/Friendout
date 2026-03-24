@@ -37,7 +37,7 @@ public interface IActivityService
     /// <param name="activityDto"></param>
     /// /// <param name="userId"></param>
     /// <returns></returns>
-    public Task<ServiceResult<ActivityDto>> UpdateActivityAync(UpdateActivityDto activityDto, string userId);
+    public Task<ServiceResult<ActivityDto>> UpdateActivityAsync(UpdateActivityDto activityDto, string userId);
 
     /// <summary>
     /// Delete an activity 
