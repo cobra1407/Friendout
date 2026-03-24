@@ -20,12 +20,12 @@ LoadEnvFiles();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ────────────────────────────────────────────────
+// -----------------------------
 // Configuration – Load order (the last one wins)
 // 1. appsettings.json          (default values)
 // 2. appsettings.{Environment}.json  (environment-specific)
 // 3. Environment variables / .env     (secrets & overrides)
-// ────────────────────────────────────────────────
+// -----------------------------
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
@@ -54,9 +54,9 @@ var jwtKey = jwtSection["Key"]!;
 var jwtIssuer = jwtSection.GetValue<string>("Issuer") ?? "friendout-backend";
 var jwtAudience = jwtSection.GetValue<string>("Audience") ?? "friendout-frontend";
 
-// ────────────────────────────────────────────────
+// -----------------------------
 // Services
-// ────────────────────────────────────────────────
+// -----------------------------
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -131,9 +131,9 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.Limits.MaxRequestBodySize = 30 * 1024 * 1024; // 30 MB
 });
 
-// ────────────────────────────────────────────────
+// ------------------------------------------------
 // Authentification
-// ────────────────────────────────────────────────
+// ------------------------------------------------
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -272,9 +272,17 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// ────────────────────────────────────────────────
+// -- Migrations --
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+// -----------------------------
 // Pipeline
-// ────────────────────────────────────────────────
+//-----------------------------
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -313,9 +321,9 @@ app.MapControllers();
 
 app.Run();
 
-// ────────────────────────────────────────────────
+// -----------------------------
 // Helpers : .env and configuration
-// ────────────────────────────────────────────────
+// -----------------------------
 
 static void LoadEnvFiles()
 {
