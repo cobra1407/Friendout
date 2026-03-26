@@ -1,5 +1,6 @@
 import { Calendar, Clock, Euro, ExternalLink, Link, MapPin, MessageCircle, Package, Users } from "lucide-react";
 import DefaultActivityImage from "@/assets/images/default-activity-card.png";
+import Linkify from 'linkify-react';
 
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type";
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
@@ -24,6 +25,12 @@ export default function ActivityMainDetails({ activity, maxEquipmentVisible }: A
     const openInMaps = () => {
         const mapsUrl = activity.localisation?.mapLink;
         window.open(mapsUrl, "_blank");
+    };
+
+    const linkifyOptions = {
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        className: 'text-blue-800 hover:underline',
     };
 
     return (
@@ -132,7 +139,9 @@ export default function ActivityMainDetails({ activity, maxEquipmentVisible }: A
 
                 <div>
                     <h3 className="font-semibold mb-3">{getTranslation('activity.description')}</h3>
-                    <p className="text-gray-700 whitespace-pre-wrap">{activity.description}</p>
+                    <Linkify options={linkifyOptions}>
+                        <p className="text-gray-700 whitespace-pre-wrap">{activity.description}</p>
+                    </Linkify>
                 </div>
 
                 {Array.isArray(activity.activityEquipments) && activity.activityEquipments.length > 0 && (
