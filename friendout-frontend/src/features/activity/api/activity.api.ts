@@ -1,4 +1,4 @@
-import type { Activity } from "@/features/activity/types/acitivity.type";
+import type { Activity } from "@/features/activity/types/activity.type";
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
@@ -6,13 +6,18 @@ import type { Participant } from "@/features/participant/types/Participant.type"
 import type { SubActivity } from "@/features/subActivity/types/subActivity.type";
 import api from "@/lib/api/api";
 import type { TimeFilter } from "@/features/activity/types/activityFilter.type";
-import { pickLocalisation } from "@/features/activity/utils/localisation.utils";
+import { pickLocalisation } from "@/features/localisation/utils/localisation.utils";
+import type { CreateActivityFormData } from "../schema/createActivity.schema";
 
+export type CreateActivityPayload = CreateActivityFormData;
+export type UpdateActivityPayload = CreateActivityPayload;
+
+// ====================== MAPPING & HELPERS ======================
 interface GetActivitiesParams {
   skip?: number;
   take?: number;
   search?: string;
-    timeFilter?: TimeFilter;
+  timeFilter?: TimeFilter;
   onlyOwnActivity?: boolean;
 }
 
@@ -36,14 +41,12 @@ type ApiActivityDetails = Omit<ActivityDetails, "localisation" | "subActivities"
 const dedupeParticipants = (participants?: Participant[] | null): Participant[] => {
   if (!participants?.length) return [];
   const byKey = new Map<string, Participant>();
-
   participants.forEach((participant) => {
     const key =
       participant.participationId ||
       `${participant.userId}:${participant.subActivityId ?? "main"}:${participant.participationStatus}`;
     byKey.set(key, participant);
   });
-
   return Array.from(byKey.values());
 };
 
@@ -68,40 +71,7 @@ const mapActivityDetailsFromApi = (activity: ApiActivityDetails): ActivityDetail
   comments: activity.comments ?? [],
 });
 
-export async function getActivities(params?: GetActivitiesParams): Promise<Activity[]> {
-  const query = new URLSearchParams();
-
-  if (params?.skip !== undefined) query.append("skip", params.skip.toString());
-  if (params?.take !== undefined) query.append("take", params.take.toString());
-  if (params?.search) query.append("search", params.search);
-  if (params?.timeFilter) query.append("timeFilter", params.timeFilter);
-  if (params?.onlyOwnActivity) query.append("onlyOwnActivity", "true");
-
-  const response = await api.get<ApiActivity[]>(`/activities?${query.toString()}`);
-  return response.data.map(mapActivityFromApi);
-}
-
-
-export async function getActivityById(id: string): Promise<ActivityDetails> {
-  const response = await api.get<ApiActivityDetails>(`/activities/${id}/details`);
-  return mapActivityDetailsFromApi(response.data);
-}
-
-export interface CreateActivityPayload {
-  title: string;
-  description: string;
-  startAt: string;
-  time: string;
-  endAt?: string;
-  estimatedPrice?: number;
-  localisation: Localisation | null;
-  activityImage?: File;
-  requiredEquipmentNames?: string[];
-  subActivities?: SubActivity[];
-}
-
-export interface UpdateActivityPayload extends CreateActivityPayload {}
-
+// ====================== FORM DATA BUILDER ======================
 const appendLocalisationFields = (formData: FormData, localisation: Localisation | null) => {
   if (!localisation) return;
 
@@ -109,12 +79,10 @@ const appendLocalisationFields = (formData: FormData, localisation: Localisation
     if (localisation.address?.trim()) formData.append("Address", localisation.address.trim());
     return;
   }
-
   if (localisation.type === LocalisationType.MapLink) {
     if (localisation.mapLink?.trim()) formData.append("MapLink", localisation.mapLink.trim());
     return;
   }
-
   if (localisation.type === LocalisationType.Virtual) {
     const virtualUrl = localisation.virtualUrl?.trim() || localisation.serverInfo?.trim();
     if (virtualUrl) formData.append("VirtualUrl", virtualUrl);
@@ -123,51 +91,47 @@ const appendLocalisationFields = (formData: FormData, localisation: Localisation
 
 const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
   const formData = new FormData();
-  formData.append("Title", payload.title.trim());
-  formData.append("Description", payload.description.trim());
-  formData.append("StartAt", payload.startAt);
+
+  formData.append("Title", payload.title);
+  formData.append("Description", payload.description);
+  formData.append("StartAt", payload.startAt.toISOString());
   formData.append("Time", payload.time);
 
-  if (payload.endAt) {
-    formData.append("EndAt", payload.endAt);
-  }
-
-  if (payload.estimatedPrice !== undefined && Number.isFinite(payload.estimatedPrice)) {
+  if (payload.endAt) formData.append("EndAt", payload.endAt.toISOString());
+  if (payload.estimatedPrice !== undefined) {
     formData.append("EstimatedPrice", String(payload.estimatedPrice));
   }
 
-  if (payload.requiredEquipmentNames && payload.requiredEquipmentNames.length > 0) {
-    const cleanedEquipmentNames = payload.requiredEquipmentNames
-      .filter((name) => Boolean(name?.trim()))
-      .map((name) => name.trim());
-
-    cleanedEquipmentNames.forEach((name, index) => {
-      formData.append("RequiredEquipmentNames", name);
+  // Required Equipment Names
+  if (payload.requiredEquipmentNames.length > 0) {
+    payload.requiredEquipmentNames.forEach((name, index) => {
       formData.append(`RequiredEquipmentNames[${index}]`, name);
     });
-    formData.append("RequiredEquipmentNamesJson", JSON.stringify(cleanedEquipmentNames));
+    // Fallback JSON (à supprimer plus tard si le binding indexé suffit)
+    formData.append("RequiredEquipmentNamesJson", JSON.stringify(payload.requiredEquipmentNames));
   }
 
-  if (payload.subActivities && payload.subActivities.length > 0) {
-    const normalizedSubActivities = payload.subActivities
-      .filter((subActivity) => Boolean(subActivity.name?.trim()) && Boolean(subActivity.startTime) && Boolean(subActivity.endTime))
-      .map((subActivity) => ({
-        id: subActivity.id || null,
-        name: subActivity.name.trim(),
-        startTime: subActivity.startTime,
-        endTime: subActivity.endTime,
-        description: subActivity.description?.trim() || null,
-        price: Number.isFinite(subActivity.price) ? subActivity.price : 0,
-        address: subActivity.localisation?.type === LocalisationType.Address ? subActivity.localisation.address?.trim() || null : null,
-        mapLink: subActivity.localisation?.type === LocalisationType.MapLink ? subActivity.localisation.mapLink?.trim() || null : null,
-        virtualUrl: subActivity.localisation?.type === LocalisationType.Virtual
-          ? (subActivity.localisation.virtualUrl?.trim() || subActivity.localisation.serverInfo?.trim() || null)
-          : null
-      }));
+  // SubActivities
+  if (payload.subActivities.length > 0) {
+    const normalizedSubActivities = payload.subActivities.map((subActivity) => ({
+      id: subActivity.id || null,
+      name: subActivity.name,
+      startTime: subActivity.startTime,
+      endTime: subActivity.endTime,
+      description: subActivity.description || null,
+      price: subActivity.price,
+      address: subActivity.localisation?.type === LocalisationType.Address
+        ? subActivity.localisation.address?.trim() || null
+        : null,
+      mapLink: subActivity.localisation?.type === LocalisationType.MapLink
+        ? subActivity.localisation.mapLink?.trim() || null
+        : null,
+      virtualUrl: subActivity.localisation?.type === LocalisationType.Virtual
+        ? (subActivity.localisation.virtualUrl?.trim() || subActivity.localisation.serverInfo?.trim() || null)
+        : null,
+    }));
 
-    if (normalizedSubActivities.length > 0) {
-      formData.append("SubActivitiesJson", JSON.stringify(normalizedSubActivities));
-    }
+    formData.append("SubActivitiesJson", JSON.stringify(normalizedSubActivities));
   }
 
   appendLocalisationFields(formData, payload.localisation);
@@ -179,9 +143,28 @@ const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
   return formData;
 };
 
+// ====================== API FUNCTIONS ======================
+export async function getActivities(params?: GetActivitiesParams): Promise<Activity[]> {
+  const query = new URLSearchParams();
+  if (params?.skip !== undefined) query.append("skip", params.skip.toString());
+  if (params?.take !== undefined) query.append("take", params.take.toString());
+  if (params?.search) query.append("search", params.search);
+  if (params?.timeFilter) query.append("timeFilter", params.timeFilter);
+  if (params?.onlyOwnActivity) query.append("onlyOwnActivity", "true");
+
+  const response = await api.get<ApiActivity[]>(`/activities?${query.toString()}`);
+  return response.data.map(mapActivityFromApi);
+}
+
+export async function getActivityById(id: string): Promise<ActivityDetails> {
+  const response = await api.get<ApiActivityDetails>(`/activities/${id}/details`);
+  return mapActivityDetailsFromApi(response.data);
+}
+
+// La validation Zod est faite dans le formulaire (ActivityForm) avant l'appel API.
+// Ces fonctions reçoivent un payload déjà validé et construisent le FormData.
 export async function createActivity(payload: CreateActivityPayload): Promise<Activity> {
   const formData = buildActivityFormData(payload);
-
   const response = await api.post<ApiActivity>("/activities", formData);
   return mapActivityFromApi(response.data);
 }
