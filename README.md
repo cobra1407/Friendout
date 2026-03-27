@@ -177,4 +177,4 @@ Les retours, issues et pull requests sont les bienvenus ! Ce projet est avant to
 
 ## 📄 Licence
 
-Ce projet est sous licence [MIT](LICENSE).
+Ce projet est sous licence [GPLv2](LICENSE).

@@ -178,4 +178,4 @@ Issues and pull requests are welcome! This is primarily a learning project, so d
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GPLv2](LICENSE).
