@@ -2,8 +2,6 @@ import { z } from "zod";
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 
 // ─── Localisation ──────────────────────────────────────────────────────────
-// Les messages sont des clés courtes ("location_incomplete") — mappés vers i18n
-// dans showZodErrors() du formulaire, jamais affichés directement à l'utilisateur.
 const localisationSchema = z.object({
   type: z.nativeEnum(LocalisationType),
   address: z.string().trim().optional(),
@@ -28,7 +26,6 @@ const subActivitySchema = z.object({
   localisation: localisationSchema.optional().nullable(),
 }).refine(
   (data) => {
-    // Ignoré si l'un des deux champs est déjà invalide (format non HH:mm)
     const toMinutes = (t: string) => {
       const [h, m] = t.split(":").map(Number);
       return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : -1;
@@ -40,8 +37,8 @@ const subActivitySchema = z.object({
   { message: "end_before_start", path: ["endTime"] }
 );
 
-// ─── Activité principale ───────────────────────────────────────────────────
-export const createActivitySchema = z.object({
+// ─── Schéma de base ────────────────────────────────────────────────────────
+const baseSchema = z.object({
   title:       z.string().trim().min(1, "title_required").min(3, "title_too_short"),
   description: z.string().trim().min(1, "description_required").min(10, "description_too_short"),
   startAt:     z.date({ message: "date_required" }),
@@ -53,9 +50,25 @@ export const createActivitySchema = z.object({
   requiredEquipmentNames: z.array(z.string().trim().min(1)).optional().default([]),
   subActivities: z.array(subActivitySchema).optional().default([]),
 }).refine(
-  // localisation nullable dans le schema pour le typage, mais obligatoire à la soumission
   (data) => data.localisation !== null,
   { message: "location_required", path: ["localisation"] }
 );
 
-export type CreateActivityFormData = z.infer<typeof createActivitySchema>;
+// ─── Schéma contextuel selon le mode ──────────────────────────────────────
+// En mode "create", on vérifie que la date est dans le futur.
+// En mode "edit", cette contrainte n'existe pas (l'activité peut déjà être passée).
+export const buildActivitySchema = (mode: "create" | "edit") => {
+  if (mode === "edit") return baseSchema;
+
+  return baseSchema.superRefine((data, ctx) => {
+    if (data.startAt <= new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "date_must_be_future",
+        path: ["startAt"],
+      });
+    }
+  });
+};
+
+export type CreateActivityFormData = z.infer<typeof baseSchema>;
