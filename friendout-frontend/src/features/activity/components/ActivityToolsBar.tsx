@@ -11,6 +11,18 @@ interface Props {
     className?: string;
 }
 
+/**
+ * A toolbar component for the activity page.
+ *
+ * It includes a search bar and a filter bar.
+ *
+ * @param {string} search - The current search value.
+ * @param {(v: string) => void} onSearchChange - A callback function to handle search value changes.
+ * @param {ActivityFilter} filter - The current filter value.
+ * @param {(v: ActivityFilter) => void} onFilterChange - A callback function to handle filter value changes.
+ * @param {string} [className] - An optional className for the component.
+ * @returns {React.ReactNode} A React component with the toolbar functionality.
+ */
 export const ActivityToolbar = ({
     search,
     onSearchChange,

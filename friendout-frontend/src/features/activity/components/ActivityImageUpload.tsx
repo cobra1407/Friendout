@@ -9,6 +9,14 @@ interface ActivityImageUploadProps {
     onRemove: () => void
 }
 
+/**
+ * A component to upload and display an activity image.
+ *
+ * @param {string | null} image - The current image URL.
+ * @param {(event: React.ChangeEvent<HTMLInputElement>) => void} onUpload - A callback function to handle image upload.
+ * @param {() => void} onRemove - A callback function to handle image removal.
+ * @returns {React.ReactNode} A React component with the image upload and display functionality.
+ */
 export function ActivityImageUpload({ image, onUpload, onRemove }: ActivityImageUploadProps) {
     return (
         <div className="space-y-2">

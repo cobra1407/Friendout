@@ -180,7 +180,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                         onClick={() => {
                                             if (!timeInputRef.current) return
-                                            ;(timeInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
+                                                ; (timeInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
                                             timeInputRef.current.focus()
                                         }}
                                         aria-label={getTranslation("activity_form.start_time_aria")}

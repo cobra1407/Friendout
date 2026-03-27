@@ -35,7 +35,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
         <header className="bg-white shadow-sm border-b">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    {/* Bouton retour + titre */}
+                    {/* Title + Back button */}
                     <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"

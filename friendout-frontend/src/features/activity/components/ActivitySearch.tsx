@@ -7,6 +7,14 @@ interface Props {
     onChange: (value: string) => void;
 }
 
+/**
+ * A search input component for activity filtering.
+ *
+ * @param {string} value - The current search value.
+ * @param {(value: string) => void} onChange - A callback function to handle search value changes.
+ *
+ * @returns {React.ReactNode} A React component with the search input functionality.
+ */
 export const ActivitySearch = ({ value, onChange }: Props) => {
     return (
         <div className="relative flex-1">

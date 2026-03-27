@@ -160,7 +160,7 @@ export default function ActivityMainDetails({
                                         {Number(activity.totalPrice).toFixed(2)}€
                                     </span>
 
-                                    {/* Prix estimé + sous‑activités */}
+                                    {/* estimated price + sub activities */}
                                     {activity.subActivities?.some((s) => s.price) && (
                                         <div className="text-sm text-muted-foreground">
                                             <span>

@@ -14,7 +14,12 @@ interface Props {
 }
 
 export const ActivityFilters = ({ value, onChange }: Props) => {
-    // On transforme la valeur sélectionnée du select en ActivityFilter
+
+    /**
+     * Maps a select value to an ActivityFilter object.
+     * @param {string} val - The select value to map.
+     * @returns {ActivityFilter} - The mapped ActivityFilter object.
+     */
     const mapSelectValueToFilter = (val: string): ActivityFilter => {
         switch (val) {
             case "all":
@@ -31,7 +36,11 @@ export const ActivityFilters = ({ value, onChange }: Props) => {
     };
 
 
-    // Inverse : pour que le select affiche correctement la valeur actuelle
+    /**
+     * Maps an ActivityFilter object to a select value.
+     * @param {ActivityFilter} filter - The ActivityFilter object to map.
+     * @returns {string} - The mapped select value.
+     */
     const mapFilterToSelectValue = (filter: ActivityFilter) => {
         if (filter.onlyOwnActivity) return "mine";
         return filter.timeFilter;

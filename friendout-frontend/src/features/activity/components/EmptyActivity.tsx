@@ -1,6 +1,11 @@
 import { Plus } from "lucide-react";
 import { getTranslation } from "@/i18n";
 
+/**
+ * A component to display when no activities are found.
+ *
+ * @returns {JSX.Element} A React component displaying a "no activities found" message.
+ */
 const EmptyActivity = () => {
     return (
         <div className="text-center py-12">
