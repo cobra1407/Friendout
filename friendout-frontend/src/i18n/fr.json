@@ -50,6 +50,8 @@
         "sub_activity_time_invalid": "Le format horaire de la sous-activité {{position}} est invalide",
         "sub_activity_end_before_start": "La sous-activité {{position}} doit finir après son heure de début",
         "sub_activity_location_incomplete": "Le lieu de la sous-activité {{position}} est incomplet",
+        "title_too_short": "Le titre doit faire au moins 3 caractères",
+        "description_too_short": "La description doit faire au moins 10 caractères",
         "date_must_be_future": "La date et l'heure doivent être dans le futur",
         "create_success": "Sortie créée avec succès",
         "edit_success": "Sortie modifiée avec succès",

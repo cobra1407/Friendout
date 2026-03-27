@@ -16,19 +16,20 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { createActivity, updateActivity } from "@/features/activity/api/activity.api"
+import { createActivitySchema } from "@/features/activity/schema/createActivity.schema"
 import EquipmentManager from "@/features/equipment/component/EquipmentManager"
 import SubActivityManager from "@/features/subActivity/component/SubActivityManager"
 import type { Activity } from "@/features/activity/types/activity.type"
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type"
 import type { SubActivity } from "@/features/subActivity/types/subActivity.type"
-import { LocalisationType } from "@/features/localisation/types/localisation.type"
 import type { Localisation } from "@/features/localisation/types/localisation.type"
 import { resolveMediaUrl } from "@/lib/media"
-import { pickLocalisation } from "@/features/activity/utils/localisation.utils"
+import { pickLocalisation } from "@/features/localisation/utils/localisation.utils"
 import { getTranslation, getLang } from "@/i18n"
 
-
 const dateLocale = getLang() === "fr" ? fr : enUS
+
+// ─── Types ────────────────────────────────────────────────────────────────
 
 interface ActivityFormProps {
     mode: "create" | "edit"
@@ -36,6 +37,28 @@ interface ActivityFormProps {
     onBack: () => void
     onSuccess: (activity: Activity) => void
 }
+
+// errors for each field
+interface FormErrors {
+    title?: string
+    description?: string
+    startAt?: string
+    time?: string
+    localisation?: string
+}
+
+// ─── Composant d'affichage d'erreur inline ────────────────────────────────
+
+function FieldError({ message }: { message?: string }) {
+    if (!message) return null
+    return (
+        <p className="text-sm text-red-500 mt-1" role="alert">
+            {message}
+        </p>
+    )
+}
+
+// ─── Utilitaires ──────────────────────────────────────────────────────────
 
 const formatImageUrl = (imageSrc: string | undefined | null): string | null => {
     if (!imageSrc) return null
@@ -56,31 +79,18 @@ const formatToHHmm = (value: string): string => {
     return /^\d{2}:\d{2}$/.test(maybeTime) ? maybeTime : ""
 }
 
-const toLocalDateTimeString = (value: Date): string => {
-    const pad = (n: number) => n.toString().padStart(2, "0")
-    return [
-        value.getFullYear(), "-",
-        pad(value.getMonth() + 1), "-",
-        pad(value.getDate()), "T",
-        pad(value.getHours()), ":",
-        pad(value.getMinutes()), ":",
-        pad(value.getSeconds()),
-    ].join("")
-}
-
 const normalizeSubActivitiesForForm = (subActivities: SubActivity[] | undefined): SubActivity[] => {
     if (!subActivities) return []
-    return subActivities.map((subActivity) => ({
-        ...subActivity,
-        localisation: pickLocalisation(subActivity as SubActivity & { location?: Localisation | null }),
-        startTime: formatToHHmm(subActivity.startTime),
-        endTime: formatToHHmm(subActivity.endTime),
+    return subActivities.map((sa) => ({
+        ...sa,
+        localisation: pickLocalisation(sa as SubActivity & { location?: Localisation | null }),
+        startTime: formatToHHmm(sa.startTime),
+        endTime: formatToHHmm(sa.endTime),
     }))
 }
 
-const getInitialLocalisation = (initialData: Activity | ActivityDetails | undefined): Localisation | null => {
-    return pickLocalisation(initialData as (Activity | ActivityDetails) & { location?: Localisation | null })
-}
+const getInitialLocalisation = (initialData: Activity | ActivityDetails | undefined): Localisation | null =>
+    pickLocalisation(initialData as (Activity | ActivityDetails) & { location?: Localisation | null })
 
 const getInitialRequiredEquipment = (initialData: Activity | ActivityDetails | undefined): string[] => {
     if (!initialData) return []
@@ -90,33 +100,148 @@ const getInitialRequiredEquipment = (initialData: Activity | ActivityDetails | u
     return []
 }
 
+
+/**
+ * Builds an object containing errors for each form field from the given Zod issues.
+ * Used to display errors to the user when they submit an invalid form.
+ * @param issues - The issues returned by Zod's safeParse method.
+ * @returns An object containing errors for each form field.
+ */
+const buildErrors = (
+    issues: ReturnType<typeof createActivitySchema.safeParse> extends { success: false; error: infer E }
+        ? E extends { issues: infer I }
+        ? I
+        : never
+        : never
+): FormErrors => {
+    const errors: FormErrors = {}
+    const subActivityToastShown = new Set<string>()
+
+    for (const issue of issues as { path: (string | number)[]; message: string }[]) {
+        const [p0, p1, p2] = issue.path
+        const msg = issue.message
+
+        // ── Champs principaux ─────────────────────────────────────────────
+        if (p0 === "title" && !errors.title) {
+            errors.title = getTranslation(
+                msg === "title_too_short"
+                    ? "activity_form.toast.title_too_short"
+                    : "activity_form.toast.title_required"
+            )
+        } else if (p0 === "description" && !errors.description) {
+            errors.description = getTranslation(
+                msg === "description_too_short"
+                    ? "activity_form.toast.description_too_short"
+                    : "activity_form.toast.description_required"
+            )
+        } else if (p0 === "startAt" && !errors.startAt) {
+            errors.startAt = getTranslation("activity_form.toast.date_required")
+        } else if (p0 === "time" && !errors.time) {
+            errors.time = getTranslation(
+                msg === "time_invalid_format"
+                    ? "activity_form.toast.time_invalid_format"
+                    : "activity_form.toast.time_required"
+            )
+        } else if (p0 === "localisation" && !errors.localisation) {
+            errors.localisation = getTranslation(
+                msg === "location_required"
+                    ? "activity_form.toast.location_required"
+                    : "activity_form.toast.location_incomplete"
+            )
+
+            // ── Sous-activités → toast ────────────────────────────────────────
+        } else if (p0 === "subActivities" && typeof p1 === "number") {
+            const position = String(p1 + 1)
+            const toastKey = `${p1}.${String(p2)}`
+            if (subActivityToastShown.has(toastKey)) continue
+            subActivityToastShown.add(toastKey)
+
+            if (p2 === "name") {
+                toast.error(getTranslation("activity_form.toast.sub_activity_name_required", { position }))
+            } else if (p2 === "startTime") {
+                toast.error(getTranslation(
+                    msg === "time_invalid_format"
+                        ? "activity_form.toast.sub_activity_time_invalid"
+                        : "activity_form.toast.sub_activity_start_required",
+                    { position }
+                ))
+            } else if (p2 === "endTime") {
+                toast.error(getTranslation(
+                    msg === "end_before_start"
+                        ? "activity_form.toast.sub_activity_end_before_start"
+                        : msg === "time_invalid_format"
+                            ? "activity_form.toast.sub_activity_time_invalid"
+                            : "activity_form.toast.sub_activity_end_required",
+                    { position }
+                ))
+            } else if (p2 === "localisation") {
+                toast.error(getTranslation("activity_form.toast.sub_activity_location_incomplete", { position }))
+            }
+        }
+    }
+
+    return errors
+}
+
+/**
+ * A form to create or edit an activity.
+ * The form contains fields for the activity title, description, start date and time, estimated price, localisation, required equipment, and image.
+ * The form also includes a list of sub-activities.
+ * The form is validated using Zod.
+ * When the form is submitted, it sends a POST request to the API to create or edit an activity.
+ * The form is rendered as a card with a title, description, and form fields.
+ * The form is intended to be used in a modal.
+ * @param {ActivityFormProps} props - The props for the ActivityForm component.
+ * @prop {string} mode - The mode of the form, either "create" or "edit".
+ * @prop {Activity | ActivityDetails | undefined} initialData - The initial data for the form, either an Activity or ActivityDetails object.
+ * @prop {() => void} onBack - The function to call when the user clicks the back button.
+ * @prop {(activity: Activity) => void} onSuccess - The function to call when the form is submitted successfully.
+ */
 export default function ActivityForm({ mode, initialData, onBack, onSuccess }: ActivityFormProps) {
     const navigate = useNavigate()
     const timeInputRef = useRef<HTMLInputElement | null>(null)
 
     const [isLoading, setIsLoading] = useState(false)
+    const [errors, setErrors] = useState<FormErrors>({})
+
     const [title, setTitle] = useState(initialData?.title ?? "")
     const [description, setDescription] = useState(initialData?.description ?? "")
-    const [date, setDate] = useState<Date | undefined>(initialData?.startAt ? new Date(initialData.startAt) : undefined)
+    const [date, setDate] = useState<Date | undefined>(
+        initialData?.startAt ? new Date(initialData.startAt) : undefined
+    )
     const [calendarOpen, setCalendarOpen] = useState(false)
     const [time, setTime] = useState(initialData?.startAt ? formatToHHmm(initialData.startAt) : "")
     const [estimatedPrice, setEstimatedPrice] = useState(
-        initialData?.estimatedPrice !== undefined && initialData.estimatedPrice !== null
-            ? String(initialData.estimatedPrice)
-            : "",
+        initialData?.estimatedPrice != null ? String(initialData.estimatedPrice) : ""
     )
     const [localisationData, setLocalisationData] = useState<Localisation | null>(getInitialLocalisation(initialData))
     const [requiredEquipment, setRequiredEquipment] = useState<string[]>(getInitialRequiredEquipment(initialData))
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [image, setImage] = useState<string | null>(formatImageUrl(initialData?.image?.url ?? null))
-    const [subActivities, setSubActivities] = useState<SubActivity[]>(normalizeSubActivitiesForForm(initialData?.subActivities))
+    const [subActivities, setSubActivities] = useState<SubActivity[]>(
+        normalizeSubActivitiesForForm(initialData?.subActivities)
+    )
+
+
+    /**
+     * Clears an error for a specific field.
+     * @param {keyof FormErrors} field The field to clear the error for.
+     */
+    const clearError = (field: keyof FormErrors) =>
+        setErrors((prev) => ({ ...prev, [field]: undefined }))
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (!file) return
         const limitSize = 10 * 1024 * 1024
-        if (file.size > limitSize) return toast.error(getTranslation("activity_form.toast.image_too_large", { size: String(limitSize / 1024 / 1024) }))
-        if (!file.type.startsWith("image/")) return toast.error(getTranslation("activity_form.toast.image_invalid_type"))
+        if (file.size > limitSize) {
+            toast.error(getTranslation("activity_form.toast.image_too_large", { size: String(limitSize / 1024 / 1024) }))
+            return
+        }
+        if (!file.type.startsWith("image/")) {
+            toast.error(getTranslation("activity_form.toast.image_invalid_type"))
+            return
+        }
         setImageFile(file)
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -131,86 +256,48 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         setImageFile(null)
     }
 
-    const toMinutes = (timeValue: string): number => {
-        const [hours, minutes] = timeValue.split(":").map(Number)
-        if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return Number.NaN
-        return hours * 60 + minutes
-    }
-
-    const validateForm = (): boolean => {
-        if (!title.trim()) return toast.error(getTranslation("activity_form.toast.title_required")), false
-        if (!description.trim()) return toast.error(getTranslation("activity_form.toast.description_required")), false
-        if (!date) return toast.error(getTranslation("activity_form.toast.date_required")), false
-        if (!time) return toast.error(getTranslation("activity_form.toast.time_required")), false
-        if (!/^\d{2}:\d{2}$/.test(time)) return toast.error(getTranslation("activity_form.toast.time_invalid_format")), false
-        if (!localisationData) return toast.error(getTranslation("activity_form.toast.location_required")), false
-
-        const hasLocalisationValue =
-            Boolean(localisationData.address?.trim()) ||
-            Boolean(localisationData.mapLink?.trim()) ||
-            localisationData.type === LocalisationType.Virtual
-        if (!hasLocalisationValue) return toast.error(getTranslation("activity_form.toast.location_incomplete")), false
-
-        for (let index = 0; index < subActivities.length; index += 1) {
-            const subActivity = subActivities[index]
-            const position = String(index + 1)
-
-            if (!subActivity.name?.trim()) return toast.error(getTranslation("activity_form.toast.sub_activity_name_required", { position })), false
-            if (!subActivity.startTime) return toast.error(getTranslation("activity_form.toast.sub_activity_start_required", { position })), false
-            if (!subActivity.endTime) return toast.error(getTranslation("activity_form.toast.sub_activity_end_required", { position })), false
-
-            const startMinutes = toMinutes(subActivity.startTime)
-            const endMinutes = toMinutes(subActivity.endTime)
-            if (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes)) {
-                return toast.error(getTranslation("activity_form.toast.sub_activity_time_invalid", { position })), false
-            }
-            if (endMinutes <= startMinutes) {
-                return toast.error(getTranslation("activity_form.toast.sub_activity_end_before_start", { position })), false
-            }
-            if (subActivity.localisation) {
-                const hasSubLocalisationValue =
-                    Boolean(subActivity.localisation.address?.trim()) ||
-                    Boolean(subActivity.localisation.mapLink?.trim()) ||
-                    Boolean(subActivity.localisation.virtualUrl?.trim()) ||
-                    Boolean(subActivity.localisation.serverInfo?.trim())
-                if (!hasSubLocalisationValue) {
-                    return toast.error(getTranslation("activity_form.toast.sub_activity_location_incomplete", { position })), false
-                }
-            }
-        }
-
-        return true
-    }
-
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
         setIsLoading(true)
-        if (!validateForm()) {
+        setErrors({}) // reset errors after each submit
+
+        const startAt = date ? new Date(date) : undefined
+        if (startAt && time) {
+            const [hours, minutes] = time.split(":").map(Number)
+            if (Number.isFinite(hours) && Number.isFinite(minutes)) {
+                startAt.setHours(hours, minutes, 0, 0)
+            }
+        }
+
+        const payload = {
+            title,
+            description,
+            startAt: startAt ?? new Date(0),
+            time,
+            estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : undefined,
+            localisation: localisationData,
+            activityImage: imageFile ?? undefined,
+            requiredEquipmentNames: requiredEquipment,
+            subActivities,
+        }
+
+        // Validation Zod
+        const result = createActivitySchema.safeParse(payload)
+        if (!result.success) {
+            const fieldErrors = buildErrors(result.error.issues as never)
+            setErrors(fieldErrors)
             setIsLoading(false)
             return
         }
 
-        const startAt = new Date(date!)
-        startAt.setHours(Number(time.split(":")[0]), Number(time.split(":")[1]), 0, 0)
-        if (mode === "create" && startAt <= new Date()) {
-            toast.error(getTranslation("activity_form.toast.date_must_be_future"))
+        // validation date future
+        if (mode === "create" && startAt && startAt <= new Date()) {
+            setErrors({ startAt: getTranslation("activity_form.toast.date_must_be_future") })
             setIsLoading(false)
             return
         }
 
         try {
-            const payload = {
-                title,
-                description,
-                startAt: toLocalDateTimeString(startAt),
-                time,
-                estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : undefined,
-                localisation: localisationData,
-                activityImage: imageFile ?? undefined,
-                requiredEquipmentNames: requiredEquipment,
-                subActivities,
-            }
-
             if (mode === "create") {
                 const createdActivity = await createActivity(payload)
                 toast.success(getTranslation("activity_form.toast.create_success"))
@@ -231,7 +318,10 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         } catch (error: unknown) {
             console.error(error)
             if (axios.isAxiosError(error)) {
-                const message = typeof error.response?.data === "string" ? error.response.data : (error.response?.data?.errorMessage as string | undefined)
+                const message =
+                    typeof error.response?.data === "string"
+                        ? error.response.data
+                        : (error.response?.data?.errorMessage as string | undefined)
                 toast.error(message || getTranslation("activity_form.toast.save_error"))
             } else {
                 toast.error(getTranslation("activity_form.toast.save_error"))
@@ -254,17 +344,24 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
+                            {/* Title */}
+                            <div className="space-y-1">
                                 <Label htmlFor="title">{getTranslation("activity_form.title_label")}</Label>
                                 <Input
                                     id="title"
                                     value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    onChange={(e) => { setTitle(e.target.value); clearError("title") }}
                                     placeholder={getTranslation("activity_form.title_placeholder")}
+                                    aria-invalid={!!errors.title}
+                                    className={errors.title ? "border-red-500 focus-visible:ring-red-500" : ""}
                                 />
+                                <FieldError message={errors.title} />
                             </div>
-                            <div className="space-y-2">
+
+                            {/* Price */}
+                            <div className="space-y-1">
                                 <Label htmlFor="estimatedPrice">{getTranslation("activity_form.price_label")}</Label>
                                 <Input
                                     id="estimatedPrice"
@@ -278,29 +375,44 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                             </div>
                         </div>
 
-                        <EnhancedLocationInput value={localisationData} onChange={setLocalisationData} required />
+                        {/* Localisation */}
+                        <div className="space-y-1">
+                            <EnhancedLocationInput
+                                value={localisationData}
+                                onChange={(val) => { setLocalisationData(val); clearError("localisation") }}
+                                required
+                            />
+                            <FieldError message={errors.localisation} />
+                        </div>
 
-                        <div className="space-y-2">
+                        {/* Description */}
+                        <div className="space-y-1">
                             <Label htmlFor="description">{getTranslation("activity_form.description_label")}</Label>
                             <Textarea
                                 id="description"
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
+                                onChange={(e) => { setDescription(e.target.value); clearError("description") }}
                                 rows={4}
                                 placeholder={getTranslation("activity_form.description_placeholder")}
+                                aria-invalid={!!errors.description}
+                                className={errors.description ? "border-red-500 focus-visible:ring-red-500" : ""}
                             />
+                            <FieldError message={errors.description} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Calendar */}
-                            <div className="space-y-2">
+                            {/* Date */}
+                            <div className="space-y-1">
                                 <Label>{getTranslation("activity_form.start_date_label")}</Label>
                                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            className="w-full justify-start text-left font-normal"
+                                            className={[
+                                                "w-full justify-start text-left font-normal",
+                                                errors.startAt ? "border-red-500 focus-visible:ring-red-500" : "",
+                                            ].join(" ")}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {date
@@ -315,6 +427,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                             selected={date}
                                             onSelect={(newDate) => {
                                                 setDate(newDate)
+                                                clearError("startAt")
                                                 setCalendarOpen(false)
                                             }}
                                             locale={dateLocale}
@@ -322,10 +435,11 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         />
                                     </PopoverContent>
                                 </Popover>
+                                <FieldError message={errors.startAt} />
                             </div>
 
-                            {/* Time picker */}
-                            <div className="space-y-2">
+                            {/* Hour */}
+                            <div className="space-y-1">
                                 <Label>{getTranslation("activity_form.start_time_label")}</Label>
                                 <div className="relative">
                                     <Input
@@ -333,10 +447,14 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         step={300}
                                         name="startTime"
                                         value={time}
-                                        onChange={(e) => setTime(e.target.value)}
+                                        onChange={(e) => { setTime(e.target.value); clearError("time") }}
                                         ref={timeInputRef}
                                         aria-label={getTranslation("activity_form.start_time_aria")}
-                                        className="pr-10"
+                                        aria-invalid={!!errors.time}
+                                        className={[
+                                            "pr-10",
+                                            errors.time ? "border-red-500 focus-visible:ring-red-500" : "",
+                                        ].join(" ")}
                                     />
                                     <Button
                                         type="button"
@@ -353,12 +471,14 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         <Clock className="h-4 w-4" />
                                     </Button>
                                 </div>
+                                <FieldError message={errors.time} />
                             </div>
                         </div>
 
                         <SubActivityManager subActivities={subActivities} onChange={setSubActivities} />
                         <EquipmentManager equipment={requiredEquipment} onChange={setRequiredEquipment} showChecklist={false} />
 
+                        {/* Image */}
                         <div className="space-y-2">
                             <Label>{getTranslation("activity_form.image_label")}</Label>
                             {!image ? (

@@ -51,6 +51,8 @@
         "sub_activity_time_invalid": "Sub-activity {{position}} time format is invalid",
         "sub_activity_end_before_start": "Sub-activity {{position}} must end after its start time",
         "sub_activity_location_incomplete": "Sub-activity {{position}} location is incomplete",
+        "title_too_short": "Title must be at least 3 characters",
+        "description_too_short": "Description must be at least 10 characters",
         "date_must_be_future": "Date and time must be in the future",
         "create_success": "Activity created successfully",
         "edit_success": "Activity updated successfully",
