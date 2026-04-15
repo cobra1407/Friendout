@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -78,7 +78,7 @@ public class ParticipantService : IParticipantService
     UpdateParticipationCommand command,
     string userId)
     {
-        // Vérifie si l'activité existe
+        // VÃ©rifie si l'activitÃ© existe
         var activity = await _friendoutDbContext.Activities
             .FirstOrDefaultAsync(a => a.Id == command.ActivityId);
 
@@ -91,19 +91,19 @@ public class ParticipantService : IParticipantService
 
         try
         {
-            // Précharge toutes les participations existantes pour cet utilisateur + activité
+            // PrÃ©charge toutes les participations existantes pour cet utilisateur + activitÃ©
             var existingParticipations = await _friendoutDbContext.UserParticipation
                 .Where(up => up.UserId == userId && up.ActivityId == command.ActivityId)
                 .ToListAsync();
 
-            // Nettoie les subActivityIds pour enlever null et doublons
+            // Clean subActivityIds to remove nulls and duplicates
             var subActivityIds = command.SubActivityIds?
                 .Where(id => !string.IsNullOrEmpty(id))
                 .Distinct()
                 .ToList() ?? new List<string>();
 
             // ----------------
-            // PARTICIPATION PRINCIPALE
+            // MAIN PARTICIPATION
             // ----------------
             if (!subActivityIds.Any())
             {
@@ -135,7 +135,7 @@ public class ParticipantService : IParticipantService
             else
             {
                 // ----------------
-                // PARTICIPATION AUX SOUS-ACTIVITÉS
+                // PARTICIPATION AUX SOUS-ACTIVITÃ‰S
                 // ----------------
                 var validSubActivityIds = await _friendoutDbContext.SubActivities
                     .Where(sa => sa.ActivityId == command.ActivityId && subActivityIds.Contains(sa.Id))
@@ -167,11 +167,11 @@ public class ParticipantService : IParticipantService
                 }
             }
 
-            // Sauvegarde tout
+            // Save all
             await _friendoutDbContext.SaveChangesAsync();
 
             // ----------------
-            // Récupère toutes les participations pour cette activité
+            // RÃ©cupÃ¨re toutes les participations pour cette activitÃ©
             // ----------------
             var userParticipations = await _friendoutDbContext.UserParticipation
                 .Where(up =>
@@ -255,3 +255,4 @@ public class ParticipantService : IParticipantService
         }
     }
 }
+

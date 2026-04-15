@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.Enums;
@@ -76,7 +76,7 @@ public class UserService : IUserService
             await using var transaction =
                 await _friendoutDbContext.Database.BeginTransactionAsync();
 
-            // 1. Vérifier si le compte existe
+            // 1. VÃ©rifier si le compte existe
             var existingAccount = await _friendoutDbContext.Accounts
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a =>
@@ -89,7 +89,7 @@ public class UserService : IUserService
                 return ServiceResult<User>.Success(existingAccount.User);
             }
 
-            // 2. Créer l'utilisateur
+            // 2. CrÃ©er l'utilisateur
             var isFirstUser = !await _friendoutDbContext.Users.AnyAsync();
 
             var user = new User
@@ -103,7 +103,7 @@ public class UserService : IUserService
             _friendoutDbContext.Users.Add(user);
             await _friendoutDbContext.SaveChangesAsync();
 
-            // 3. Créer le lien OAuth
+            // 3. CrÃ©er le lien OAuth
             var account = new Account
             {
                 Provider = provider.GetEnumMemberValue(),

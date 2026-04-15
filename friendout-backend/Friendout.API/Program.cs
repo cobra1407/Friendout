@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Claims;
@@ -15,6 +16,8 @@ using Friendout.Domain.Models;
 using Friendout.Domain.Seeds;
 using Friendout.Infrastructure;
 using friendout_backend.Controller;
+using Microsoft.AspNetCore.HttpOverrides;
+using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
 LoadEnvFiles();
 
@@ -44,7 +47,7 @@ foreach (var key in requiredKeys)
     if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
     {
         throw new InvalidOperationException(
-            $"Configuration manquante : la clé '{key}' est obligatoire.\n" +
+            $"Configuration missing: the key� '{key}' est obligatoire.\n" +
             "Vérifiez .env (ou .env.local), appsettings.json, ou les variables d'environnement.");
     }
 }
@@ -104,7 +107,7 @@ builder.Services.AddInfrastructure(uploadsBasePath);
 var connectionString = builder.Configuration.GetConnectionString("FriendoutDatabase");
 if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
-        "La chaîne de connexion 'ConnectionStrings:FriendoutDatabase' est manquante. Vérifiez .env ou appsettings.json.");
+        "La chaîne de connexion 'ConnectionStrings:FriendoutDatabase' is missing. Vérifiez .env ou appsettings.json.");
 
 builder.Services.AddDbContext<FriendoutDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
@@ -159,7 +162,7 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            if (string.IsNullOrEmpty(context.Token) && 
+            if (string.IsNullOrEmpty(context.Token) &&
                 context.Request.Cookies.TryGetValue("auth_token", out var token))
             {
                 context.Token = token;
@@ -187,7 +190,9 @@ builder.Services.AddAuthentication(options =>
 {
     options.Cookie.Name = ".AspNetCore.OAuth.Temp";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+        ? CookieSecurePolicy.Always
+        : CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
 })
 .AddDiscord(options =>
@@ -200,7 +205,9 @@ builder.Services.AddAuthentication(options =>
     options.SaveTokens = true;
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.CorrelationCookie.SecurePolicy = builder.Environment.IsProduction()
+        ? CookieSecurePolicy.Always
+        : CookieSecurePolicy.SameAsRequest;
     options.CorrelationCookie.SameSite = SameSiteMode.Lax;
 
     // Avatar URL custom claim
@@ -226,10 +233,16 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnTicketReceived = async context =>
     {
+        // Lire l'URL de login depuis la config pour générer des redirects absolus.
+        // Un redirect relatif (/login) fonctionnerait aussi, mais une URL absolue
+        // est plus sûre derrière un reverse proxy.
+        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
+
         var accessToken = context.Properties?.GetTokenValue("access_token");
         if (string.IsNullOrEmpty(accessToken))
         {
-            context.Response.Redirect("/login?error=no_token");
+            // error_code : paramètre lu par le frontend React (loginpage.tsx)
+            context.Response.Redirect($"{loginUrl}?error_code=no_token");
             context.HandleResponse();
             return;
         }
@@ -241,6 +254,8 @@ builder.Services.AddAuthentication(options =>
         var response = await client.GetAsync("https://discord.com/api/users/@me/guilds");
         if (!response.IsSuccessStatusCode)
         {
+            // Bug fixed� : avant, pas de redirect → page blanche pour l'utilisateur.
+            context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
             context.HandleResponse();
             return;
         }
@@ -254,7 +269,7 @@ builder.Services.AddAuthentication(options =>
 
         if (allowedGuildIds.Length > 0 && !guilds.Any(g => allowedGuildIds.Contains(g.Id)))
         {
-            context.Response.Redirect("/login?error=discord_access_denied");
+            context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
             context.HandleResponse();
             return;
         }
@@ -264,8 +279,11 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnRemoteFailure = context =>
     {
+        // Déclenché notamment si le redirect_uri ne correspond pas à celui
+        // enregistré dans le Discord Developer Portal.
+        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
         context.HandleResponse();
-        context.Response.Redirect("/login?error=discord_access_denied");
+        context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
         return Task.CompletedTask;
     };
 });
@@ -312,6 +330,10 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
+// Doit être appelé avant UseAuthentication pour que le middleware OAuth
+// voie déjà l'URL publique reconstituée quand il construit le redirect_uri.
+app.UseForwardedHeaders();
+
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
@@ -348,10 +370,11 @@ static void LoadEnvFiles()
     }
 }
 
-// Lit une clé qui peut être une chaîne "a,b,c" (ex. variable d'env) et la retourne en tableau.
+// Lit une clé qui peut être une chaîne "a,b,c" (ex. variable d'env) et and returns it as an array.
 static string[]? GetCommaSeparatedConfig(IConfiguration configuration, string key)
 {
     var value = configuration[key];
     if (string.IsNullOrWhiteSpace(value)) return null;
     return value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
+

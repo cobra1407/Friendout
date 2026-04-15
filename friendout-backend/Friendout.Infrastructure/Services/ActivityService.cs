@@ -1122,7 +1122,7 @@ public class ActivityService : IActivityService
         {
             _logger.LogError(ex, "Failed to update activity");
             return ServiceResult<ActivityDto>.Failure(
-                "Une erreur s'est produite lors de la mise a jour de l'activite");
+                "An error occurred while updating the activity");
         }
     }
 
@@ -1173,3 +1173,4 @@ public class ActivityService : IActivityService
         return ServiceResult<ActivityDto>.Success(activityDto);
     }
 }
+
