@@ -1,0 +1,34 @@
+﻿# OS & editors
+.DS_Store
+Thumbs.db
+*.suo
+*.sw?
+
+# JetBrains IDEs
+.idea/
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+
+# .NET / C#
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.DotSettings.user
+.vs/
