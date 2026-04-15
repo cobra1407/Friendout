@@ -1,0 +1,26 @@
+# ── Artefacts de build .NET ───────────────────────────────────────────────
+**/bin/
+**/obj/
+**/publish/
+_tmp_build/
+
+# ── Fichiers d'environnement ──────────────────────────────────────────────
+# Ne jamais embarquer de secrets dans l'image Docker.
+**/.env
+**/.env.local
+**/.env.*.local
+
+# ── Outils de développement ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.user
+*.suo
+.editorconfig
+
+# ── Uploads locaux (montés via volume en prod) ────────────────────────────
+**/uploads/
+
+# ── Système ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log

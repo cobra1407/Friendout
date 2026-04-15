@@ -1,0 +1,22 @@
+# ── Dépendances ────────────────────────────────────────────────────────────
+# CRITIQUE : sans cette règle, node_modules Windows écrase le node_modules
+# Linux installé par pnpm dans le conteneur → build TypeScript cassé.
+node_modules/
+
+# ── Artefacts de build ────────────────────────────────────────────────────
+dist/
+
+# ── Fichiers d'environnement ──────────────────────────────────────────────
+# Ne jamais embarquer de secrets dans l'image Docker.
+.env
+.env.local
+.env.*.local
+
+# ── Outils de développement ───────────────────────────────────────────────
+.vscode/
+.editorconfig
+*.log
+
+# ── Système ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

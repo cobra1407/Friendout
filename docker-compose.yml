@@ -1,6 +1,5 @@
-services:
-
-  # ── Base de données MySQL ─────────────────────────────────────────────────
+﻿services:
+  # Database MySQL
   db:
     image: mysql:8.4
     container_name: friendout-db
@@ -21,7 +20,7 @@ services:
       retries: 10
       start_period: 30s
 
-  # ── Backend ASP.NET Core 9 ────────────────────────────────────────────────
+  # ASP.NET Core 9 Backend
   backend:
     build:
       context: ./friendout-backend
@@ -33,41 +32,24 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-
-      # Base de données
       ConnectionStrings__FriendoutDatabase: "Server=db;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};AllowPublicKeyRetrieval=true;"
-
-      # JWT
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${APP_URL}
       Jwt__Audience: ${APP_URL}
-
-      # Discord OAuth
       Authentication__Discord__ClientId: ${DISCORD_CLIENT_ID}
       Authentication__Discord__ClientSecret: ${DISCORD_CLIENT_SECRET}
       Authentication__Discord__CallbackPath: /api/auth/callback/discord
-
-      # Redirections frontend (même domaine, géré par Nginx)
       Frontend__LoginUrl: ${APP_URL}/login
       Frontend__ActivitiesUrl: ${APP_URL}/activities
-
-      # CORS – le frontend est servi sur le même domaine via Nginx
       Cors__AllowedOrigins: ${APP_URL}
-
-      # Guilds Discord autorisés (optionnel)
       Discord__AllowedGuildIds: ${DISCORD_ALLOWED_GUILD_IDS}
-
-      # Seed (désactivé en prod par défaut, passer à true pour seeder au démarrage)
       Seed__Enabled: ${SEED_ENABLED:-false}
-
     volumes:
-      # Persistance des fichiers uploadés
       - uploads_data:/app/uploads
     networks:
       - friendout-net
-    # Pas de port exposé vers l'extérieur : Nginx est le seul point d'entrée
 
-  # ── Frontend React + Nginx ────────────────────────────────────────────────
+  # React Frontend + Nginx
   frontend:
     build:
       context: ./friendout-frontend
@@ -81,12 +63,10 @@ services:
     networks:
       - friendout-net
 
-# ── Volumes persistants ───────────────────────────────────────────────────
 volumes:
   mysql_data:
   uploads_data:
 
-# ── Réseau interne ────────────────────────────────────────────────────────
 networks:
   friendout-net:
     driver: bridge
