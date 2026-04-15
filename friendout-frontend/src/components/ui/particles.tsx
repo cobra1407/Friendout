@@ -1,6 +1,6 @@
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
-import { cn } from "~/lib/utils"
+import { cn } from "@/lib/utils"
 
 interface MousePosition {
   x: number
@@ -77,7 +77,9 @@ export const Particles: React.FC<ParticlesProps> = ({
   const mousePosition = useMousePosition()
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 })
-  const animationRef = useRef<number>()
+  // undefined comme valeur initiale : React 19 exige une valeur explicite
+  // pour que le ref soit mutable (MutableRefObject vs RefObject).
+  const animationRef = useRef<number | undefined>(undefined)
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1
 
   useEffect(() => {

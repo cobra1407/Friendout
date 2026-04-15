@@ -19,7 +19,7 @@ function App() {
     }, []);
 
     return (
-        <ThemeProvider defaultTheme="light">
+        <ThemeProvider defaultBaseTheme="light" defaultAccentColor="default">
             <Toaster richColors />
             <BrowserRouter>
                 <Routes>
