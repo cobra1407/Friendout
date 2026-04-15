@@ -104,7 +104,11 @@
     "time_picker_aria": "Choisir l'heure"
 },
   "errors": {
-    "discord_access_denied": "Vous ne faite pas partie d'un serveur discord autorisé.",
+    "discord_access_denied": "Vous ne faites pas partie d'un serveur Discord autorisé.",
+    "discord_unauthorized": "L'authentification Discord a échoué. Veuillez réessayer.",
+    "no_token": "Impossible de récupérer le token Discord. Veuillez réessayer.",
+    "user_creation_failed": "Impossible de créer votre compte. Veuillez contacter un administrateur.",
+    "missing_id": "Identifiant Discord manquant. Veuillez réessayer.",
     "unknown_error": "Une erreur inconnue est survenue."
   },
   "header": {

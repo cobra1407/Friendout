@@ -103,6 +103,10 @@
     "time_picker_aria": "Choose time"},
   "errors": {
     "discord_access_denied": "You are not part of an authorized Discord server.",
+    "discord_unauthorized": "Discord authentication failed. Please try again.",
+    "no_token": "Could not retrieve Discord token. Please try again.",
+    "user_creation_failed": "Could not create your account. Please contact an administrator.",
+    "missing_id": "Discord ID is missing. Please try again.",
     "unknown_error": "An unknown error occurred."
   },
   "header": {

@@ -1,4 +1,4 @@
-import { getTranslation } from "@/i18n";
+﻿import { getTranslation } from "@/i18n";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { DiscordLoginButton } from "../components/DiscordLoginButton";
@@ -13,10 +13,13 @@ import { authApi } from "@/features/auth/api/auth.api";
 export const LoginPage = () => {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
+        // Backend sends ?error_code=... (OnRemoteFailure, OnTicketReceived)
         const errorCode = params.get("error_code");
         if (errorCode) {
-            // Correction ici : syntaxe getTranslation
-            toast.error(getTranslation(`errors.${errorCode}`));
+            const message = getTranslation(`errors.${errorCode}`);
+            // If key is not found, getTranslation returns the key itself
+            // Still display the error to avoid a silent page
+            toast.error(message !== `errors.${errorCode}` ? message : getTranslation("errors.unknown_error"));
         }
     }, []);
 
@@ -27,7 +30,7 @@ export const LoginPage = () => {
     return (
         <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
             <div className="flex flex-col md:flex-row w-full max-w-4xl overflow-hidden rounded-2xl shadow-2xl bg-card">
-                {/* LEFT — LOGIN */}
+                {/* LEFT â€” LOGIN */}
                 <div className="flex w-full md:w-1/2 flex-col items-center justify-center px-6 sm:px-10 py-8 md:py-12 gap-6">
                     <h1 className="text-2xl sm:text-3xl font-bold text-center">
                         {getTranslation("login_page.title")}
@@ -44,13 +47,13 @@ export const LoginPage = () => {
                         </button>
                     </div>
                     <p className="text-center text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6">
-                        🎉 {getTranslation("login_page.welcome_sentence")}
+                        ðŸŽ‰ {getTranslation("login_page.welcome_sentence")}
                     </p>
                     <DiscordLoginButton onClick={handleDiscordLogin}>
                         {getTranslation("login_page.login_button")}
                     </DiscordLoginButton>
                 </div>
-                {/* RIGHT — CAROUSEL */}
+                {/* RIGHT â€” CAROUSEL */}
                 <div className="relative w-full md:w-1/2 mt-6 md:mt-0 bg-muted/30 overflow-hidden rounded-b-2xl md:rounded-r-2xl">
                     <Carousel autoplayIntervalMs={6000} opts={{ loop: true }} className="h-64 sm:h-80 md:h-full w-full flex">
                         <CarouselContent className="h-full">
@@ -69,3 +72,4 @@ export const LoginPage = () => {
         </div>
     );
 };
+

@@ -67,7 +67,7 @@ cd friendout
 ### 2. Configurer les variables d'environnement
 
 ```bash
-cp .env.docker.example .env.docker
+cp .env.example .env
 ```
 
 Édite `.env.docker` et renseigne toutes les valeurs requises (credentials Discord, clé JWT, mots de passe DB).
@@ -75,7 +75,7 @@ cp .env.docker.example .env.docker
 ### 3. Lancer avec Docker
 
 ```bash
-docker compose --env-file .env.docker up --build
+docker compose up -d --build
 ```
 
 L'application sera disponible sur `http://localhost`.
@@ -135,8 +135,16 @@ friendout/
 
 1. Va sur le [Discord Developer Portal](https://discord.com/developers/applications)
 2. Crée une nouvelle application
-3. Dans **OAuth2**, ajoute l'URI de redirection : `http://localhost:5122/api/auth/callback/discord`
-4. Copie le **Client ID** et le **Client Secret** dans ton `.env` / `.env.docker`
+3. Dans **OAuth2 → Redirects**, ajoute l'URI correspondant à ton contexte :
+
+   | Contexte | URI de redirection à ajouter |
+   |---|---|
+   | **Docker (local)** | `http://localhost/api/auth/callback/discord` |
+   | **Développement local (sans Docker)** | `http://localhost:5122/signin-discord` |
+
+   > Tu peux ajouter les deux en même temps pour couvrir les deux cas.
+
+4. Copie le **Client ID** et le **Client Secret** dans ton `.env.docker` (Docker) ou `.env` (dev local)
 
 ---
 
@@ -178,3 +186,5 @@ Les retours, issues et pull requests sont les bienvenus ! Ce projet est avant to
 ## 📄 Licence
 
 Ce projet est sous licence [GPLv2](LICENSE).
+
+

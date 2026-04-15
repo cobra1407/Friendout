@@ -136,8 +136,16 @@ friendout/
 
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create a new application
-3. Under **OAuth2**, add the redirect URI: `http://localhost:5122/api/auth/callback/discord`
-4. Copy the **Client ID** and **Client Secret** into your `.env` / `.env.docker`
+3. Under **OAuth2 → Redirects**, add the URI matching your context:
+
+   | Context | Redirect URI to add |
+   |---|---|
+   | **Docker (local)** | `http://localhost/api/auth/callback/discord` |
+   | **Local development (without Docker)** | `http://localhost:5122/signin-discord` |
+
+   > You can add both at once to cover both scenarios.
+
+4. Copy the **Client ID** and **Client Secret** into your `.env.docker` (Docker) or `.env` (local dev)
 
 ---
 

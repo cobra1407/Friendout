@@ -2,7 +2,10 @@ import { toast } from "sonner"
 import { getTranslation } from "@/i18n"
 import type { FormErrors } from "@/features/activity/types/activityForm.type"
 
-type ZodIssueLike = { path: (string | number)[]; message: string }
+// Zod v4 a changé le type de `path` : c'est désormais `PropertyKey[]` (string | number | symbol).
+// On accepte symbol dans le type mais nos comparaisons `=== "title"` etc. ne matchent
+// jamais les symbols, ce qui est le comportement attendu.
+type ZodIssueLike = { path: (string | number | symbol)[]; message: string }
 
 /**
  * Convertit les issues Zod en deux types de retour :
