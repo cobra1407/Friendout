@@ -30,7 +30,7 @@ export const LoginPage = () => {
     return (
         <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
             <div className="flex flex-col md:flex-row w-full max-w-4xl overflow-hidden rounded-2xl shadow-2xl bg-card">
-                {/* LEFT â€” LOGIN */}
+                {/* LEFT LOGIN */}
                 <div className="flex w-full md:w-1/2 flex-col items-center justify-center px-6 sm:px-10 py-8 md:py-12 gap-6">
                     <h1 className="text-2xl sm:text-3xl font-bold text-center">
                         {getTranslation("login_page.title")}
@@ -47,13 +47,13 @@ export const LoginPage = () => {
                         </button>
                     </div>
                     <p className="text-center text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6">
-                        ðŸŽ‰ {getTranslation("login_page.welcome_sentence")}
+                        {getTranslation("login_page.welcome_sentence")}
                     </p>
                     <DiscordLoginButton onClick={handleDiscordLogin}>
                         {getTranslation("login_page.login_button")}
                     </DiscordLoginButton>
                 </div>
-                {/* RIGHT â€” CAROUSEL */}
+                {/* RIGHT CAROUSEL */}
                 <div className="relative w-full md:w-1/2 mt-6 md:mt-0 bg-muted/30 overflow-hidden rounded-b-2xl md:rounded-r-2xl">
                     <Carousel autoplayIntervalMs={6000} opts={{ loop: true }} className="h-64 sm:h-80 md:h-full w-full flex">
                         <CarouselContent className="h-full">
@@ -72,4 +72,3 @@ export const LoginPage = () => {
         </div>
     );
 };
-
