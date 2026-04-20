@@ -127,7 +127,7 @@ public class OAuthCallbackController : ControllerBase
             HttpOnly = true,
             Secure = isHttps,
             SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddDays(7)
+            Expires = DateTimeOffset.UtcNow.AddHours(24)
         });
 
         await HttpContext.SignOutAsync(
