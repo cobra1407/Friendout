@@ -47,7 +47,7 @@ foreach (var key in requiredKeys)
     if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
     {
         throw new InvalidOperationException(
-            $"Configuration missing: the key© '{key}' est obligatoire.\n" +
+            $"Configuration missing: the keyï¿½ '{key}' est obligatoire.\n" +
             "VÃ©rifiez .env (ou .env.local), appsettings.json, ou les variables d'environnement.");
     }
 }
@@ -190,9 +190,10 @@ builder.Services.AddAuthentication(options =>
 {
     options.Cookie.Name = ".AspNetCore.OAuth.Temp";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = builder.Environment.IsProduction()
-        ? CookieSecurePolicy.Always
-        : CookieSecurePolicy.SameAsRequest;
+    // SameAsRequest: Secure flag is derived from the actual request scheme.
+    // CookieSecurePolicy.Always would block cookies over HTTP (Docker without TLS).
+    // When HTTPS is enabled, Secure=true is applied automatically.
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
 })
 .AddDiscord(options =>
@@ -205,9 +206,8 @@ builder.Services.AddAuthentication(options =>
     options.SaveTokens = true;
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-    options.CorrelationCookie.SecurePolicy = builder.Environment.IsProduction()
-        ? CookieSecurePolicy.Always
-        : CookieSecurePolicy.SameAsRequest;
+    // Same reason: the OAuth correlation cookie must follow the actual request scheme.
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.CorrelationCookie.SameSite = SameSiteMode.Lax;
 
     // Avatar URL custom claim
@@ -254,7 +254,7 @@ builder.Services.AddAuthentication(options =>
         var response = await client.GetAsync("https://discord.com/api/users/@me/guilds");
         if (!response.IsSuccessStatusCode)
         {
-            // Bug fixed© : avant, pas de redirect â†’ page blanche pour l'utilisateur.
+            // Bug fixedï¿½ : avant, pas de redirect â†’ page blanche pour l'utilisateur.
             context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
             context.HandleResponse();
             return;
@@ -377,4 +377,3 @@ static string[]? GetCommaSeparatedConfig(IConfiguration configuration, string ke
     if (string.IsNullOrWhiteSpace(value)) return null;
     return value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
-
