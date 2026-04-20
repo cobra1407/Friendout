@@ -51,8 +51,9 @@ public class OAuthCallbackController : ControllerBase
     [HttpGet("discord")]
     public async Task<IActionResult> DiscordCallback()
     {
-        var frontendLoginUrl = _configuration["Frontend:LoginUrl"] ?? "http://localhost:5173/login";
-        var frontendActivitiesUrl = _configuration["Frontend:ActivitiesUrl"] ?? "http://localhost:5173/activities";
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var frontendLoginUrl = _configuration["Frontend:LoginUrl"] ?? $"{baseUrl}/login";
+        var frontendActivitiesUrl = _configuration["Frontend:ActivitiesUrl"] ?? $"{baseUrl}/activities";
 
         var result = await HttpContext.AuthenticateAsync(
             CookieAuthenticationDefaults.AuthenticationScheme
@@ -112,10 +113,19 @@ public class OAuthCallbackController : ControllerBase
 
         var token = _jwt.GenerateJwt(cleanClaims);
 
+        // Secure=true only if the request arrives over HTTPS.
+        // CookieSecurePolicy.Always (or Secure=true) blocks cookies over HTTP on non-localhost.
+        // Chrome has a localhost exception but rejects Secure cookies on plain HTTP for remote IPs.
+        var isHttps = HttpContext.Request.IsHttps ||
+            string.Equals(
+                HttpContext.Request.Headers["X-Forwarded-Proto"],
+                "https",
+                StringComparison.OrdinalIgnoreCase);
+
         Response.Cookies.Append("auth_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = !_env.IsDevelopment(),
+            Secure = isHttps,
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
