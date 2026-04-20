@@ -30,13 +30,21 @@ public class AuthController : ControllerBase
     [Authorize]
     public IActionResult Logout()
     {
+        // Doit correspondre exactement aux attributs utilisés lors de la création du cookie
+        // dans OAuthCallbackController, sinon le browser ignore la suppression.
+        var isHttps = HttpContext.Request.IsHttps ||
+            string.Equals(
+                HttpContext.Request.Headers["X-Forwarded-Proto"],
+                "https",
+                StringComparison.OrdinalIgnoreCase);
+
         Response.Cookies.Delete("auth_token", new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = isHttps,
             SameSite = SameSiteMode.Lax
         });
-        
+
         return Ok();
     }
 }
