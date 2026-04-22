@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace friendout_backend.Controller;
 
 /// <summary>
-/// Controller pour la gestion de l'équipement des utilisateurs
+/// Controller for managing user equipment on activities.
 /// </summary>
 [ApiController]
 public class EquipmentController : ControllerBase
@@ -17,17 +17,17 @@ public class EquipmentController : ControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="EquipmentController"/> class.
     /// </summary>
-    /// <param name="equipmentService">Service de gestion de l'équipement</param>
+    /// <param name="equipmentService">Service responsible for equipment operations.</param>
     public EquipmentController(IEquipmentService equipmentService)
     {
         _equipmentService = equipmentService;
     }
 
     /// <summary>
-    /// Récupère l'équipement de l'utilisateur pour une activité donnée
+    /// Returns the equipment list for a given activity, including ownership status for the current user.
     /// </summary>
-    /// <param name="activityId">ID de l'activité</param>
-    /// <returns>Liste des équipements avec leur statut de possession par l'utilisateur</returns>
+    /// <param name="activityId">The activity ID.</param>
+    /// <returns>List of equipment items with the user's ownership status.</returns>
     [Authorize]
     [ProducesResponseType(typeof(List<UserEquipmentDto>), 200)]
     [ProducesResponseType(401)]
@@ -53,11 +53,10 @@ public class EquipmentController : ControllerBase
     }
 
     /// <summary>
-    ///  Met à jour l'équipement de l'utilisateur pour une activité
+    /// Updates the equipment ownership for the current user on a given activity.
     /// </summary>
-    /// <param name="request">Contient les informations ativityId, equipementId et la quantité</param>
-    /// <param name="activityId">L'id de l'activité concernée</param>
-    /// <returns></returns>
+    /// <param name="request">Contains the equipmentId and quantity to set.</param>
+    /// <param name="activityId">The activity ID.</param>
     [Authorize]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
