@@ -33,7 +33,21 @@ function TimeSelect({ value, onChange, className }: TimeSelectProps) {
                     step={300}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className="pr-10"
+                    onMouseDown={(e) => {
+                        const input = e.currentTarget
+                        const rect = input.getBoundingClientRect()
+                        const clickX = e.clientX - rect.left
+                        // "HH:MM" text occupies roughly the first 70px (padding-left + ~5 chars).
+                        // Clicks beyond that hit the empty padding area → open picker.
+                        if (clickX > 70) {
+                            e.preventDefault()
+                            const el = input as HTMLInputElement & { showPicker?: () => void }
+                            el.focus()
+                            el.showPicker?.()
+                        }
+                        // else: native segment editing (HH / MM) with keyboard
+                    }}
+                    className="pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                     ref={inputRef}
                     aria-label={getTranslation("sub_activity_manager.time_picker_aria")}
                 />
