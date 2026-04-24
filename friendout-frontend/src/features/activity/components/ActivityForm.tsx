@@ -37,7 +37,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         calendarOpen, setCalendarOpen,
         time, setTime,
         estimatedPrice, setEstimatedPrice,
-        localisationData, setLocalisationData,
+        localisationData, setLocalisationData, handleLocalisationChange,
         requiredEquipment, setRequiredEquipment,
         image,
         subActivities, setSubActivities,
@@ -96,7 +96,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                         <div className="space-y-1">
                             <EnhancedLocationInput
                                 value={localisationData}
-                                onChange={(val) => { setLocalisationData(val); clearError("localisation") }}
+                                onChange={handleLocalisationChange}
                                 required
                             />
                             <FieldError message={errors.localisation} />
