@@ -37,7 +37,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         calendarOpen, setCalendarOpen,
         time, setTime,
         estimatedPrice, setEstimatedPrice,
-        localisationData, setLocalisationData, handleLocalisationChange,
+        localisationData, handleLocalisationChange,
         requiredEquipment, setRequiredEquipment,
         image,
         subActivities, setSubActivities,
