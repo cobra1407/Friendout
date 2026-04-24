@@ -37,7 +37,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         calendarOpen, setCalendarOpen,
         time, setTime,
         estimatedPrice, setEstimatedPrice,
-        localisationData, setLocalisationData,
+        localisationData, setLocalisationData, handleLocalisationChange,
         requiredEquipment, setRequiredEquipment,
         image,
         subActivities, setSubActivities,
@@ -96,7 +96,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                         <div className="space-y-1">
                             <EnhancedLocationInput
                                 value={localisationData}
-                                onChange={(val) => { setLocalisationData(val); clearError("localisation") }}
+                                onChange={handleLocalisationChange}
                                 required
                             />
                             <FieldError message={errors.localisation} />
@@ -165,11 +165,25 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         name="startTime"
                                         value={time}
                                         onChange={(e) => { setTime(e.target.value); clearError("time") }}
+                                        onMouseDown={(e) => {
+                                            const input = e.currentTarget
+                                            const rect = input.getBoundingClientRect()
+                                            const clickX = e.clientX - rect.left
+                                            // "HH:MM" text occupies roughly the first 70px (padding-left + ~5 chars).
+                                            // Clicks beyond that hit the empty padding area → open picker.
+                                            if (clickX > 70) {
+                                                e.preventDefault()
+                                                const el = input as HTMLInputElement & { showPicker?: () => void }
+                                                el.focus()
+                                                el.showPicker?.()
+                                            }
+                                            // else: native segment editing (HH / MM) with keyboard
+                                        }}
                                         ref={timeInputRef}
                                         aria-label={getTranslation("activity_form.start_time_aria")}
                                         aria-invalid={!!errors.time}
                                         className={[
-                                            "pr-10",
+                                            "pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
                                             errors.time ? "border-red-500 focus-visible:ring-red-500" : "",
                                         ].join(" ")}
                                     />

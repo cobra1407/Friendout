@@ -130,7 +130,11 @@
     "cancel": "Annuler",
     "save": "Enregistrer",
     "free": "Gratuit",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "export_calendar": "Exporter au calendrier",
+    "calendar_exported": "Activité exportée dans votre calendrier !",
+    "export_ics": "Fichier .ics (Apple / Outlook)",
+    "export_error": "Erreur lors de l'exportation"
   },
   "activity": {
     "past": "Passée",

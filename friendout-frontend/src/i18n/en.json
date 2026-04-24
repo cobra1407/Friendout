@@ -128,7 +128,11 @@
     "cancel": "Cancel",
     "save": "Save",
     "free": "Free",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "export_calendar": "Export to Calendar",
+    "calendar_exported": "Activity exported to your calendar!",
+    "export_ics": ".ics file (Apple / Outlook)",
+    "export_error": "Export failed"
   },
   "activity": {
     "past": "Past",
