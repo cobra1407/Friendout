@@ -4,14 +4,15 @@ import { LocalisationType } from "@/features/localisation/types/localisation.typ
 // ─── Localisation ──────────────────────────────────────────────────────────
 const localisationSchema = z.object({
   type: z.nativeEnum(LocalisationType),
-  address: z.string().trim().optional(),
-  mapLink: z.string().url().trim().optional(),
-  virtualUrl: z.string().trim().optional(),
-  serverInfo: z.string().trim().optional(),
+  address: z.string().trim().nullish(),
+  mapLink: z.string().url().trim().nullish(),
+  virtualUrl: z.string().trim().nullish(),
+  serverInfo: z.string().trim().nullish(),
 }).refine((data) => {
   if (data.type === LocalisationType.Address) return !!data.address?.trim();
   if (data.type === LocalisationType.MapLink) return !!data.mapLink?.trim();
-  if (data.type === LocalisationType.Virtual) return !!(data.virtualUrl?.trim() || data.serverInfo?.trim());
+  // Virtual: virtualUrl and serverInfo are optional — address (server name) is sufficient.
+  if (data.type === LocalisationType.Virtual) return !!(data.virtualUrl?.trim() || data.serverInfo?.trim() || data.address?.trim());
   return true;
 }, { message: "location_incomplete" });
 
@@ -37,7 +38,6 @@ const subActivitySchema = z.object({
   { message: "end_before_start", path: ["endTime"] }
 );
 
-// ─── Schéma de base ────────────────────────────────────────────────────────
 const baseSchema = z.object({
   title:       z.string().trim().min(1, "title_required").min(3, "title_too_short"),
   description: z.string().trim().min(1, "description_required").min(10, "description_too_short"),
@@ -54,16 +54,28 @@ const baseSchema = z.object({
   { message: "location_required", path: ["localisation"] }
 );
 
-// ─── Schéma contextuel selon le mode ──────────────────────────────────────
-// En mode "create", on vérifie que la date est dans le futur.
-// En mode "edit", cette contrainte n'existe pas (l'activité peut déjà être passée).
-export const buildActivitySchema = (mode: "create" | "edit") => {
-  if (mode === "edit") return baseSchema;
+export const buildActivitySchema = (mode: "create" | "edit", initialStartAt?: Date) => {
+  if (mode === "create") {
+    return baseSchema.superRefine((data, ctx) => {
+      if (data.startAt <= new Date()) {
+        ctx.addIssue({
+          code: "custom",
+          message: "date_must_be_future",
+          path: ["startAt"],
+        });
+      }
+    });
+  }
 
+  // Edit mode: only validate the date if the user actually changed it.
+  // An existing past activity must remain editable (description, participants, etc.)
+  // but rescheduling to a past date is not allowed.
   return baseSchema.superRefine((data, ctx) => {
-    if (data.startAt <= new Date()) {
+    if (!initialStartAt) return;
+    const dateChanged = data.startAt.getTime() !== initialStartAt.getTime();
+    if (dateChanged && data.startAt <= new Date()) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "date_must_be_future",
         path: ["startAt"],
       });

@@ -45,7 +45,6 @@ export default function ActivityMainDetails({
     maxEquipmentVisible,
 }: ActivityMainDetailsProps) {
 
-    //Location standardization (legacy compatibility + safety)
     const localisation = pickLocalisation(activity);
     const isGoogleMapsLink = localisation?.type === LocalisationType.MapLink;
 
