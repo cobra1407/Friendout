@@ -129,6 +129,11 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddHttpClient();
 
+// Singleton: one instance shared across all requests.
+// The blacklist must persist between requests — a scoped or transient service would lose state.
+builder.Services.AddSingleton<Friendout.Infrastructure.Interfaces.ITokenBlacklistService,
+    Friendout.Infrastructure.Services.TokenBlacklistService>();
+
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.Limits.MaxRequestBodySize = 30 * 1024 * 1024; // 30 MB
@@ -160,6 +165,22 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
+        OnTokenValidated = context =>
+        {
+            // Check if this token has been blacklisted (i.e. the user already logged out).
+            // We use the Jti claim (unique token ID) as the blacklist key.
+            var blacklist = context.HttpContext.RequestServices
+                .GetRequiredService<Friendout.Infrastructure.Interfaces.ITokenBlacklistService>();
+
+            var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+            if (jti != null && blacklist.IsBlacklisted(jti))
+            {
+                context.Fail("Token has been invalidated.");
+            }
+
+            return Task.CompletedTask;
+        },
+
         OnMessageReceived = context =>
         {
             if (string.IsNullOrEmpty(context.Token) &&
