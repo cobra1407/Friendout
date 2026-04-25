@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import axios from "axios"
@@ -36,9 +36,15 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
 
     const [title, setTitle] = useState(initialData?.title ?? "")
     const [description, setDescription] = useState(initialData?.description ?? "")
-    const [date, setDate] = useState<Date | undefined>(
-        initialData?.startAt ? new Date(initialData.startAt) : undefined
-    )
+    const [date, setDate] = useState<Date | undefined>(() => {
+        if (!initialData?.startAt) return undefined
+        // Same UTC normalization: append 'Z' if the backend omitted the timezone suffix.
+        const raw = initialData.startAt
+        const normalized = !raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-', 10)
+            ? raw + 'Z'
+            : raw
+        return new Date(normalized)
+    })
     const [calendarOpen, setCalendarOpen] = useState(false)
     const [time, setTime] = useState(initialData?.startAt ? formatToHHmm(initialData.startAt) : "")
     const [estimatedPrice, setEstimatedPrice] = useState(
@@ -61,8 +67,18 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
     // ── Handlers ──────────────────────────────────────────────────────────
 
     /** Efface l'erreur d'un champ dès que l'utilisateur le modifie. */
-    const clearError = (field: keyof FormErrors) =>
-        setErrors((prev) => ({ ...prev, [field]: undefined }))
+    const clearError = useCallback(
+        (field: keyof FormErrors) => setErrors((prev) => ({ ...prev, [field]: undefined })),
+        []
+    )
+
+    const handleLocalisationChange = useCallback(
+        (val: Localisation | null) => {
+            setLocalisationData(val)
+            setErrors((prev) => ({ ...prev, localisation: undefined }))
+        },
+        []
+    )
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
@@ -122,7 +138,10 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
 
         // Validation Zod — le schéma est contextuel selon le mode
         // En mode "create", il vérifie aussi que la date est dans le futur
-        const schema = buildActivitySchema(mode)
+        const schema = buildActivitySchema(
+            mode,
+            initialData?.startAt ? new Date(initialData.startAt) : undefined
+        )
         const result = schema.safeParse(payload)
         if (!result.success) {
             setErrors(buildErrors(result.error.issues))
@@ -174,7 +193,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         calendarOpen, setCalendarOpen,
         time, setTime,
         estimatedPrice, setEstimatedPrice,
-        localisationData, setLocalisationData,
+        localisationData, setLocalisationData, handleLocalisationChange,
         requiredEquipment, setRequiredEquipment,
         image,
         subActivities, setSubActivities,

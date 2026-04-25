@@ -134,7 +134,7 @@ const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
     formData.append("SubActivitiesJson", JSON.stringify(normalizedSubActivities));
   }
 
-  appendLocalisationFields(formData, payload.localisation);
+  appendLocalisationFields(formData, payload.localisation as Localisation | null);
 
   if (payload.activityImage) {
     formData.append("ActivityImage", payload.activityImage);
