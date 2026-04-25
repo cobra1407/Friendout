@@ -955,6 +955,99 @@ public class ActivityServiceTests
         result4.Data!.TotalPrice.Should().Be(0);
     }
 
+    [Test]
+    public async Task CreateActivity_StartAt_HourShouldMatchInput()
+    {
+        // Regression test for UTC DateTime handling.
+        // The bug: Pomelo (MySQL) returns DateTime with Kind=Unspecified.
+        // System.Text.Json serializes it without 'Z', browsers parse as local time
+        // and shift the hour by the UTC offset (e.g. UTC+2 shows 18:00 instead of 20:00).
+        await using var context = TestDbContextFactory.CreateInMemoryContext(
+            nameof(CreateActivity_StartAt_HourShouldMatchInput));
+
+        var user = new User { Id = "user-utc-1", Name = "UTC User", Email = "utc@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+
+        // Simulate: user in UTC+2 sets 20:00 local → frontend sends 18:00 UTC
+        var startAt = new DateTime(2026, 8, 15, 18, 0, 0, DateTimeKind.Utc);
+
+        var result = await service.CreateActivityAsync(BuildMinimalCreateDto(startAt), user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.StartAt.Hour.Should().Be(18,
+            because: "the service must not shift or alter the hour value");
+    }
+
+    [Test]
+    public async Task CreateActivity_StartAt_ShouldNotHaveLocalKind()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(
+            nameof(CreateActivity_StartAt_ShouldNotHaveLocalKind));
+
+        var user = new User { Id = "user-utc-2", Name = "UTC User 2", Email = "utc2@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+        var startAt = new DateTime(2026, 8, 15, 18, 0, 0, DateTimeKind.Utc);
+
+        var result = await service.CreateActivityAsync(BuildMinimalCreateDto(startAt), user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.StartAt.Kind.Should().NotBe(DateTimeKind.Local,
+            because: "DateTimeKind.Local would cause incorrect serialization on servers in non-UTC time zones");
+    }
+
+    [Test]
+    public async Task UpdateActivity_StartAt_HourShouldMatchInput()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(
+            nameof(UpdateActivity_StartAt_HourShouldMatchInput));
+
+        var user = new User { Id = "user-utc-3", Name = "UTC User 3", Email = "utc3@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+
+        // Create first
+        var created = await service.CreateActivityAsync(
+            BuildMinimalCreateDto(new DateTime(2026, 8, 15, 18, 0, 0, DateTimeKind.Utc)),
+            user.Id);
+        created.IsSuccess.Should().BeTrue();
+
+        // Update with a different hour
+        var newStartAt = new DateTime(2026, 9, 1, 10, 0, 0, DateTimeKind.Utc);
+        var result = await service.UpdateActivityAsync(new UpdateActivityDto
+        {
+            Id                     = created.Data!.Id,
+            Title                  = "Updated",
+            Description            = "Updated desc",
+            StartAt                = newStartAt,
+            EndAt                  = newStartAt.AddHours(2),
+            RequiredEquipmentNames = [],
+            SubActivities          = []
+        }, user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.StartAt.Hour.Should().Be(10,
+            because: "the updated hour must exactly match what the frontend sent in UTC");
+    }
+
+    private static CreateActivityDto BuildMinimalCreateDto(DateTime startAt) => new()
+    {
+        Title                  = "UTC Test Activity",
+        Description            = "Testing UTC hour preservation",
+        StartAt                = startAt,
+        EndAt                  = startAt.AddHours(2),
+        Time                   = $"{startAt.Hour:D2}:{startAt.Minute:D2}",
+        RequiredEquipmentNames = [],
+        SubActivities          = []
+    };
+
     private static ActivityService CreateService(Friendout.Domain.Context.FriendoutDbContext context)
     {
         return new ActivityService(context, TestLogger<ActivityService>.Instance, new NoopFileService());
