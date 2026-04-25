@@ -326,14 +326,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
 
-    // Seed only if enable
-    if (builder.Configuration.GetValue<bool>("Seed:Enabled", false))
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
-        await DatabaseSeeder.SeedAsync(db);
-    }
+// Seed runs in any environment when explicitly enabled — useful for first-time Docker setup.
+if (builder.Configuration.GetValue<bool>("Seed:Enabled", false))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
+    await DatabaseSeeder.SeedAsync(db);
 }
 
 if (app.Environment.IsProduction())

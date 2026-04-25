@@ -42,17 +42,15 @@ public class AuthController : ControllerBase
         // even if the cookie is somehow still sent.
         var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
         var expClaim = User.FindFirstValue(JwtRegisteredClaimNames.Exp);
-
         if (jti != null)
         {
             // Parse the exp claim (Unix timestamp) to know when to auto-clean the blacklist entry.
             var expiry = expClaim != null && long.TryParse(expClaim, out var exp)
                 ? DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime
                 : DateTime.UtcNow.AddDays(7); // fallback: assume 7-day token
-
             _blacklist.Invalidate(jti, expiry);
         }
-
+        
         var isHttps = HttpContext.Request.IsHttps ||
             string.Equals(
                 HttpContext.Request.Headers["X-Forwarded-Proto"],
