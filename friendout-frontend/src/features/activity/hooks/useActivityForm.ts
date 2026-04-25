@@ -36,9 +36,15 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
 
     const [title, setTitle] = useState(initialData?.title ?? "")
     const [description, setDescription] = useState(initialData?.description ?? "")
-    const [date, setDate] = useState<Date | undefined>(
-        initialData?.startAt ? new Date(initialData.startAt) : undefined
-    )
+    const [date, setDate] = useState<Date | undefined>(() => {
+        if (!initialData?.startAt) return undefined
+        // Same UTC normalization: append 'Z' if the backend omitted the timezone suffix.
+        const raw = initialData.startAt
+        const normalized = !raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-', 10)
+            ? raw + 'Z'
+            : raw
+        return new Date(normalized)
+    })
     const [calendarOpen, setCalendarOpen] = useState(false)
     const [time, setTime] = useState(initialData?.startAt ? formatToHHmm(initialData.startAt) : "")
     const [estimatedPrice, setEstimatedPrice] = useState(

@@ -21,7 +21,14 @@ export const formatImageUrl = (imageSrc: string | undefined | null): string | nu
 
 /** Extrait HH:mm depuis une string ISO ou déjà au format HH:mm. */
 export const formatToHHmm = (value: string): string => {
-    const parsedDate = new Date(value)
+    // The backend returns DateTime without a timezone suffix (e.g. "2026-04-23T18:00:00").
+    // Without 'Z', browsers parse it as local time instead of UTC, causing the displayed
+    // time to be off by the user's UTC offset. Appending 'Z' forces UTC interpretation.
+    const normalized = value && !value.endsWith('Z') && !value.includes('+') && !value.includes('-', 10)
+        ? value + 'Z'
+        : value
+
+    const parsedDate = new Date(normalized)
     if (!Number.isNaN(parsedDate.getTime())) {
         const h = parsedDate.getHours().toString().padStart(2, "0")
         const m = parsedDate.getMinutes().toString().padStart(2, "0")

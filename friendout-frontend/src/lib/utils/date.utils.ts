@@ -31,7 +31,17 @@ export const formatDate = (dateInput?: string | Date): string => {
  * @returns {string | null} - Formatted as "HH:mm", or null if invalid.
  */
 export const formatTime = (time: string | Date): string => {
-  const date = typeof time === 'string' ? new Date(time) : time;
+  // Normalize to UTC: backend may omit the 'Z' suffix on DateTime strings.
+  // Without it, the browser parses as local time, shifting the displayed hour by the UTC offset.
+  let date: Date
+  if (typeof time === 'string') {
+    const normalized = !time.endsWith('Z') && !time.includes('+') && !time.includes('-', 10)
+      ? time + 'Z'
+      : time
+    date = new Date(normalized)
+  } else {
+    date = time
+  }
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
