@@ -17,26 +17,27 @@ namespace friendout_backend.Controller;
 public class OAuthCallbackController : ControllerBase
 {
     private readonly JwtService _jwt;
-    private readonly IWebHostEnvironment _env;
     private readonly IUserService _userService;
+    private readonly IRefreshTokenService _refreshTokenService;
     private readonly IConfiguration _configuration;
-    
+
+
     /// <summary>
-    /// Initializes a new instance of <see cref="OAuthCallbackController"/>.
+    /// Controller responsible for handling OAuth callbacks from external providers.
     /// </summary>
-    /// <param name="jwt">Service responsible for generating JWT tokens.</param>
-    /// <param name="env">Provides information about the hosting environment.</param>
-    /// <param name="userService">Service responsible for user operations.</param>
-    /// <param name="configuration">Application configuration.</param>
+    /// <param name="jwt">The JWT service used to generate access tokens.</param>
+    /// <param name="userService">The user service used to retrieve user information.</param>
+    /// <param name="refreshTokenService">The refresh token service used to manage refresh tokens.</param>
+    /// <param name="configuration">The application configuration used to retrieve JWT settings.</param>
     public OAuthCallbackController(
         JwtService jwt,
-        IWebHostEnvironment env,
         IUserService userService,
+        IRefreshTokenService refreshTokenService,
         IConfiguration configuration)
     {
         _jwt = jwt;
-        _env = env;
         _userService = userService;
+        _refreshTokenService = refreshTokenService;
         _configuration = configuration;
     }
 
@@ -74,11 +75,11 @@ public class OAuthCallbackController : ControllerBase
 
         var email = claims
             .FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        
+
         var avatarUrl = claims
             .FirstOrDefault(c => c.Type == "urn:discord:avatar:url")
             ?.Value;
-        
+
 
         if (string.IsNullOrEmpty(discordId))
         {
@@ -127,7 +128,17 @@ public class OAuthCallbackController : ControllerBase
             HttpOnly = true,
             Secure = isHttps,
             SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddHours(24)
+            Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+        });
+
+        var rawRefreshToken = await _refreshTokenService.CreateAsync(user.Id);
+        Response.Cookies.Append("refresh_token", rawRefreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isHttps,
+            SameSite = SameSiteMode.Lax,
+            Path = "/api/auth",
+            Expires = DateTimeOffset.UtcNow.AddDays(30)
         });
 
         await HttpContext.SignOutAsync(

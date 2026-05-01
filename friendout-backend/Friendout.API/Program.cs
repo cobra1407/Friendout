@@ -1,5 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Claims;
@@ -16,8 +15,6 @@ using Friendout.Domain.Models;
 using Friendout.Domain.Seeds;
 using Friendout.Infrastructure;
 using friendout_backend.Controller;
-using Microsoft.AspNetCore.HttpOverrides;
-using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
 LoadEnvFiles();
 
@@ -133,6 +130,12 @@ builder.Services.AddHttpClient();
 // The blacklist must persist between requests — a scoped or transient service would lose state.
 builder.Services.AddSingleton<Friendout.Infrastructure.Interfaces.ITokenBlacklistService,
     Friendout.Infrastructure.Services.TokenBlacklistService>();
+
+builder.Services.AddScoped<Friendout.Infrastructure.Interfaces.IRefreshTokenService,
+    Friendout.Infrastructure.Services.RefreshTokenService>();
+
+// Runs once per day to delete expired and revoked refresh tokens.
+builder.Services.AddHostedService<friendout_backend.RefreshTokenCleanupService>();
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
