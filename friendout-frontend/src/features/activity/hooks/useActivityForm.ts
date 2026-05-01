@@ -30,6 +30,16 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
     const navigate = useNavigate()
     const timeInputRef = useRef<HTMLInputElement | null>(null)
 
+    // Refs for each field that can have a validation error.
+    // Used to scroll to the first error after a failed submit.
+    const fieldRefs = {
+        title:        useRef<HTMLDivElement | null>(null),
+        description:  useRef<HTMLDivElement | null>(null),
+        startAt:      useRef<HTMLDivElement | null>(null),
+        time:         useRef<HTMLDivElement | null>(null),
+        localisation: useRef<HTMLDivElement | null>(null),
+    }
+
     // ── État du formulaire ────────────────────────────────────────────────
     const [isLoading, setIsLoading] = useState(false)
     const [errors, setErrors] = useState<FormErrors>({})
@@ -144,7 +154,22 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         )
         const result = schema.safeParse(payload)
         if (!result.success) {
-            setErrors(buildErrors(result.error.issues))
+            const newErrors = buildErrors(result.error.issues)
+            setErrors(newErrors)
+
+            // Scroll to the first field that has an error.
+            // The order matches the visual order in the form.
+            const errorOrder: (keyof typeof fieldRefs)[] = ['title', 'localisation', 'description', 'startAt', 'time']
+            const firstErrorKey = errorOrder.find(key => newErrors[key as keyof FormErrors])
+            if (firstErrorKey) {
+                setTimeout(() => {
+                    fieldRefs[firstErrorKey].current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                    })
+                }, 50)
+            }
+
             setIsLoading(false)
             return
         }
@@ -203,5 +228,6 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         handleImageUpload,
         removeImage,
         handleSubmit,
+        fieldRefs,
     }
 }

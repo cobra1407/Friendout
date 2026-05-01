@@ -32,16 +32,51 @@ interface ActivityHeaderProps {
 
 export default function ActivityHeader({ activity, currentUserId, onBack, onEdit, onDelete }: ActivityHeaderProps) {
     const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: activity.title,
-                text: activity.description,
-                url: window.location.href,
-            });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
+        const copyToClipboard = (text: string) => {
+            // navigator.clipboard requires HTTPS or localhost.
+            // On plain HTTP (Docker without TLS), use the legacy execCommand fallback.
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text)
+                    .then(() => toast.success(getTranslation('activity.link_copied')))
+                    .catch(() => execCommandCopy(text));
+            } else {
+                execCommandCopy(text);
+            }
+        };
+
+        const execCommandCopy = (text: string) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
             toast.success(getTranslation('activity.link_copied'));
-        }
+        };
+
+        const doShare = () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: activity.title,
+                    text: activity.description,
+                    url: window.location.href,
+                }).catch((err) => {
+                    if (err?.name !== 'AbortError') {
+                        copyToClipboard(window.location.href);
+                    }
+                });
+            } else {
+                copyToClipboard(window.location.href);
+            }
+        };
+
+        // Defer slightly so the dropdown has time to close before the
+        // native share sheet opens — otherwise the user gesture is consumed
+        // by the dropdown and navigator.share() may be blocked.
+        setTimeout(doShare, 0);
     };
 
     const calendarEvent = {
