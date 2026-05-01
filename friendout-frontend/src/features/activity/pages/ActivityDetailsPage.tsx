@@ -11,6 +11,7 @@ import { useActivityParticipationSync } from "@/features/activity/hooks/useActiv
 import { useActivityCommentHandlers } from "@/features/activity/hooks/useActivityCommentHandlers";
 import { ActivityDetailsContent } from "@/features/activity/components/ActivityDetailsContent";
 import { getTranslation } from "@/i18n";
+import { useOgMeta } from "@/lib/utils/useOgMeta";
 import api from "@/lib/api/api";
 
 export const ActivityDetailsPage = () => {
@@ -67,6 +68,15 @@ export const ActivityDetailsPage = () => {
     });
 
     const handleOnBack = () => navigate("/activities");
+
+    // Update Open Graph meta tags so WhatsApp / Telegram show the activity
+    // title and image when the URL is shared.
+    useOgMeta({
+        title: activityDetails?.title ?? 'Friendout',
+        description: activityDetails?.description,
+        imageUrl: activityDetails?.image?.url ?? undefined,
+        url: window.location.href,
+    });
 
     const handleDeleteActivity = () => {
         api.delete(`/activities/${id}`)

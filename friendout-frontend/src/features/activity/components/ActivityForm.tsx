@@ -46,6 +46,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         handleImageUpload,
         removeImage,
         handleSubmit,
+        fieldRefs,
     } = useActivityForm({ mode, initialData, onSuccess })
 
     return (
@@ -64,7 +65,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Titre */}
-                            <div className="space-y-1">
+                            <div className="space-y-1" ref={fieldRefs.title}>
                                 <Label htmlFor="title">{getTranslation("activity_form.title_label")}</Label>
                                 <Input
                                     id="title"
@@ -93,7 +94,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                         </div>
 
                         {/* Lieu */}
-                        <div className="space-y-1">
+                        <div className="space-y-1" ref={fieldRefs.localisation}>
                             <EnhancedLocationInput
                                 value={localisationData}
                                 onChange={handleLocalisationChange}
@@ -103,7 +104,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                         </div>
 
                         {/* Description */}
-                        <div className="space-y-1">
+                        <div className="space-y-1" ref={fieldRefs.description}>
                             <Label htmlFor="description">{getTranslation("activity_form.description_label")}</Label>
                             <Textarea
                                 id="description"
@@ -119,7 +120,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Date */}
-                            <div className="space-y-1">
+                            <div className="space-y-1" ref={fieldRefs.startAt}>
                                 <Label>{getTranslation("activity_form.start_date_label")}</Label>
                                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                                     <PopoverTrigger asChild>
@@ -156,7 +157,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                             </div>
 
                             {/* Heure */}
-                            <div className="space-y-1">
+                            <div className="space-y-1" ref={fieldRefs.time}>
                                 <Label>{getTranslation("activity_form.start_time_label")}</Label>
                                 <div className="relative">
                                     <Input
