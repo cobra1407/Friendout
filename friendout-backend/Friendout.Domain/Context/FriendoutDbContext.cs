@@ -21,6 +21,7 @@ namespace Friendout.Domain.Context
         public DbSet<UserAchievement> UserAchievements { get; set; }
         public DbSet<VerificationToken> VerificationTokens { get; set; }
         public DbSet<Localisation> Localisations { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -230,7 +231,18 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.Expires);
             });
 
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(e => e.Token);
 
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ExpiresAt);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

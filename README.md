@@ -114,7 +114,7 @@ Application disponible sur `http://localhost:5173`.
 ```
 friendout/
 ├── docker-compose.yml
-├── .env.docker.example          # Template variables Docker
+├── .env.example                 # Template variables Docker
 ├── friendout-backend/           # API ASP.NET Core 9
 │   ├── Friendout.API/           # Controllers, config, point d'entrée
 │   ├── Friendout.Domain/        # Entités, DbContext, seeds
@@ -169,6 +169,24 @@ friendout/
 | `VITE_API_BASE_URL` | URL de base de l'API backend |
 | `VITE_DISCORD_AUTH_URL` | Point d'entrée Discord OAuth |
 | `VITE_ENV` | Environnement (`development` / `production`) |
+
+---
+
+## 🔒 Sécurité & Authentification
+
+Friendout utilise un système d'authentification en deux couches :
+
+| Mécanisme | Durée | Rôle |
+|---|---|---|
+| **Access Token (JWT)** | 15 minutes | Authentifie chaque requête API |
+| **Refresh Token** | 30 jours | Renouvelle l'access token silencieusement |
+
+**Ce qui se passe concrètement :**
+- À la connexion via Discord, deux cookies `HttpOnly` sont émis — invisibles au JavaScript (protection XSS)
+- Quand l'access token expire, le frontend renouvelle automatiquement la session sans déconnecter l'utilisateur
+- Les refresh tokens sont à **usage unique** (rotation) — un token volé devient invalide dès que le vrai utilisateur l'utilise
+- Au logout, l'access token est blacklisté et le refresh token est révoqué en base
+- Les cookies utilisent `SameSite=Lax` — protection CSRF sans configuration supplémentaire
 
 ---
 
