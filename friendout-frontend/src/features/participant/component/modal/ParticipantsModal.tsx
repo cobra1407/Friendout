@@ -73,7 +73,7 @@ export function ParticipantsModal({
 
             <div className="space-y-6 py-4">
                 {Object.entries(participantsByStatus).map(([statusKey, group]) => {
-                    const status = Number(statusKey) as ParticipationStatus;
+                    const status = statusKey as ParticipationStatus;
                     if (group.length === 0) return null;
 
                     return (
