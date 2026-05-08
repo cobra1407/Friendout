@@ -30,8 +30,7 @@ namespace Friendout.Domain.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Configuration de User
+            
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasIndex(e => e.Email).IsUnique();
@@ -71,22 +70,20 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
-            // Configuration de Account
+            
             modelBuilder.Entity<Account>(entity =>
             {
                 entity.HasIndex(e => new { e.Provider, e.ProviderAccountId }).IsUnique();
                 entity.HasIndex(e => e.UserId);
             });
 
-            // Configuration de Session
             modelBuilder.Entity<Session>(entity =>
             {
                 entity.HasIndex(e => e.SessionToken).IsUnique();
                 entity.HasIndex(e => e.UserId);
             });
 
-            // Configuration de Activity
+            
             modelBuilder.Entity<Activity>(entity =>
             {
                 entity.HasIndex(e => e.CreatedBy);
@@ -114,16 +111,13 @@ namespace Friendout.Domain.Context
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                // ActivityEquipment
+                
                 entity.HasMany(e => e.ActivityEquipments)
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
-
-            // Configuration de SubActivity
+            
             modelBuilder.Entity<SubActivity>(entity =>
             {
                 entity.HasIndex(e => e.ActivityId);
@@ -133,8 +127,7 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.SubActivityId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
-
-            // Configuration de UserParticipation
+            
             modelBuilder.Entity<UserParticipation>(entity =>
             {
                 entity.HasIndex(e => e.ActivityId);
@@ -157,14 +150,12 @@ namespace Friendout.Domain.Context
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-
-            // Configuration Comment
+            
             modelBuilder.Entity<ActivityComment>(entity =>
             {
                 entity.HasIndex(e => e.ActivityId);
             });
-
-            // Configuration de Equipment
+            
             modelBuilder.Entity<Equipment>(entity =>
             {
                 entity.HasIndex(e => e.Name).IsUnique();
@@ -179,8 +170,7 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.EquipmentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
-            // Configuration UserEquipment
+            
             modelBuilder.Entity<UserEquipment>(entity =>
             {
                 entity.HasKey(e => new { e.UserId, e.EquipmentId });
@@ -198,14 +188,12 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.EquipmentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
-            // Configuration ActivityEquipment
+            
             modelBuilder.Entity<ActivityEquipment>(entity =>
             {
                 entity.HasIndex(e => new { e.ActivityId, e.EquipmentId }).IsUnique();
             });
-
-            // Configuration Achievement
+            
             modelBuilder.Entity<UserAchievement>(entity =>
             {
                 entity.HasIndex(e => new { e.UserId, e.AchievementId })
@@ -224,8 +212,7 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.AchievementId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
-            // Configuration de VerificationToken
+            
             modelBuilder.Entity<VerificationToken>(entity =>
             {
                 entity.HasKey(e => e.Token);
