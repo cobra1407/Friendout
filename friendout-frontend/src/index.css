@@ -1,5 +1,6 @@
 html {
   scrollbar-gutter: stable;
+  overflow-y: scroll;
 }
 
 body {
@@ -8,4 +9,9 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body[data-scroll-locked] {
+  margin-right: 0 !important;
+  overflow: visible !important; /* prevent Radix from hiding the scrollbar */
 }
