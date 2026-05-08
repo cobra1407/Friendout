@@ -47,6 +47,8 @@ import {
 } from "../hooks/useAdmin";
 import { getTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { UserRole } from "@/features/user/enum/userRole.enum";
+
 
 export default function AdminPage() {
     const { user } = useAuth();
@@ -54,10 +56,11 @@ export default function AdminPage() {
     const [requestsOpen, setRequestsOpen] = useState(false);
 
     useEffect(() => {
-        if (user && user.role !== "Admin") navigate("/activities");
+
+        if (user && user.role !== UserRole.Admin) navigate("/activities");
     }, [user, navigate]);
 
-    if (!user || user.role !== "Admin") return null;
+    if (!user || user.role !== UserRole.Admin) return null;
 
     const handleLogout = async () => {
         await authApi.logout();
@@ -301,12 +304,13 @@ const UsersSection = () => {
                                         variant="secondary"
                                         className={cn(
                                             "text-xs",
-                                            u.role === "Admin"
+                                            u.role === UserRole.Admin
                                                 ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
                                                 : "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
                                         )}
                                     >
-                                        {u.role}
+
+                                        {getTranslation(`admin.roles.${u.role.toLowerCase()}`)}
                                     </Badge>
                                     <DropdownMenu modal={false}>
                                         <DropdownMenuTrigger asChild>
@@ -316,16 +320,14 @@ const UsersSection = () => {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-48">
                                             <DropdownMenuItem
-                                                disabled={u.role === "User" || updateRoleMutation.isPending}
-                                                onClick={() => updateRoleMutation.mutate({ id: u.id, role: "User" })}
-                                            >
+                                                disabled={u.role === UserRole.User || updateRoleMutation.isPending}
+                                                onClick={() => updateRoleMutation.mutate({ id: u.id, role: UserRole.User })}>
                                                 {getTranslation('admin.users.set_user')}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
-                                                disabled={u.role === "Admin" || updateRoleMutation.isPending}
+                                                disabled={u.role === UserRole.Admin || updateRoleMutation.isPending}
                                                 className="text-destructive"
-                                                onClick={() => updateRoleMutation.mutate({ id: u.id, role: "Admin" })}
-                                            >
+                                                onClick={() => updateRoleMutation.mutate({ id: u.id, role: UserRole.Admin })}>
                                                 {getTranslation('admin.users.set_admin')}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>

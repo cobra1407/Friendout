@@ -259,6 +259,10 @@
     "system_operational": "System operational",
     "search_placeholder": "Search...",
     "no_results": "No results",
+    "roles": {
+      "admin": "Admin",
+      "user": "User"
+    },
     "stats": {
       "users": "Users",
       "pending_requests": "Pending requests",

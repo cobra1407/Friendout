@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin.api";
 import { toast } from "sonner";
 import { getTranslation } from "@/i18n";
+import { UserRole } from "@/features/user/enum/userRole.enum";
 
 export const useAdminGuilds = () => {
     const qc = useQueryClient();
@@ -75,7 +76,7 @@ export const useAdminUsers = () => {
     });
 
     const updateRoleMutation = useMutation({
-        mutationFn: ({ id, role }: { id: string; role: "Admin" | "User" }) =>
+        mutationFn: ({ id, role }: { id: string; role: UserRole }) =>
             adminApi.updateUserRole(id, role),
         onSuccess: () => {
             toast.success(getTranslation('admin.toast.role_updated'));

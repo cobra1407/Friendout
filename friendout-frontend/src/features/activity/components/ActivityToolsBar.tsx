@@ -43,7 +43,7 @@ export const ActivityToolbar = ({
             if (localSearch !== search) {
                 onSearchChange(localSearch);
             }
-        }, 500); // 500ms de debounce
+        }, 500); // 500ms debounce
 
         return () => clearTimeout(timeout);
     }, [localSearch, onSearchChange, search]);

@@ -261,6 +261,10 @@
     "system_operational": "Système opérationnel",
     "search_placeholder": "Rechercher...",
     "no_results": "Aucun résultat",
+    "roles": {
+      "admin": "Administrateur",
+      "user": "Utilisateur"
+    },
     "stats": {
       "users": "Utilisateurs",
       "pending_requests": "Demandes en attente",

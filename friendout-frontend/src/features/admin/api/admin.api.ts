@@ -1,4 +1,6 @@
+import type { UserRole } from "@/features/user/enum/userRole.enum";
 import api from "@/lib/api/api";
+
 
 export interface GuildDto {
     id: number;
@@ -18,7 +20,7 @@ export interface UserAdminDto {
     name: string;
     email: string | null;
     avatarUrl: string | null;
-    role: "Admin" | "User";
+    role: UserRole;
     createdAt: string;
 }
 
@@ -44,7 +46,8 @@ export const adminApi = {
     deleteEmail: (id: number) => api.delete(`/admin/allowed-emails/${id}`),
 
     getUsers: () => api.get<UserAdminDto[]>("/admin/users").then(r => r.data),
-    updateUserRole: (id: string, role: "Admin" | "User") =>
+
+    updateUserRole: (id: string, role: UserRole) =>
         api.put<UserAdminDto>(`/admin/users/${id}/role`, { role }).then(r => r.data),
 
     getAccessRequests: (status?: string) =>
