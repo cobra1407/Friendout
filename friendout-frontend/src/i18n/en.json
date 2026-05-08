@@ -132,7 +132,15 @@
     "export_calendar": "Export to Calendar",
     "calendar_exported": "Activity exported to your calendar!",
     "export_ics": ".ics file (Apple / Outlook)",
-    "export_error": "Export failed"
+    "export_error": "Export failed",
+    "soon": "Soon"
+  },
+  "user_menu": {
+    "my_account": "My account",
+    "preferences": "Preferences",
+    "my_equipment": "My equipment",
+    "administration": "Administration",
+    "admin_panel": "Admin panel"
   },
   "activity": {
     "past": "Past",
@@ -196,7 +204,8 @@
     "none_yet": "No participants yet",
     "participating": "Participating",
     "maybe": "Maybe",
-    "not_participating": "Not participating"
+    "not_participating": "Not participating",
+    "no_participants": "No participants yet"
   },
   "participation": {
     "i_participate": "I'm in",
