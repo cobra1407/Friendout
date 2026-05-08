@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin.api";
 import { toast } from "sonner";
+import { getTranslation } from "@/i18n";
 
 export const useAdminGuilds = () => {
     const qc = useQueryClient();
@@ -16,18 +17,18 @@ export const useAdminGuilds = () => {
     const addMutation = useMutation({
         mutationFn: () => adminApi.addGuild(guildId.trim(), label.trim() || undefined),
         onSuccess: () => {
-            toast.success("Serveur ajouté");
+            toast.success(getTranslation('admin.toast.guild_added'));
             setGuildId("");
             setLabel("");
             qc.invalidateQueries({ queryKey: ["admin", "guilds"] });
         },
-        onError: () => toast.error("Ce serveur existe déjà ou une erreur est survenue"),
+        onError: () => toast.error(getTranslation('admin.toast.guild_error')),
     });
 
     const deleteMutation = useMutation({
         mutationFn: adminApi.deleteGuild,
         onSuccess: () => {
-            toast.success("Serveur supprimé");
+            toast.success(getTranslation('admin.toast.guild_deleted'));
             qc.invalidateQueries({ queryKey: ["admin", "guilds"] });
         },
     });
@@ -47,17 +48,17 @@ export const useAdminEmails = () => {
     const addMutation = useMutation({
         mutationFn: () => adminApi.addEmail(email.trim()),
         onSuccess: () => {
-            toast.success("Email ajouté");
+            toast.success(getTranslation('admin.toast.email_added'));
             setEmail("");
             qc.invalidateQueries({ queryKey: ["admin", "emails"] });
         },
-        onError: () => toast.error("Cet email existe déjà ou une erreur est survenue"),
+        onError: () => toast.error(getTranslation('admin.toast.email_error')),
     });
 
     const deleteMutation = useMutation({
         mutationFn: adminApi.deleteEmail,
         onSuccess: () => {
-            toast.success("Email supprimé");
+            toast.success(getTranslation('admin.toast.email_deleted'));
             qc.invalidateQueries({ queryKey: ["admin", "emails"] });
         },
     });
@@ -77,10 +78,10 @@ export const useAdminUsers = () => {
         mutationFn: ({ id, role }: { id: string; role: "Admin" | "User" }) =>
             adminApi.updateUserRole(id, role),
         onSuccess: () => {
-            toast.success("Rôle mis à jour");
+            toast.success(getTranslation('admin.toast.role_updated'));
             qc.invalidateQueries({ queryKey: ["admin", "users"] });
         },
-        onError: () => toast.error("Erreur lors de la mise à jour du rôle"),
+        onError: () => toast.error(getTranslation('admin.toast.role_error')),
     });
 
     return { users, isLoading, updateRoleMutation };
@@ -98,10 +99,14 @@ export const useAdminAccessRequests = () => {
         mutationFn: ({ id, status }: { id: number; status: "Approved" | "Denied" }) =>
             adminApi.resolveAccessRequest(id, status),
         onSuccess: (_, vars) => {
-            toast.success(vars.status === "Approved" ? "Demande approuvée" : "Demande refusée");
+            toast.success(
+                vars.status === "Approved"
+                    ? getTranslation('admin.toast.request_approved')
+                    : getTranslation('admin.toast.request_denied')
+            );
             qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
         },
-        onError: () => toast.error("Erreur lors du traitement de la demande"),
+        onError: () => toast.error(getTranslation('admin.toast.request_error')),
     });
 
     return { requests, isLoading, resolveMutation };

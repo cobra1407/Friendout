@@ -45,6 +45,7 @@ import {
     useAdminUsers,
     useAdminAccessRequests,
 } from "../hooks/useAdmin";
+import { getTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
@@ -104,14 +105,14 @@ const PageHeader = () => {
                     <ShieldCheck className="w-3.5 h-3.5" />
                     Administration
                 </p>
-                <h1 className="text-2xl font-bold tracking-tight">Panneau de contrôle</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{getTranslation('admin.page_title')}</h1>
             </div>
             <Badge
                 variant="outline"
                 className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400"
             >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Système opérationnel
+                {getTranslation('admin.system_operational')}
             </Badge>
         </div>
     );
@@ -124,42 +125,10 @@ const StatsSummary = ({ onOpenRequests }: { onOpenRequests: () => void }) => {
     const { guilds } = useAdminGuilds();
 
     const stats = [
-        {
-            label: "Utilisateurs",
-            value: users.length,
-            icon: Users,
-            color: "text-blue-600",
-            bg: "bg-blue-50 dark:bg-blue-950/40",
-            highlight: false,
-            onClick: undefined as (() => void) | undefined,
-        },
-        {
-            label: "Demandes en attente",
-            value: requests.length,
-            icon: AlertCircle,
-            color: "text-amber-600",
-            bg: "bg-amber-50 dark:bg-amber-950/40",
-            highlight: requests.length > 0,
-            onClick: onOpenRequests,
-        },
-        {
-            label: "Emails autorisés",
-            value: emails.length,
-            icon: Mail,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50 dark:bg-emerald-950/40",
-            highlight: false,
-            onClick: undefined as (() => void) | undefined,
-        },
-        {
-            label: "Guilds Discord",
-            value: guilds.length,
-            icon: Shield,
-            color: "text-indigo-600",
-            bg: "bg-indigo-50 dark:bg-indigo-950/40",
-            highlight: false,
-            onClick: undefined as (() => void) | undefined,
-        },
+        { label: getTranslation('admin.stats.users'), value: users.length, icon: Users, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/40", highlight: false, onClick: undefined as (() => void) | undefined },
+        { label: getTranslation('admin.stats.pending_requests'), value: requests.length, icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/40", highlight: requests.length > 0, onClick: onOpenRequests },
+        { label: getTranslation('admin.stats.allowed_emails'), value: emails.length, icon: Mail, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40", highlight: false, onClick: undefined as (() => void) | undefined },
+        { label: getTranslation('admin.stats.discord_guilds'), value: guilds.length, icon: Shield, color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-950/40", highlight: false, onClick: undefined as (() => void) | undefined },
     ];
 
     return (
@@ -186,7 +155,7 @@ const StatsSummary = ({ onOpenRequests }: { onOpenRequests: () => void }) => {
                                 </p>
                                 {stat.onClick && requests.length > 0 && (
                                     <span className="text-[10px] text-amber-600 font-semibold uppercase tracking-wide">
-                                        Voir →
+                                        {getTranslation('admin.stats.view')}
                                     </span>
                                 )}
                             </div>
@@ -207,7 +176,7 @@ const AccessRequestsModal = ({ open, onClose }: { open: boolean; onClose: () => 
             <ModalHeader>
                 <ModalTitle className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-amber-600" />
-                    Demandes d'accès
+                    {getTranslation('admin.requests.modal_title')}
                     {requests.length > 0 && (
                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 ml-1">
                             {requests.length}
@@ -215,7 +184,7 @@ const AccessRequestsModal = ({ open, onClose }: { open: boolean; onClose: () => 
                     )}
                 </ModalTitle>
                 <ModalDescription>
-                    Ces personnes souhaitent rejoindre Friendout.
+                    {getTranslation('admin.requests.modal_description')}
                 </ModalDescription>
             </ModalHeader>
 
@@ -225,7 +194,7 @@ const AccessRequestsModal = ({ open, onClose }: { open: boolean; onClose: () => 
                 ) : requests.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                         <Check className="w-10 h-10 mb-2 opacity-20" />
-                        <p className="text-sm italic">Aucune demande en attente</p>
+                        <p className="text-sm italic">{getTranslation('admin.requests.empty')}</p>
                     </div>
                 ) : (
                     <ul className="divide-y max-h-[60vh] overflow-y-auto">
@@ -236,7 +205,7 @@ const AccessRequestsModal = ({ open, onClose }: { open: boolean; onClose: () => 
                                         {r.name?.[0]?.toUpperCase() ?? "?"}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium">{r.name ?? "Inconnu"}</p>
+                                        <p className="text-sm font-medium">{r.name ?? getTranslation('admin.requests.unknown_name')}</p>
                                         <p className="text-xs text-muted-foreground">{r.email}</p>
                                         {r.message && (
                                             <p className="text-xs text-muted-foreground italic mt-0.5">"{r.message}"</p>
@@ -251,7 +220,7 @@ const AccessRequestsModal = ({ open, onClose }: { open: boolean; onClose: () => 
                                         disabled={resolveMutation.isPending}
                                         onClick={() => resolveMutation.mutate({ id: r.id, status: "Denied" })}
                                     >
-                                        <X className="w-3.5 h-3.5 mr-1" /> Refuser
+                                        <X className="w-3.5 h-3.5 mr-1" /> {getTranslation('admin.requests.deny')}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -259,7 +228,7 @@ const AccessRequestsModal = ({ open, onClose }: { open: boolean; onClose: () => 
                                         disabled={resolveMutation.isPending}
                                         onClick={() => resolveMutation.mutate({ id: r.id, status: "Approved" })}
                                     >
-                                        <Check className="w-3.5 h-3.5 mr-1" /> Approuver
+                                        <Check className="w-3.5 h-3.5 mr-1" /> {getTranslation('admin.requests.approve')}
                                     </Button>
                                 </div>
                             </li>
@@ -291,14 +260,14 @@ const UsersSection = () => {
                             <Users className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                            <CardTitle className="text-base">Membres</CardTitle>
-                            <CardDescription className="text-xs">Gérez les rôles</CardDescription>
+                            <CardTitle className="text-base">{getTranslation('admin.users.title')}</CardTitle>
+                            <CardDescription className="text-xs">{getTranslation('admin.users.description')}</CardDescription>
                         </div>
                     </div>
                     <div className="relative">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                         <Input
-                            placeholder="Rechercher..."
+                            placeholder={getTranslation('admin.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-8 h-8 text-sm w-full sm:w-52"
@@ -310,7 +279,7 @@ const UsersSection = () => {
                 {isLoading ? (
                     <div className="flex justify-center py-8"><Spinner /></div>
                 ) : filteredUsers.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8 italic">Aucun résultat</p>
+                    <p className="text-sm text-muted-foreground text-center py-8 italic">{getTranslation('admin.no_results')}</p>
                 ) : (
                     <ul className="divide-y">
                         {filteredUsers.map((u) => (
@@ -350,14 +319,14 @@ const UsersSection = () => {
                                                 disabled={u.role === "User" || updateRoleMutation.isPending}
                                                 onClick={() => updateRoleMutation.mutate({ id: u.id, role: "User" })}
                                             >
-                                                Passer en Utilisateur
+                                                {getTranslation('admin.users.set_user')}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 disabled={u.role === "Admin" || updateRoleMutation.isPending}
                                                 className="text-destructive"
                                                 onClick={() => updateRoleMutation.mutate({ id: u.id, role: "Admin" })}
                                             >
-                                                Définir comme Administrateur
+                                                {getTranslation('admin.users.set_admin')}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -394,8 +363,8 @@ const GuildsSection = () => {
                         <Server className="w-4 h-4 text-indigo-600" />
                     </div>
                     <div>
-                        <CardTitle className="text-base">Guilds Discord</CardTitle>
-                        <CardDescription className="text-xs">Serveurs autorisés</CardDescription>
+                        <CardTitle className="text-base">{getTranslation('admin.guilds.title')}</CardTitle>
+                        <CardDescription className="text-xs">{getTranslation('admin.guilds.description')}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -403,14 +372,14 @@ const GuildsSection = () => {
                 {/* Add form */}
                 <div className="flex flex-col gap-2">
                     <Input
-                        placeholder="ID du serveur"
+                        placeholder={getTranslation('admin.guilds.guild_id_placeholder')}
                         value={guildId}
                         onChange={(e) => setGuildId(e.target.value)}
                         className="h-8 text-sm font-mono"
                     />
                     <div className="flex gap-2">
                         <Input
-                            placeholder="Nom (optionnel)"
+                            placeholder={getTranslation('admin.guilds.label_placeholder')}
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
                             className="h-8 text-sm"
@@ -431,7 +400,7 @@ const GuildsSection = () => {
                     <div className="relative">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                         <Input
-                            placeholder="Rechercher..."
+                            placeholder={getTranslation('admin.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-8 h-8 text-sm"
@@ -444,14 +413,14 @@ const GuildsSection = () => {
                     <div className="flex justify-center py-3"><Spinner /></div>
                 ) : filteredGuilds.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-3 italic">
-                        {search ? "Aucun résultat" : "Aucun serveur configuré"}
+                        {search ? getTranslation('admin.no_results') : getTranslation('admin.guilds.empty')}
                     </p>
                 ) : (
                     <ul className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
                         {filteredGuilds.map((g) => (
                             <li key={g.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
                                 <div className="min-w-0">
-                                    <p className="text-sm font-medium truncate">{g.label ?? "Sans nom"}</p>
+                                    <p className="text-sm font-medium truncate">{g.label ?? getTranslation('admin.guilds.no_name')}</p>
                                     <p className="text-[10px] font-mono text-muted-foreground truncate">{g.guildId}</p>
                                 </div>
                                 <Button
@@ -487,8 +456,8 @@ const EmailsSection = () => {
                         <Mail className="w-4 h-4 text-emerald-600" />
                     </div>
                     <div>
-                        <CardTitle className="text-base">Emails autorisés</CardTitle>
-                        <CardDescription className="text-xs">Whitelist Gmail OAuth</CardDescription>
+                        <CardTitle className="text-base">{getTranslation('admin.emails.title')}</CardTitle>
+                        <CardDescription className="text-xs">{getTranslation('admin.emails.description')}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -514,7 +483,7 @@ const EmailsSection = () => {
                 {isLoading ? (
                     <div className="flex justify-center py-3"><Spinner /></div>
                 ) : emails.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-3 italic">Aucun email configuré</p>
+                    <p className="text-xs text-muted-foreground text-center py-3 italic">{getTranslation('admin.emails.empty')}</p>
                 ) : (
                     <ul className="space-y-1.5 max-h-64 overflow-y-auto">
                         {emails.map((e) => (

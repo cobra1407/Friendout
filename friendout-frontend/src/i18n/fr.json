@@ -255,5 +255,58 @@
     "message": "Oups ! La page que vous recherchez n'existe pas.",
     "back_home": "Retour à l'accueil",
     "icon_alt": "Erreur 404"
+  },
+  "admin": {
+    "page_title": "Panneau de contrôle",
+    "system_operational": "Système opérationnel",
+    "search_placeholder": "Rechercher...",
+    "no_results": "Aucun résultat",
+    "stats": {
+      "users": "Utilisateurs",
+      "pending_requests": "Demandes en attente",
+      "allowed_emails": "Emails autorisés",
+      "discord_guilds": "Guilds Discord",
+      "view": "Voir →"
+    },
+    "requests": {
+      "modal_title": "Demandes d'accès",
+      "modal_description": "Ces personnes souhaitent rejoindre Friendout.",
+      "empty": "Aucune demande en attente",
+      "unknown_name": "Inconnu",
+      "deny": "Refuser",
+      "approve": "Approuver"
+    },
+    "users": {
+      "title": "Membres",
+      "description": "Gérez les rôles",
+      "set_user": "Passer en Utilisateur",
+      "set_admin": "Définir comme Administrateur"
+    },
+    "guilds": {
+      "title": "Guilds Discord",
+      "description": "Serveurs autorisés",
+      "guild_id_placeholder": "ID du serveur",
+      "label_placeholder": "Nom (optionnel)",
+      "empty": "Aucun serveur configuré",
+      "no_name": "Sans nom"
+    },
+    "emails": {
+      "title": "Emails autorisés",
+      "description": "Whitelist Gmail OAuth",
+      "empty": "Aucun email configuré"
+    },
+    "toast": {
+      "guild_added": "Serveur ajouté",
+      "guild_error": "Ce serveur existe déjà ou une erreur est survenue",
+      "guild_deleted": "Serveur supprimé",
+      "email_added": "Email ajouté",
+      "email_error": "Cet email existe déjà ou une erreur est survenue",
+      "email_deleted": "Email supprimé",
+      "role_updated": "Rôle mis à jour",
+      "role_error": "Erreur lors de la mise à jour du rôle",
+      "request_approved": "Demande approuvée",
+      "request_denied": "Demande refusée",
+      "request_error": "Erreur lors du traitement de la demande"
+    }
   }
 }

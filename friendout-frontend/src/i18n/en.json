@@ -253,5 +253,58 @@
     "message": "Oops! The page you are looking for does not exist.",
     "back_home": "Back to Home",
     "icon_alt": "404 Error"
+  },
+  "admin": {
+    "page_title": "Control panel",
+    "system_operational": "System operational",
+    "search_placeholder": "Search...",
+    "no_results": "No results",
+    "stats": {
+      "users": "Users",
+      "pending_requests": "Pending requests",
+      "allowed_emails": "Allowed emails",
+      "discord_guilds": "Discord guilds",
+      "view": "View →"
+    },
+    "requests": {
+      "modal_title": "Access requests",
+      "modal_description": "These people want to join Friendout.",
+      "empty": "No pending requests",
+      "unknown_name": "Unknown",
+      "deny": "Deny",
+      "approve": "Approve"
+    },
+    "users": {
+      "title": "Members",
+      "description": "Manage roles",
+      "set_user": "Set as User",
+      "set_admin": "Set as Admin"
+    },
+    "guilds": {
+      "title": "Discord guilds",
+      "description": "Authorized servers",
+      "guild_id_placeholder": "Server ID",
+      "label_placeholder": "Name (optional)",
+      "empty": "No server configured",
+      "no_name": "No name"
+    },
+    "emails": {
+      "title": "Allowed emails",
+      "description": "Gmail OAuth whitelist",
+      "empty": "No email configured"
+    },
+    "toast": {
+      "guild_added": "Server added",
+      "guild_error": "This server already exists or an error occurred",
+      "guild_deleted": "Server removed",
+      "email_added": "Email added",
+      "email_error": "This email already exists or an error occurred",
+      "email_deleted": "Email removed",
+      "role_updated": "Role updated",
+      "role_error": "Error updating role",
+      "request_approved": "Request approved",
+      "request_denied": "Request denied",
+      "request_error": "Error processing request"
+    }
   }
 }
