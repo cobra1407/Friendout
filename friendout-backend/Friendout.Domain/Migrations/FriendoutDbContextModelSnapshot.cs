@@ -22,6 +22,52 @@ namespace Friendout.Domain.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Friendout.Domain.Models.AccessRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("varchar(191)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(191)
+                        .HasColumnType("varchar(191)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("access_requests");
+                });
+
             modelBuilder.Entity("Friendout.Domain.Models.Account", b =>
                 {
                     b.Property<string>("Id")
@@ -265,6 +311,65 @@ namespace Friendout.Domain.Migrations
                         .IsUnique();
 
                     b.ToTable("activity_equipment");
+                });
+
+            modelBuilder.Entity("Friendout.Domain.Models.AllowedEmail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("varchar(191)")
+                        .HasColumnName("email");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("allowed_emails");
+                });
+
+            modelBuilder.Entity("Friendout.Domain.Models.AllowedGuild", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("GuildId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("guild_id");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("label");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId")
+                        .IsUnique();
+
+                    b.ToTable("allowed_guilds");
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Equipment", b =>

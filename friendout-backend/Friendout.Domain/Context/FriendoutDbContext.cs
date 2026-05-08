@@ -22,6 +22,9 @@ namespace Friendout.Domain.Context
         public DbSet<VerificationToken> VerificationTokens { get; set; }
         public DbSet<Localisation> Localisations { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<AllowedGuild> AllowedGuilds { get; set; }
+        public DbSet<AllowedEmail> AllowedEmails { get; set; }
+        public DbSet<AccessRequest> AccessRequests { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -242,6 +245,22 @@ namespace Friendout.Domain.Context
                     .WithMany()
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AllowedGuild>(entity =>
+            {
+                entity.HasIndex(e => e.GuildId).IsUnique();
+            });
+
+            modelBuilder.Entity<AllowedEmail>(entity =>
+            {
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            modelBuilder.Entity<AccessRequest>(entity =>
+            {
+                entity.HasIndex(e => e.Email);
+                entity.HasIndex(e => e.Status);
             });
         }
     }
