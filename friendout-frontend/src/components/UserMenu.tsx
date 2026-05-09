@@ -29,7 +29,7 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
         .slice(0, 2);
 
     return (
-        <Popover onOpenChange={setIsPopoverOpen}>
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <PopoverTrigger asChild>
                 <button className={cn(
                     "group relative flex items-center rounded-full  p-1 cursor-pointer border border-transparent hover:border-border transition-all duration-300 ease-in-out overflow-hidden",
@@ -90,13 +90,13 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
                         icon={<Settings className="w-4 h-4" />}
                         label={getTranslation("user_menu.preferences")}
                         badge={getTranslation("common.soon")}
-                        onClick={() => navigate("/preferences")}
+                        onClick={() => { setIsPopoverOpen(false); navigate("/preferences"); }}
                     />
                     <MenuButton
                         icon={<Package className="w-4 h-4" />}
                         label={getTranslation("user_menu.my_equipment")}
                         badge={getTranslation("common.soon")}
-                        onClick={() => navigate("/equipment")}
+                        onClick={() => { setIsPopoverOpen(false); navigate("/equipment"); }}
                     />
                 </div>
 
@@ -110,7 +110,7 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
                             <MenuButton
                                 icon={<Shield className="w-4 h-4" />}
                                 label={getTranslation("user_menu.admin_panel")}
-                                onClick={() => navigate("/admin")}
+                                onClick={() => { setIsPopoverOpen(false); navigate("/admin"); }}
                             />
                         </div>
                     </>
@@ -120,7 +120,7 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
 
                 <div className="p-2">
                     <button
-                        onClick={onLogout}
+                        onClick={() => { setIsPopoverOpen(false); onLogout(); }}
                         className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors group/logout"
                     >
                         <LogOut className="w-4 h-4 group-hover/logout:-translate-x-0.5 transition-transform" />
