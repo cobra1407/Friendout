@@ -45,13 +45,13 @@ export function ParticipantsModal({
     const getStatusLabel = (status: ParticipationStatus) => {
         switch (status) {
             case ParticipationStatus.Participating:
-                return "Participe";
+                return getTranslation('participants.participating');
             case ParticipationStatus.Maybe:
-                return "Peut-être";
+                return getTranslation('participants.maybe');
             case ParticipationStatus.NotParticipating:
-                return "Ne participe pas";
+                return getTranslation('participants.not_participating');
             default:
-                return "Inconnu";
+                return getTranslation('participants.unknown');
         }
     };
 
@@ -63,11 +63,10 @@ export function ParticipantsModal({
         >
             <ModalHeader>
                 <ModalTitle className="text-xl">
-                    Participant{participants.length > 1 ? "s" : ""}
+                    {getTranslation('participants.modal_title')}
                 </ModalTitle>
                 <ModalDescription>
-                    Liste des participants pour la sous activité «&nbsp;
-                    {activityName}&nbsp;».
+                    {getTranslation('participants.modal_description', { name: activityName })}
                 </ModalDescription>
             </ModalHeader>
 

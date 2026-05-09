@@ -207,7 +207,10 @@
     "participating": "Participent",
     "maybe": "Peut-être",
     "not_participating": "Ne participent pas",
-    "no_participants": "Aucun participant pour l'instant"
+    "no_participants": "Aucun participant pour l'instant",
+    "unknown": "Inconnu",
+    "modal_title": "Participants",
+    "modal_description": "Liste des participants pour la sous-activité \u00ab\u00a0{{name}}\u00a0\u00bb."
   },
   "participation": {
     "i_participate": "Je participe",
