@@ -287,7 +287,11 @@
       "title": "Membres",
       "description": "Gérez les rôles",
       "set_user": "Passer en Utilisateur",
-      "set_admin": "Définir comme Administrateur"
+      "set_admin": "Définir comme Administrateur",
+      "demote_confirm_title": "Rétrograder {{name}} ?",
+      "demote_confirm_description": "Cette action retirera les droits administrateur de {{name}}. Vous pouvez les restaurer à tout moment.",
+      "demote_confirm": "Rétrograder",
+      "cancel": "Annuler"
     },
     "guilds": {
       "title": "Guilds Discord",
@@ -311,6 +315,7 @@
       "email_deleted": "Email supprimé",
       "role_updated": "Rôle mis à jour",
       "role_error": "Erreur lors de la mise à jour du rôle",
+      "role_last_admin": "Impossible de rétrograder le dernier administrateur",
       "request_approved": "Demande approuvée",
       "request_denied": "Demande refusée",
       "request_error": "Erreur lors du traitement de la demande"

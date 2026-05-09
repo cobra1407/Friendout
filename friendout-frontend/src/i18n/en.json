@@ -285,7 +285,11 @@
       "title": "Members",
       "description": "Manage roles",
       "set_user": "Set as User",
-      "set_admin": "Set as Admin"
+      "set_admin": "Set as Admin",
+      "demote_confirm_title": "Demote {{name}}?",
+      "demote_confirm_description": "This will remove admin rights from {{name}}. You can restore them at any time.",
+      "demote_confirm": "Demote",
+      "cancel": "Cancel"
     },
     "guilds": {
       "title": "Discord guilds",
@@ -309,6 +313,7 @@
       "email_deleted": "Email removed",
       "role_updated": "Role updated",
       "role_error": "Error updating role",
+      "role_last_admin": "Cannot demote the last administrator",
       "request_approved": "Request approved",
       "request_denied": "Request denied",
       "request_error": "Error processing request"
