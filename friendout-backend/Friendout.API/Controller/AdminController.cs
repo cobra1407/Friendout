@@ -26,6 +26,7 @@ public class AdminController : ControllerBase
         "guild_already_exists"     => Conflict(new { error = errorMessage }),
         "email_already_exists"     => Conflict(new { error = errorMessage }),
         "request_already_resolved" => BadRequest(new { error = errorMessage }),
+        "last_admin"               => BadRequest(new { error = errorMessage }),
         _                          => StatusCode(500, new { error = errorMessage })
     };
 

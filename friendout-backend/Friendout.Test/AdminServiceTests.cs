@@ -380,6 +380,36 @@ public class AdminServiceTests
     }
 
     [Test]
+    public async Task UpdateUserRole_ReturnsFailure_WhenDemotingLastAdmin()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserRole_ReturnsFailure_WhenDemotingLastAdmin));
+        var admin = new User { Name = "Solo Admin", Role = UserRole.Admin };
+        db.Users.Add(admin);
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateUserRoleAsync(admin.Id, new UpdateUserRoleDto(UserRole.User));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("last_admin");
+        db.Users.First().Role.Should().Be(UserRole.Admin);
+    }
+
+    [Test]
+    public async Task UpdateUserRole_ReturnsSuccess_WhenDemotingAdminIfOtherAdminExists()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserRole_ReturnsSuccess_WhenDemotingAdminIfOtherAdminExists));
+        var admin1 = new User { Name = "Admin 1", Role = UserRole.Admin };
+        var admin2 = new User { Name = "Admin 2", Role = UserRole.Admin };
+        db.Users.AddRange(admin1, admin2);
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateUserRoleAsync(admin1.Id, new UpdateUserRoleDto(UserRole.User));
+
+        result.IsSuccess.Should().BeTrue();
+        db.Users.First(u => u.Id == admin1.Id).Role.Should().Be(UserRole.User);
+    }
+
+    [Test]
     public async Task UpdateUserRole_ReturnsSuccess_AndUpdatesRole()
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserRole_ReturnsSuccess_AndUpdatesRole));

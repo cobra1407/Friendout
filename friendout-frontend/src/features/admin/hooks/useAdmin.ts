@@ -82,7 +82,14 @@ export const useAdminUsers = () => {
             toast.success(getTranslation('admin.toast.role_updated'));
             qc.invalidateQueries({ queryKey: ["admin", "users"] });
         },
-        onError: () => toast.error(getTranslation('admin.toast.role_error')),
+        onError: (error: any) => {
+            const errorCode = error?.response?.data?.error;
+            if (errorCode === 'last_admin') {
+                toast.error(getTranslation('admin.toast.role_last_admin'));
+            } else {
+                toast.error(getTranslation('admin.toast.role_error'));
+            }
+        },
     });
 
     return { users, isLoading, updateRoleMutation };

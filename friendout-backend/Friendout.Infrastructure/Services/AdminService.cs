@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Admin;
+using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -178,6 +179,14 @@ public class AdminService : IAdminService
         var user = await _db.Users.FindAsync(id);
         if (user is null)
             return ServiceResult<UserAdminDto>.Failure("not_found");
+
+        // Prevent demoting the last admin — at least one admin must always exist.
+        if (dto.Role == UserRole.User && user.Role == UserRole.Admin)
+        {
+            var adminCount = await _db.Users.CountAsync(u => u.Role == UserRole.Admin);
+            if (adminCount <= 1)
+                return ServiceResult<UserAdminDto>.Failure("last_admin");
+        }
 
         user.Role = dto.Role;
         user.UpdatedAt = DateTime.UtcNow;
