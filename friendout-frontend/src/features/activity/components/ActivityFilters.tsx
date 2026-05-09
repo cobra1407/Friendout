@@ -44,7 +44,7 @@ export const ActivityFilters = ({ value, onChange }: Props) => {
                 <Button
                     variant="outline"
                     role="combobox"
-                    className="w-full sm:w-48 justify-between border font-normal"
+                    className="w-full h-10 sm:w-48 justify-between border font-normal"
                 >
                     {currentLabel}
                     <ChevronDown className="h-4 w-4 opacity-50" />
