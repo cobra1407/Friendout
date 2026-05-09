@@ -30,7 +30,7 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
 
     return (
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-            <PopoverTrigger asChild>
+            <PopoverTrigger asChild onClick={() => setIsPopoverOpen(prev => !prev)}>
                 <button className={cn(
                     "group relative flex items-center rounded-full  p-1 cursor-pointer border border-transparent hover:border-border transition-all duration-300 ease-in-out overflow-hidden",
                     isPopoverOpen ? "max-w-[250px] bg-muted" : "max-w-[50px] hover:max-w-[250px] hover:bg-muted"
