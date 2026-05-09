@@ -96,6 +96,10 @@ builder.Services.AddSwaggerGen(opt =>
 builder.Services.AddControllers(options =>
 {
     options.Conventions.Add(new RoutePrefixConvention("api"));
+})
+.AddJsonOptions(options =>
+{
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 
 var uploadsBasePath = builder.Environment.WebRootPath ?? builder.Environment.ContentRootPath;

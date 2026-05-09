@@ -11,6 +11,10 @@ import { useEffect } from 'react'
 import { ActivityDetailsPage } from './features/activity'
 import CreateActivityPage from './features/activity/pages/CreateActivityPage'
 import EditActivityPage from './features/activity/pages/EditActivityPage'
+import AdminPage from './features/admin/pages/AdminPage'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 function App() {
     const { fetchMe } = useAuth();
@@ -19,22 +23,28 @@ function App() {
     }, []);
 
     return (
-        <ThemeProvider defaultBaseTheme="light" defaultAccentColor="default">
-            <Toaster richColors />
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route element={<ProtectedRoutes />}>
-                        <Route path="/" element={<ActivitiesPage />} />
-                        <Route path="/activities" element={<ActivitiesPage />} />
-                        <Route path="/activities/createActivity" element={<CreateActivityPage />} />
-                        <Route path="/activities/:id/edit" element={<EditActivityPage />} />
-                        <Route path="/activities/:id" element={<ActivityDetailsPage />} />
-                    </Route>
-                    <Route path="*" element={<Error404Page />} />
-                </Routes>
-            </BrowserRouter>
-        </ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider defaultBaseTheme="light" defaultAccentColor="default">
+                <Toaster richColors />
+                <BrowserRouter>
+                    <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route element={<ProtectedRoutes />}>
+                            <Route path="/" element={<ActivitiesPage />} />
+                            <Route path="/activities" element={<ActivitiesPage />} />
+                            <Route path="/activities/createActivity" element={<CreateActivityPage />} />
+                            <Route path="/activities/:id/edit" element={<EditActivityPage />} />
+                            <Route path="/activities/:id" element={<ActivityDetailsPage />} />
+                            <Route path="/admin" element={<AdminPage />} /> a
+                            {/* Placeholder routes — pages to be implemented */}
+                            <Route path="/preferences" element={<div className="p-8 text-center text-muted-foreground">Préférences — à venir</div>} />
+                            <Route path="/equipment" element={<div className="p-8 text-center text-muted-foreground">Équipements — à venir</div>} />
+                        </Route>
+                        <Route path="*" element={<Error404Page />} />
+                    </Routes>
+                </BrowserRouter>
+            </ThemeProvider>
+        </QueryClientProvider>
     )
 }
 

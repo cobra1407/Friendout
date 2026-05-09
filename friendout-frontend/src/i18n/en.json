@@ -132,7 +132,15 @@
     "export_calendar": "Export to Calendar",
     "calendar_exported": "Activity exported to your calendar!",
     "export_ics": ".ics file (Apple / Outlook)",
-    "export_error": "Export failed"
+    "export_error": "Export failed",
+    "soon": "Soon"
+  },
+  "user_menu": {
+    "my_account": "My account",
+    "preferences": "Preferences",
+    "my_equipment": "My equipment",
+    "administration": "Administration",
+    "admin_panel": "Admin panel"
   },
   "activity": {
     "past": "Past",
@@ -196,7 +204,11 @@
     "none_yet": "No participants yet",
     "participating": "Participating",
     "maybe": "Maybe",
-    "not_participating": "Not participating"
+    "not_participating": "Not participating",
+    "no_participants": "No participants yet",
+    "unknown": "Unknown",
+    "modal_title": "Participants",
+    "modal_description": "Participants for sub-activity \u00ab\u00a0{{name}}\u00a0\u00bb."
   },
   "participation": {
     "i_participate": "I'm in",
@@ -244,5 +256,67 @@
     "message": "Oops! The page you are looking for does not exist.",
     "back_home": "Back to Home",
     "icon_alt": "404 Error"
+  },
+  "admin": {
+    "page_title": "Control panel",
+    "system_operational": "System operational",
+    "search_placeholder": "Search...",
+    "no_results": "No results",
+    "roles": {
+      "admin": "Admin",
+      "user": "User"
+    },
+    "stats": {
+      "users": "Users",
+      "pending_requests": "Pending requests",
+      "allowed_emails": "Allowed emails",
+      "discord_guilds": "Discord guilds",
+      "view": "View →"
+    },
+    "requests": {
+      "modal_title": "Access requests",
+      "modal_description": "These people want to join Friendout.",
+      "empty": "No pending requests",
+      "unknown_name": "Unknown",
+      "deny": "Deny",
+      "approve": "Approve"
+    },
+    "users": {
+      "title": "Members",
+      "description": "Manage roles",
+      "set_user": "Set as User",
+      "set_admin": "Set as Admin",
+      "demote_confirm_title": "Demote {{name}}?",
+      "demote_confirm_description": "This will remove admin rights from {{name}}. You can restore them at any time.",
+      "demote_confirm": "Demote",
+      "cancel": "Cancel"
+    },
+    "guilds": {
+      "title": "Discord guilds",
+      "description": "Authorized servers",
+      "guild_id_placeholder": "Server ID",
+      "label_placeholder": "Name (optional)",
+      "empty": "No server configured",
+      "no_name": "No name"
+    },
+    "emails": {
+      "title": "Allowed emails",
+      "description": "Gmail OAuth whitelist",
+      "empty": "No email configured"
+    },
+    "toast": {
+      "guild_added": "Server added",
+      "guild_error": "This server already exists or an error occurred",
+      "guild_deleted": "Server removed",
+      "email_added": "Email added",
+      "email_error": "This email already exists or an error occurred",
+      "email_deleted": "Email removed",
+      "role_updated": "Role updated",
+      "role_error": "Error updating role",
+      "role_last_admin": "Cannot demote the last administrator",
+      "request_approved": "Request approved",
+      "request_denied": "Request denied",
+      "request_error": "Error processing request"
+    }
   }
 }

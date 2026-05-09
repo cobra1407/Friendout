@@ -134,7 +134,15 @@
     "export_calendar": "Exporter au calendrier",
     "calendar_exported": "Activité exportée dans votre calendrier !",
     "export_ics": "Fichier .ics (Apple / Outlook)",
-    "export_error": "Erreur lors de l'exportation"
+    "export_error": "Erreur lors de l'exportation",
+    "soon": "Bientôt"
+  },
+  "user_menu": {
+    "my_account": "Mon compte",
+    "preferences": "Mes préférences",
+    "my_equipment": "Mes équipements",
+    "administration": "Administration",
+    "admin_panel": "Panneau admin"
   },
   "activity": {
     "past": "Passée",
@@ -198,7 +206,11 @@
     "none_yet": "Aucun participant pour l'instant",
     "participating": "Participent",
     "maybe": "Peut-être",
-    "not_participating": "Ne participent pas"
+    "not_participating": "Ne participent pas",
+    "no_participants": "Aucun participant pour l'instant",
+    "unknown": "Inconnu",
+    "modal_title": "Participants",
+    "modal_description": "Liste des participants pour la sous-activité \u00ab\u00a0{{name}}\u00a0\u00bb."
   },
   "participation": {
     "i_participate": "Je participe",
@@ -246,5 +258,67 @@
     "message": "Oups ! La page que vous recherchez n'existe pas.",
     "back_home": "Retour à l'accueil",
     "icon_alt": "Erreur 404"
+  },
+  "admin": {
+    "page_title": "Panneau de contrôle",
+    "system_operational": "Système opérationnel",
+    "search_placeholder": "Rechercher...",
+    "no_results": "Aucun résultat",
+    "roles": {
+      "admin": "Administrateur",
+      "user": "Utilisateur"
+    },
+    "stats": {
+      "users": "Utilisateurs",
+      "pending_requests": "Demandes en attente",
+      "allowed_emails": "Emails autorisés",
+      "discord_guilds": "Guilds Discord",
+      "view": "Voir →"
+    },
+    "requests": {
+      "modal_title": "Demandes d'accès",
+      "modal_description": "Ces personnes souhaitent rejoindre Friendout.",
+      "empty": "Aucune demande en attente",
+      "unknown_name": "Inconnu",
+      "deny": "Refuser",
+      "approve": "Approuver"
+    },
+    "users": {
+      "title": "Membres",
+      "description": "Gérez les rôles",
+      "set_user": "Passer en Utilisateur",
+      "set_admin": "Définir comme Administrateur",
+      "demote_confirm_title": "Rétrograder {{name}} ?",
+      "demote_confirm_description": "Cette action retirera les droits administrateur de {{name}}. Vous pouvez les restaurer à tout moment.",
+      "demote_confirm": "Rétrograder",
+      "cancel": "Annuler"
+    },
+    "guilds": {
+      "title": "Guilds Discord",
+      "description": "Serveurs autorisés",
+      "guild_id_placeholder": "ID du serveur",
+      "label_placeholder": "Nom (optionnel)",
+      "empty": "Aucun serveur configuré",
+      "no_name": "Sans nom"
+    },
+    "emails": {
+      "title": "Emails autorisés",
+      "description": "Whitelist Gmail OAuth",
+      "empty": "Aucun email configuré"
+    },
+    "toast": {
+      "guild_added": "Serveur ajouté",
+      "guild_error": "Ce serveur existe déjà ou une erreur est survenue",
+      "guild_deleted": "Serveur supprimé",
+      "email_added": "Email ajouté",
+      "email_error": "Cet email existe déjà ou une erreur est survenue",
+      "email_deleted": "Email supprimé",
+      "role_updated": "Rôle mis à jour",
+      "role_error": "Erreur lors de la mise à jour du rôle",
+      "role_last_admin": "Impossible de rétrograder le dernier administrateur",
+      "request_approved": "Demande approuvée",
+      "request_denied": "Demande refusée",
+      "request_error": "Erreur lors du traitement de la demande"
+    }
   }
 }
