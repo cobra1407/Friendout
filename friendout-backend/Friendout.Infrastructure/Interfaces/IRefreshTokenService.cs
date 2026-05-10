@@ -32,4 +32,10 @@ public interface IRefreshTokenService
     /// This limits the damage if a refresh token is stolen — each token can only be used once.
     /// </summary>
     Task<string> RotateAsync(string oldToken, string userId);
+
+    /// <summary>
+    /// Revokes all active refresh tokens for a given user.
+    /// Called on login to ensure only one active session exists per user.
+    /// </summary>
+    Task RevokeAllAsync(string userId);
 }

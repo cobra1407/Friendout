@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
@@ -83,6 +84,14 @@ public class RefreshTokenService : IRefreshTokenService
 
         // Issue a fresh token for the same user.
         return await CreateAsync(userId);
+    }
+
+    /// <inheritdoc />
+    public async Task RevokeAllAsync(string userId)
+    {
+        await _db.RefreshTokens
+            .Where(t => t.UserId == userId && !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsRevoked, true));
     }
 
     /// <summary>
