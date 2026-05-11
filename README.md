@@ -70,7 +70,7 @@ cd friendout
 cp .env.example .env
 ```
 
-Édite `.env.docker` et renseigne toutes les valeurs requises (credentials Discord, clé JWT, mots de passe DB).
+Édite `.env` et renseigne toutes les valeurs requises (credentials Discord, clé JWT, mots de passe DB).
 
 ### 3. Lancer avec Docker
 
@@ -144,7 +144,7 @@ friendout/
 
    > Tu peux ajouter les deux en même temps pour couvrir les deux cas.
 
-4. Copie le **Client ID** et le **Client Secret** dans ton `.env.docker` (Docker) ou `.env` (dev local)
+4. Copie le **Client ID** et le **Client Secret** dans ton `.env`
 
 ---
 
@@ -160,7 +160,6 @@ friendout/
 | `Jwt__Key` | Clé de signature JWT (min. 32 caractères) |
 | `Jwt__Issuer` | URL de l'émetteur du token |
 | `Jwt__Audience` | URL de l'audience du token |
-| `Discord__AllowedGuildIds` | IDs de serveurs Discord autorisés, séparés par des virgules (optionnel — vide = tout le monde) |
 
 ### Frontend (`friendout-frontend/.env`)
 

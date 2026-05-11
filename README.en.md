@@ -68,10 +68,10 @@ cd friendout
 ### 2. Set up environment variables
 
 ```bash
-cp .env.docker.example .env.docker
+cp .env.example .env
 ```
 
-Edit `.env.docker` and fill in all required values (Discord credentials, JWT key, DB passwords).
+Edit `.env` and fill in all required values (Discord credentials, JWT key, DB passwords).
 
 ### 3. Run with Docker
 
@@ -163,7 +163,7 @@ Friendout uses a two-layer authentication system:
 
    > You can add both at once to cover both scenarios.
 
-4. Copy the **Client ID** and **Client Secret** into your `.env.docker` (Docker) or `.env` (local dev)
+4. Copy the **Client ID** and **Client Secret** into your `.env`
 
 ---
 
@@ -179,7 +179,6 @@ Friendout uses a two-layer authentication system:
 | `Jwt__Key` | JWT signing key (min. 32 characters) |
 | `Jwt__Issuer` | Token issuer URL |
 | `Jwt__Audience` | Token audience URL |
-| `Discord__AllowedGuildIds` | Comma-separated Discord server IDs (optional — leave empty to allow everyone) |
 
 ### Frontend (`friendout-frontend/.env`)
 
