@@ -2,6 +2,7 @@ using FluentAssertions;
 using Friendout.Domain.DTOs.Admin;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
+using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
 
 namespace Friendout.Test;
@@ -12,8 +13,17 @@ public class AdminServiceTests
     // Helper
     // -------------------------
 
+    /// <summary>No-op IAppLogService for tests — logs nothing, throws nothing.</summary>
+    private sealed class NullAppLogService : IAppLogService
+    {
+        public static readonly NullAppLogService Instance = new();
+        public Task LogInfoAsync(string category, string message) => Task.CompletedTask;
+        public Task LogWarningAsync(string category, string message) => Task.CompletedTask;
+        public Task LogErrorAsync(string category, string message, Exception? ex = null) => Task.CompletedTask;
+    }
+
     private static AdminService CreateService(Friendout.Domain.Context.FriendoutDbContext db)
-        => new(db, TestLogger<AdminService>.Instance);
+        => new(db, TestLogger<AdminService>.Instance, NullAppLogService.Instance);
 
     // -------------------------
     // GetAllowedGuildsAsync
