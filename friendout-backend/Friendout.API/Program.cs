@@ -291,11 +291,13 @@ builder.Services.AddAuthentication(options =>
         var guildsJson = await response.Content.ReadAsStringAsync();
         var guilds = JsonSerializer.Deserialize<List<DiscordGuild>>(guildsJson) ?? new();
 
-        var allowedGuildIds = builder.Configuration.GetSection("Discord:AllowedGuildIds").Get<string[]>()
-            ?? GetCommaSeparatedConfig(builder.Configuration, "Discord:AllowedGuildIds")
-            ?? Array.Empty<string>();
+        // Check if the user has access to at least one of the allowed guilds (if any are configured).
+        var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
+        var allowedGuildIds = await db.AllowedGuilds
+            .Select(g => g.GuildId)
+            .ToListAsync();
 
-        if (allowedGuildIds.Length > 0 && !guilds.Any(g => allowedGuildIds.Contains(g.Id)))
+        if (allowedGuildIds.Count > 0 && !guilds.Any(g => allowedGuildIds.Contains(g.Id)))
         {
             context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
             context.HandleResponse();
@@ -307,8 +309,7 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnRemoteFailure = context =>
     {
-        // Déclenché notamment si le redirect_uri ne correspond pas à celui
-        // enregistré dans le Discord Developer Portal.
+        // Read the login URL from config to generate absolute redirects.
         var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
         context.HandleResponse();
         context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
@@ -358,8 +359,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-// Doit être appelé avant UseAuthentication pour que le middleware OAuth
-// voie déjà l'URL publique reconstituée quand il construit le redirect_uri.
+// Forwarded headers (X-Forwarded-For, X-Forwarded-Proto) for correct client IP and scheme when behind a reverse proxy.
 app.UseForwardedHeaders();
 
 app.UseCors("AllowFrontend");
@@ -398,7 +398,7 @@ static void LoadEnvFiles()
     }
 }
 
-// Lit une clé qui peut être une chaîne "a,b,c" (ex. variable d'env) et and returns it as an array.
+// Helper to parse comma-separated config values (e.g. CORS origins) from either JSON array or comma-separated string.
 static string[]? GetCommaSeparatedConfig(IConfiguration configuration, string key)
 {
     var value = configuration[key];
