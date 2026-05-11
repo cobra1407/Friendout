@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Admin;
@@ -16,11 +17,13 @@ public class AdminService : IAdminService
 {
     private readonly FriendoutDbContext _db;
     private readonly ILogger<AdminService> _logger;
+    private readonly IAppLogService _appLog;
 
-    public AdminService(FriendoutDbContext db, ILogger<AdminService> logger)
+    public AdminService(FriendoutDbContext db, ILogger<AdminService> logger, IAppLogService appLog)
     {
         _db = db;
         _logger = logger;
+        _appLog = appLog;
     }
 
     // -------------------------
@@ -32,6 +35,29 @@ public class AdminService : IAdminService
         var guildCount = await _db.AllowedGuilds.CountAsync();
         var emailCount = await _db.AllowedEmails.CountAsync();
         return new AccessModeDto(IsOpenMode: guildCount == 0, GuildCount: guildCount, EmailCount: emailCount);
+    }
+
+    // -------------------------
+    // Logs
+    // -------------------------
+
+    public async Task<List<AppLogDto>> GetLogsAsync(string? level, int limit)
+    {
+        var query = _db.AppLogs.AsQueryable();
+
+        if (Enum.TryParse<AppLogLevel>(level, ignoreCase: true, out var parsedLevel))
+            query = query.Where(l => l.Level == parsedLevel);
+
+        return await query
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(limit)
+            .Select(l => new AppLogDto(l.Id, l.Level.ToString(), l.Category, l.Message, l.Exception, l.CreatedAt))
+            .ToListAsync();
+    }
+
+    public async Task ClearLogsAsync()
+    {
+        await _db.AppLogs.ExecuteDeleteAsync();
     }
 
     // -------------------------
@@ -57,6 +83,7 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
+            await _appLog.LogInfoAsync("Admin", $"Guild ajouté : {dto.GuildId} ({dto.Label})");
             return ServiceResult<GuildDto>.Success(new GuildDto(guild.Id, guild.GuildId, guild.Label, guild.CreatedAt));
         }
         catch (Exception ex)
@@ -74,6 +101,7 @@ public class AdminService : IAdminService
 
         _db.AllowedGuilds.Remove(guild);
         await _db.SaveChangesAsync();
+        await _appLog.LogInfoAsync("Admin", $"Guild supprimé : {guild.GuildId} ({guild.Label})");
         return ServiceResult<bool>.Success(true);
     }
 
@@ -205,6 +233,7 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
+            await _appLog.LogInfoAsync("Admin", $"Rôle mis à jour : utilisateur {id} → {dto.Role}");
             return ServiceResult<UserAdminDto>.Success(
                 new UserAdminDto(user.Id, user.Name, user.Email, user.AvatarUrl, user.Role, user.CreatedAt));
         }

@@ -10,3 +10,4 @@ public record AccessRequestDto(int Id, string Email, string? Name, string? Messa
 
 // Access mode DTO with summary counts for admin dashboard.
 public record AccessModeDto(bool IsOpenMode, int GuildCount, int EmailCount);
+public record AppLogDto(int Id, string Level, string Category, string Message, string? Exception, DateTime CreatedAt);

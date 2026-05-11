@@ -1,3 +1,4 @@
+using System.Text;
 using Friendout.Domain.DTOs.Admin;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +38,40 @@ public class AdminController : ControllerBase
     [HttpGet("admin/access-mode")]
     public async Task<IActionResult> GetAccessMode()
         => Ok(await _adminService.GetAccessModeAsync());
+
+    // -------------------------
+    // Logs
+    // -------------------------
+
+    [HttpGet("admin/logs")]
+    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 200)
+        => Ok(await _adminService.GetLogsAsync(level, Math.Clamp(limit, 1, 1000)));
+
+    [HttpDelete("admin/logs")]
+    public async Task<IActionResult> ClearLogs()
+    {
+        await _adminService.ClearLogsAsync();
+        return NoContent();
+    }
+
+    [HttpGet("admin/logs/export")]
+    public async Task<IActionResult> ExportLogs()
+    {
+        var logs = await _adminService.GetLogsAsync(null, 10000);
+
+        var csv = new StringBuilder();
+        csv.AppendLine("Id,Level,Category,Message,Exception,CreatedAt");
+        foreach (var log in logs)
+        {
+            csv.AppendLine($"{log.Id},{log.Level},{Escape(log.Category)},{Escape(log.Message)},{Escape(log.Exception ?? "")},{log.CreatedAt:O}");
+        }
+
+        var filename = $"friendout-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";
+        return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", filename);
+    }
+
+    private static string Escape(string value)
+        => $"\"{value.Replace("\"", "\"\"")}\"";
 
     // -------------------------
     // Guilds

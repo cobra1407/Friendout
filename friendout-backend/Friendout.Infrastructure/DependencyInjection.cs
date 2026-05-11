@@ -15,6 +15,7 @@ public static class DependencyInjection
     {
         // Add services 
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IAppLogService, AppLogService>();
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IEquipmentService, EquipmentService>();
