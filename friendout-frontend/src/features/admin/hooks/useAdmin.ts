@@ -5,6 +5,14 @@ import { toast } from "sonner";
 import { getTranslation } from "@/i18n";
 import { UserRole } from "@/features/user/enum/userRole.enum";
 
+export const useAccessMode = () => {
+    const { data, isLoading } = useQuery({
+        queryKey: ["admin", "access-mode"],
+        queryFn: adminApi.getAccessMode,
+    });
+    return { accessMode: data, isLoading };
+};
+
 export const useAdminGuilds = () => {
     const qc = useQueryClient();
     const [guildId, setGuildId] = useState("");
@@ -22,6 +30,7 @@ export const useAdminGuilds = () => {
             setGuildId("");
             setLabel("");
             qc.invalidateQueries({ queryKey: ["admin", "guilds"] });
+            qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
         onError: () => toast.error(getTranslation('admin.toast.guild_error')),
     });
@@ -31,6 +40,7 @@ export const useAdminGuilds = () => {
         onSuccess: () => {
             toast.success(getTranslation('admin.toast.guild_deleted'));
             qc.invalidateQueries({ queryKey: ["admin", "guilds"] });
+            qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
     });
 

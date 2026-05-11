@@ -34,7 +34,14 @@ export interface AccessRequestDto {
     resolvedAt: string | null;
 }
 
+export interface AccessModeDto {
+    isOpenMode: boolean;
+    guildCount: number;
+    emailCount: number;
+}
+
 export const adminApi = {
+    getAccessMode: () => api.get<AccessModeDto>("/admin/access-mode").then(r => r.data),
     getGuilds: () => api.get<GuildDto[]>("/admin/allowed-guilds").then(r => r.data),
     addGuild: (guildId: string, label?: string) =>
         api.post<GuildDto>("/admin/allowed-guilds", { guildId, label }).then(r => r.data),

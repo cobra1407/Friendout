@@ -131,6 +131,10 @@ public class OAuthCallbackController : ControllerBase
             Expires = DateTimeOffset.UtcNow.AddMinutes(15)
         });
 
+        // Revoke all existing active tokens before creating a new one.
+        // Prevents token accumulation on repeated logins.
+        await _refreshTokenService.RevokeAllAsync(user.Id);
+
         var rawRefreshToken = await _refreshTokenService.CreateAsync(user.Id);
         Response.Cookies.Append("refresh_token", rawRefreshToken, new CookieOptions
         {

@@ -1,14 +1,15 @@
-import { Server, Search, Plus, Trash2 } from "lucide-react";
+import { Server, Search, Plus, Trash2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { getTranslation } from "@/i18n";
-import { useAdminGuilds } from "../hooks/useAdmin";
+import { useAdminGuilds, useAccessMode } from "../hooks/useAdmin";
 
 export const AdminGuildsSection = () => {
     const { guilds, isLoading, guildId, setGuildId, label, setLabel, addMutation, deleteMutation } = useAdminGuilds();
+    const { accessMode } = useAccessMode();
     const [search, setSearch] = useState("");
 
     const filteredGuilds = guilds.filter(
@@ -31,6 +32,14 @@ export const AdminGuildsSection = () => {
                 </div>
             </CardHeader>
             <CardContent className="pt-0 space-y-3">
+                {accessMode?.isOpenMode && (
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2.5">
+                        <TriangleAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800 dark:text-amber-300">
+                            {getTranslation('admin.guilds.open_mode_warning')}
+                        </p>
+                    </div>
+                )}
                 <div className="flex flex-col gap-2">
                     <Input
                         placeholder={getTranslation('admin.guilds.guild_id_placeholder')}

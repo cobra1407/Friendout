@@ -7,6 +7,9 @@ namespace Friendout.Infrastructure.Interfaces;
 
 public interface IAdminService
 {
+    // Access Mode
+    Task<AccessModeDto> GetAccessModeAsync();
+
     // Guilds
     Task<List<GuildDto>> GetAllowedGuildsAsync();
     Task<ServiceResult<GuildDto>> AddAllowedGuildAsync(AddGuildDto dto);

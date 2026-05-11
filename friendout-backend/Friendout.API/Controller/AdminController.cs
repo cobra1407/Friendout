@@ -31,6 +31,14 @@ public class AdminController : ControllerBase
     };
 
     // -------------------------
+    // Access Mode
+    // -------------------------
+
+    [HttpGet("admin/access-mode")]
+    public async Task<IActionResult> GetAccessMode()
+        => Ok(await _adminService.GetAccessModeAsync());
+
+    // -------------------------
     // Guilds
     // -------------------------
 

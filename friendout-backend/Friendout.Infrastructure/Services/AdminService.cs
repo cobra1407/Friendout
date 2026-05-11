@@ -24,6 +24,17 @@ public class AdminService : IAdminService
     }
 
     // -------------------------
+    // Access Mode
+    // -------------------------
+
+    public async Task<AccessModeDto> GetAccessModeAsync()
+    {
+        var guildCount = await _db.AllowedGuilds.CountAsync();
+        var emailCount = await _db.AllowedEmails.CountAsync();
+        return new AccessModeDto(IsOpenMode: guildCount == 0, GuildCount: guildCount, EmailCount: emailCount);
+    }
+
+    // -------------------------
     // Guilds
     // -------------------------
 
