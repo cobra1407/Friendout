@@ -299,7 +299,8 @@
       "guild_id_placeholder": "ID du serveur",
       "label_placeholder": "Nom (optionnel)",
       "empty": "Aucun serveur configuré",
-      "no_name": "Sans nom"
+      "no_name": "Sans nom",
+      "open_mode_warning": "Aucun serveur Discord configuré — l'accès est actuellement ouvert à tous. Ajoutez au moins un serveur pour restreindre les connexions."
     },
     "emails": {
       "title": "Emails autorisés",
