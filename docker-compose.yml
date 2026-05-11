@@ -42,7 +42,6 @@
       Frontend__LoginUrl: ${APP_URL}/login
       Frontend__ActivitiesUrl: ${APP_URL}/activities
       Cors__AllowedOrigins: ${APP_URL}
-      Discord__AllowedGuildIds: ${DISCORD_ALLOWED_GUILD_IDS}
       Seed__Enabled: ${SEED_ENABLED:-false}
     volumes:
       - uploads_data:/app/uploads
