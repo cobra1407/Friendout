@@ -262,6 +262,10 @@
     "system_operational": "System operational",
     "search_placeholder": "Search...",
     "no_results": "No results",
+    "nav": {
+      "dashboard": "Dashboard",
+      "logs": "Logs"
+    },
     "roles": {
       "admin": "Admin",
       "user": "User"
@@ -304,6 +308,16 @@
       "title": "Allowed emails",
       "description": "Gmail OAuth whitelist",
       "empty": "No email configured"
+    },
+    "logs": {
+      "title": "Activity logs",
+      "description": "Logins, admin actions and errors",
+      "empty": "No logs yet",
+      "filter_all": "All levels",
+      "export": "Export as CSV",
+      "clear": "Clear logs",
+      "toast_cleared": "Logs cleared",
+      "toast_clear_error": "Error while clearing logs"
     },
     "toast": {
       "guild_added": "Server added",

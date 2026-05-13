@@ -264,6 +264,10 @@
     "system_operational": "Système opérationnel",
     "search_placeholder": "Rechercher...",
     "no_results": "Aucun résultat",
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "logs": "Journaux"
+    },
     "roles": {
       "admin": "Administrateur",
       "user": "Utilisateur"
@@ -306,6 +310,16 @@
       "title": "Emails autorisés",
       "description": "Whitelist Gmail OAuth",
       "empty": "Aucun email configuré"
+    },
+    "logs": {
+      "title": "Journaux d'activité",
+      "description": "Connexions, actions admin et erreurs",
+      "empty": "Aucun journal pour le moment",
+      "filter_all": "Tous les niveaux",
+      "export": "Exporter en CSV",
+      "clear": "Vider les journaux",
+      "toast_cleared": "Journaux effacés",
+      "toast_clear_error": "Erreur lors de la suppression des journaux"
     },
     "toast": {
       "guild_added": "Serveur ajouté",

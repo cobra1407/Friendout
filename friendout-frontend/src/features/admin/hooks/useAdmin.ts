@@ -13,6 +13,27 @@ export const useAccessMode = () => {
     return { accessMode: data, isLoading };
 };
 
+export const useAdminLogs = () => {
+    const qc = useQueryClient();
+    const [levelFilter, setLevelFilter] = useState<string | undefined>(undefined);
+
+    const { data: logs = [], isLoading } = useQuery({
+        queryKey: ["admin", "logs", levelFilter],
+        queryFn: () => adminApi.getLogs(levelFilter),
+    });
+
+    const clearMutation = useMutation({
+        mutationFn: adminApi.clearLogs,
+        onSuccess: () => {
+            toast.success(getTranslation('admin.logs.toast_cleared'));
+            qc.invalidateQueries({ queryKey: ["admin", "logs"] });
+        },
+        onError: () => toast.error(getTranslation('admin.logs.toast_clear_error')),
+    });
+
+    return { logs, isLoading, levelFilter, setLevelFilter, clearMutation };
+};
+
 export const useAdminGuilds = () => {
     const qc = useQueryClient();
     const [guildId, setGuildId] = useState("");
