@@ -76,7 +76,7 @@ Edit `.env` and fill in all required values (Discord credentials, JWT key, DB pa
 ### 3. Run with Docker
 
 ```bash
-docker compose --env-file .env.docker up --build
+docker compose up -d --build
 ```
 
 The app will be available at `http://localhost`.
