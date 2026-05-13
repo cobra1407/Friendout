@@ -3,7 +3,7 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 # Install pnpm (project uses pnpm-lock.yaml)
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.12.4
 
 # Copy manifests and install dependencies
 # --frozen-lockfile: ensures build reproducibility
