@@ -300,7 +300,7 @@ builder.Services.AddAuthentication(options =>
         if (allowedGuildIds.Count > 0 && !guilds.Any(g => allowedGuildIds.Contains(g.Id)))
         {
             var appLog = context.HttpContext.RequestServices.GetRequiredService<IAppLogService>();
-            await appLog.LogWarningAsync("Auth", "Connection refused — no matching allowed guild found.");
+            await appLog.LogWarningAsync("Auth", "Login refused — no matching allowed guild.");
             context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
             context.HandleResponse();
             return;

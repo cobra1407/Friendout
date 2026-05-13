@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
@@ -8,22 +9,31 @@ using Friendout.Domain.DTOs.Admin;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Friendout.Infrastructure.Services;
 
 public class AdminService : IAdminService
 {
     private readonly FriendoutDbContext _db;
-    private readonly ILogger<AdminService> _logger;
     private readonly IAppLogService _appLog;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AdminService(FriendoutDbContext db, ILogger<AdminService> logger, IAppLogService appLog)
+    public AdminService(FriendoutDbContext db, IAppLogService appLog, IHttpContextAccessor httpContextAccessor)
     {
         _db = db;
-        _logger = logger;
         _appLog = appLog;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    /// <summary>Returns the (id, name) of the currently authenticated admin.</summary>
+    private async Task<(string id, string name)> GetActorAsync()
+    {
+        var actorId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+        if (actorId == "unknown") return (actorId, "unknown");
+        var actor = await _db.Users.FindAsync(actorId);
+        return (actorId, actor?.Name ?? actorId);
     }
 
     // -------------------------
@@ -83,12 +93,13 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
-            await _appLog.LogInfoAsync("Admin", $"Guild ajouté : {dto.GuildId} ({dto.Label})");
+            var (actorId, actorName) = await GetActorAsync();
+            await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) added guild {dto.GuildId} ({dto.Label})");
             return ServiceResult<GuildDto>.Success(new GuildDto(guild.Id, guild.GuildId, guild.Label, guild.CreatedAt));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add allowed guild {GuildId}", dto.GuildId);
+            await _appLog.LogErrorAsync("Admin", $"Failed to add guild {dto.GuildId}", ex);
             return ServiceResult<GuildDto>.Failure("unexpected_error");
         }
     }
@@ -101,7 +112,8 @@ public class AdminService : IAdminService
 
         _db.AllowedGuilds.Remove(guild);
         await _db.SaveChangesAsync();
-        await _appLog.LogInfoAsync("Admin", $"Guild supprimé : {guild.GuildId} ({guild.Label})");
+        var (actorId, actorName) = await GetActorAsync();
+        await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) removed guild {guild.GuildId} ({guild.Label})");
         return ServiceResult<bool>.Success(true);
     }
 
@@ -134,7 +146,7 @@ public class AdminService : IAdminService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add allowed email {Email}", email);
+            await _appLog.LogErrorAsync("Admin", $"Failed to add email {email}", ex);
             return ServiceResult<EmailDto>.Failure("unexpected_error");
         }
     }
@@ -196,7 +208,7 @@ public class AdminService : IAdminService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to resolve access request {RequestId}", id);
+            await _appLog.LogErrorAsync("Admin", $"Failed to resolve access request {id}", ex);
             return ServiceResult<AccessRequestDto>.Failure("unexpected_error");
         }
     }
@@ -208,7 +220,8 @@ public class AdminService : IAdminService
     public async Task<List<UserAdminDto>> GetUsersAsync()
     {
         return await _db.Users
-            .OrderBy(u => u.CreatedAt)
+            .OrderBy(u => u.Role == UserRole.Admin ? 0 : 1)
+            .ThenBy(u => u.CreatedAt)
             .Select(u => new UserAdminDto(u.Id, u.Name, u.Email, u.AvatarUrl, u.Role, u.CreatedAt))
             .ToListAsync();
     }
@@ -233,13 +246,14 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
-            await _appLog.LogInfoAsync("Admin", $"Rôle mis à jour : utilisateur {id} → {dto.Role}");
+            var (actorId, actorName) = await GetActorAsync();
+            await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) changed {user.Name} ({id}) role to {dto.Role}");
             return ServiceResult<UserAdminDto>.Success(
                 new UserAdminDto(user.Id, user.Name, user.Email, user.AvatarUrl, user.Role, user.CreatedAt));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update role for user {UserId}", id);
+            await _appLog.LogErrorAsync("Admin", $"Failed to update role for user {id}", ex);
             return ServiceResult<UserAdminDto>.Failure("unexpected_error");
         }
     }

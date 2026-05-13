@@ -5,7 +5,7 @@ namespace Friendout.Infrastructure.Interfaces;
 
 /// <summary>
 /// Logs meaningful application events both to stdout (Docker) and to the database (admin panel).
-/// Not intended for high-frequency/debug logging — use ILogger directly for that.
+/// Messages are stored as plain English strings
 /// </summary>
 public interface IAppLogService
 {

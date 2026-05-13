@@ -63,7 +63,10 @@ public class AdminController : ControllerBase
         csv.AppendLine("Id,Level,Category,Message,Exception,CreatedAt");
         foreach (var log in logs)
         {
-            csv.AppendLine($"{log.Id},{log.Level},{Escape(log.Category)},{Escape(log.Message)},{Escape(log.Exception ?? "")},{log.CreatedAt:O}");
+            csv.AppendLine(
+                $"{log.Id},{log.Level},{Escape(log.Category)},{Escape(log.Message)}," +
+                $"{Escape(log.Exception ?? "")},{log.CreatedAt:O}"
+            );
         }
 
         var filename = $"friendout-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";

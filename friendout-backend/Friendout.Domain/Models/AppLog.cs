@@ -7,6 +7,7 @@ namespace Friendout.Domain.Models;
 /// <summary>
 /// An application-level log entry persisted in the database.
 /// Only meaningful events are stored here (auth, admin actions, errors).
+/// Messages are plain English strings — always human-readable regardless of i18n.
 /// Low-level/debug logs stay in the console (stdout → Docker).
 /// </summary>
 [Table("app_logs")]
@@ -26,10 +27,10 @@ public class AppLog
     [MaxLength(100)]
     public string Category { get; set; } = null!;
 
-    /// <summary>Human-readable description of the event.</summary>
+    /// <summary>Human-readable English description of the event.</summary>
     [Required]
     [Column("message")]
-    [MaxLength(2000)]
+    [MaxLength(500)]
     public string Message { get; set; } = null!;
 
     /// <summary>Full exception string (only for Error level).</summary>

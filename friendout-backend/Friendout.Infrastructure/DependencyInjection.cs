@@ -14,6 +14,7 @@ public static class DependencyInjection
     public static void AddInfrastructure(this IServiceCollection services, string webRootPath)
     {
         // Add services 
+        services.AddHttpContextAccessor();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAppLogService, AppLogService>();
         services.AddScoped<IActivityService, ActivityService>();

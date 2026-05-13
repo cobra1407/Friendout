@@ -30,7 +30,6 @@ public class AppLogService : IAppLogService
 
     private async Task WriteAsync(AppLogLevel level, string category, string message, Exception? ex)
     {
-        // Forward to ASP.NET Core ILogger → visible in Docker stdout
         var logLevel = level switch
         {
             AppLogLevel.Warning => LogLevel.Warning,
@@ -39,7 +38,6 @@ public class AppLogService : IAppLogService
         };
         _logger.Log(logLevel, ex, "[{Category}] {Message}", category, message);
 
-        // Persist in DB for the admin panel
         _db.AppLogs.Add(new AppLog
         {
             Level     = level,
@@ -55,7 +53,6 @@ public class AppLogService : IAppLogService
         }
         catch (Exception saveEx)
         {
-            // Never let a log failure crash the app — just warn on stdout
             _logger.LogWarning(saveEx, "AppLogService: failed to persist log to database.");
         }
     }
