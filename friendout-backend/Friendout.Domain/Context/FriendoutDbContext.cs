@@ -25,6 +25,7 @@ namespace Friendout.Domain.Context
         public DbSet<AllowedGuild> AllowedGuilds { get; set; }
         public DbSet<AllowedEmail> AllowedEmails { get; set; }
         public DbSet<AccessRequest> AccessRequests { get; set; }
+        public DbSet<AppLog> AppLogs { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -242,6 +243,13 @@ namespace Friendout.Domain.Context
             modelBuilder.Entity<AllowedEmail>(entity =>
             {
                 entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            modelBuilder.Entity<AppLog>(entity =>
+            {
+                entity.HasIndex(e => e.Level);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.Property(e => e.Level).HasConversion<string>();
             });
 
             modelBuilder.Entity<AccessRequest>(entity =>

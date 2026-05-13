@@ -10,6 +10,10 @@ public interface IAdminService
     // Access Mode
     Task<AccessModeDto> GetAccessModeAsync();
 
+    // Logs
+    Task<List<AppLogDto>> GetLogsAsync(string? level, int limit);
+    Task ClearLogsAsync();
+
     // Guilds
     Task<List<GuildDto>> GetAllowedGuildsAsync();
     Task<ServiceResult<GuildDto>> AddAllowedGuildAsync(AddGuildDto dto);
