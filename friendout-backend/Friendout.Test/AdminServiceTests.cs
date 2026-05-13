@@ -4,6 +4,7 @@ using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace Friendout.Test;
 
@@ -23,7 +24,67 @@ public class AdminServiceTests
     }
 
     private static AdminService CreateService(Friendout.Domain.Context.FriendoutDbContext db)
-        => new(db, TestLogger<AdminService>.Instance, NullAppLogService.Instance);
+        => new(db, NullAppLogService.Instance, new HttpContextAccessor());
+
+    // -------------------------
+    // GetLogsAsync
+    // -------------------------
+
+    [Test]
+    public async Task GetLogs_ReturnsEmpty_WhenNoLogsExist()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetLogs_ReturnsEmpty_WhenNoLogsExist));
+
+        var result = await CreateService(db).GetLogsAsync(null, 100);
+
+        result.Should().BeEmpty();
+    }
+
+    [Test]
+    public async Task GetLogs_ReturnsDescendingOrder()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetLogs_ReturnsDescendingOrder));
+        db.AppLogs.AddRange(
+            new AppLog { Level = AppLogLevel.Info,    Category = "Test", Message = "old", CreatedAt = DateTime.UtcNow.AddMinutes(-10) },
+            new AppLog { Level = AppLogLevel.Warning, Category = "Test", Message = "new", CreatedAt = DateTime.UtcNow }
+        );
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).GetLogsAsync(null, 100);
+
+        result.Should().HaveCount(2);
+        result[0].Message.Should().Be("new");
+        result[1].Message.Should().Be("old");
+    }
+
+    [Test]
+    public async Task GetLogs_FiltersBy_Level()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetLogs_FiltersBy_Level));
+        db.AppLogs.AddRange(
+            new AppLog { Level = AppLogLevel.Info,  Category = "Test", Message = "info log" },
+            new AppLog { Level = AppLogLevel.Error, Category = "Test", Message = "error log" }
+        );
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).GetLogsAsync("Error", 100);
+
+        result.Should().HaveCount(1);
+        result[0].Level.Should().Be("Error");
+    }
+
+    [Test]
+    public async Task GetLogs_RespectsLimit()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetLogs_RespectsLimit));
+        for (var i = 0; i < 10; i++)
+            db.AppLogs.Add(new AppLog { Level = AppLogLevel.Info, Category = "Test", Message = $"log {i}" });
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).GetLogsAsync(null, 3);
+
+        result.Should().HaveCount(3);
+    }
 
     // -------------------------
     // GetAllowedGuildsAsync
