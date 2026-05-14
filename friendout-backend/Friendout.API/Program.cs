@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,7 +38,9 @@ var requiredKeys = new[]
 {
     "Jwt:Key",
     "Authentication:Discord:ClientId",
-    "Authentication:Discord:ClientSecret"
+    "Authentication:Discord:ClientSecret",
+    "Authentication:Google:ClientId",
+    "Authentication:Google:ClientSecret"
 };
 
 foreach (var key in requiredKeys)
@@ -45,8 +48,8 @@ foreach (var key in requiredKeys)
     if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
     {
         throw new InvalidOperationException(
-            $"Configuration missing: the key� '{key}' est obligatoire.\n" +
-            "Vérifiez .env (ou .env.local), appsettings.json, ou les variables d'environnement.");
+            $"Configuration missing: The key '{key}' is required.\n" +
+            "Please check your .env (or .env.local) file, appsettings.json, or environment variables.");
     }
 }
 
@@ -224,6 +227,34 @@ builder.Services.AddAuthentication(options =>
     // When HTTPS is enabled, Secure=true is applied automatically.
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
+})
+.AddGoogle(options =>
+{
+    var googleSection = builder.Configuration.GetSection("Authentication:Google");
+
+    options.ClientId = googleSection["ClientId"]!;
+    options.ClientSecret = googleSection["ClientSecret"]!;
+    options.CallbackPath = googleSection["CallbackPath"] ?? "/signin-google";
+    options.SaveTokens = true;
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+
+    // Map the profile picture claim
+    options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+
+    options.Scope.Add("openid");
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+
+    options.Events.OnRemoteFailure = context =>
+    {
+        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
+        context.HandleResponse();
+        context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
+        return Task.CompletedTask;
+    };
 })
 .AddDiscord(options =>
 {
