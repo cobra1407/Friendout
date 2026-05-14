@@ -39,6 +39,9 @@
       Authentication__Discord__ClientId: ${DISCORD_CLIENT_ID}
       Authentication__Discord__ClientSecret: ${DISCORD_CLIENT_SECRET}
       Authentication__Discord__CallbackPath: /api/auth/callback/discord
+      Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID}
+      Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET}
+      Authentication__Google__CallbackPath: /api/auth/callback/google
       Frontend__LoginUrl: ${APP_URL}/login
       Frontend__ActivitiesUrl: ${APP_URL}/activities
       Cors__AllowedOrigins: ${APP_URL}
