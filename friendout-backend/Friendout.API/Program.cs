@@ -112,7 +112,8 @@ builder.Services.AddInfrastructure(uploadsBasePath);
 var connectionString = builder.Configuration.GetConnectionString("FriendoutDatabase");
 if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
-        "La chaîne de connexion 'ConnectionStrings:FriendoutDatabase' is missing. Vérifiez .env ou appsettings.json.");
+        "The connection string 'ConnectionStrings:FriendoutDatabase' is missing. " +
+        "Please check your .env file or appsettings.json.");
 
 builder.Services.AddDbContext<FriendoutDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
@@ -293,15 +294,15 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnTicketReceived = async context =>
     {
-        // Lire l'URL de login depuis la config pour générer des redirects absolus.
-        // Un redirect relatif (/login) fonctionnerait aussi, mais une URL absolue
-        // est plus sûre derrière un reverse proxy.
+        // Read the login URL from config to generate absolute redirects.
+        // A relative redirect (/login) would also work, but an absolute URL
+        // is safer behind a reverse proxy.
         var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
 
         var accessToken = context.Properties?.GetTokenValue("access_token");
         if (string.IsNullOrEmpty(accessToken))
         {
-            // error_code : paramètre lu par le frontend React (loginpage.tsx)
+            // error_code: query parameter read by the React frontend (loginpage.tsx)
             context.Response.Redirect($"{loginUrl}?error_code=no_token");
             context.HandleResponse();
             return;
