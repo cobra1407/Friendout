@@ -16,11 +16,23 @@ using Friendout.Domain.Models;
 using Friendout.Domain.Seeds;
 using Friendout.Infrastructure;
 using Friendout.Infrastructure.Interfaces;
+using Microsoft.AspNetCore.HttpOverrides;
 using friendout_backend.Controller;
 
 LoadEnvFiles();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Trust forwarded headers from any proxy (Docker / reverse proxy setup).
+// Without this, ASP.NET Core ignores X-Forwarded-Proto and builds OAuth
+// redirect URIs with "http" even when the public URL is "https".
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Clear default restrictions so all proxies in the Docker network are trusted.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // -----------------------------
 // Configuration – Load order (the last one wins)
