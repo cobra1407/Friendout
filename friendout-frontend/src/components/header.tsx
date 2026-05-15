@@ -20,7 +20,6 @@ export const Header = ({ onCreateActivity, onLogout }: HeaderProps) => {
 
     const logoFriendout: Record<string, string> = {
         spring: springLogo,
-        fall: autumnLogo,
         summer: summerLogo,
         autumn: autumnLogo,
         winter: winterLogo,
@@ -38,7 +37,7 @@ export const Header = ({ onCreateActivity, onLogout }: HeaderProps) => {
                             <img
                                 src={logoPath}
                                 alt={getTranslation('header.logo_alt')}
-                                className="w-full h-full object-contain p-2 sm:p-4 cursor-pointer hover:opacity-80 transition-opacity"
+                                className="w-full h-full object-contain sm:p-4 cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => navigate('/activities')}
                                 loading="eager"
                                 width={100}
