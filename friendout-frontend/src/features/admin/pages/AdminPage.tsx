@@ -10,16 +10,18 @@ import { AdminStatsSummary } from "../components/AdminStatsSummary";
 import { AdminUsersSection } from "../components/AdminUsersSection";
 import { AdminGuildsSection } from "../components/AdminGuildsSection";
 import { AdminEmailsSection } from "../components/AdminEmailsSection";
+import { AdminAccessSettingsSection } from "../components/AdminAccessSettingsSection";
 import { AdminAccessRequestsModal } from "../components/AdminAccessRequestsModal";
 import { AdminLogsSection } from "../components/AdminLogsSection";
-import { LayoutDashboard, ScrollText } from "lucide-react";
+import { LayoutDashboard, ScrollText, ShieldCheck } from "lucide-react";
 import { getTranslation } from "@/i18n";
 
-type AdminTab = "dashboard" | "logs";
+type AdminTab = "dashboard" | "access" | "logs";
 
 const TABS: { id: AdminTab; labelKey: string; icon: React.ReactNode }[] = [
     { id: "dashboard", labelKey: "admin.nav.dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: "logs", labelKey: "admin.nav.logs", icon: <ScrollText className="w-4 h-4" /> },
+    { id: "access",    labelKey: "admin.nav.access",    icon: <ShieldCheck className="w-4 h-4" /> },
+    { id: "logs",      labelKey: "admin.nav.logs",      icon: <ScrollText className="w-4 h-4" /> },
 ];
 
 export default function AdminPage() {
@@ -74,16 +76,21 @@ export default function AdminPage() {
                 {activeTab === "dashboard" && (
                     <>
                         <AdminStatsSummary onOpenRequests={() => setRequestsOpen(true)} />
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2">
-                                <AdminUsersSection />
-                            </div>
-                            <div className="flex flex-col gap-6">
-                                <AdminGuildsSection />
-                                <AdminEmailsSection />
-                            </div>
-                        </div>
+                        <AdminUsersSection />
                     </>
+                )}
+
+                {/* Access Control */}
+                {activeTab === "access" && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-1 flex flex-col gap-6">
+                            <AdminAccessSettingsSection />
+                        </div>
+                        <div className="lg:col-span-2 flex flex-col gap-6">
+                            <AdminGuildsSection />
+                            <AdminEmailsSection />
+                        </div>
+                    </div>
                 )}
 
                 {/* Logs */}

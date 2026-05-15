@@ -34,6 +34,11 @@ export interface AccessRequestDto {
     resolvedAt: string | null;
 }
 
+export interface AccessSettingsDto {
+    discordRestricted: boolean;
+    googleRestricted: boolean;
+}
+
 export interface AccessModeDto {
     isOpenMode: boolean;
     guildCount: number;
@@ -72,6 +77,11 @@ export const adminApi = {
     getUsers: () => api.get<UserAdminDto[]>("/admin/users").then(r => r.data),
     updateUserRole: (id: string, role: UserRole) =>
         api.put<UserAdminDto>(`/admin/users/${id}/role`, { role }).then(r => r.data),
+
+    // ------ Access settings ------
+    getAccessSettings: () => api.get<AccessSettingsDto>("/admin/access-settings").then(r => r.data),
+    updateAccessSettings: (dto: AccessSettingsDto) =>
+        api.put<AccessSettingsDto>("/admin/access-settings", dto).then(r => r.data),
 
     // ------ Access requests management ------
     getAccessMode: () => api.get<AccessModeDto>("/admin/access-mode").then(r => r.data),

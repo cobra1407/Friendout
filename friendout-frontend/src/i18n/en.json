@@ -262,12 +262,25 @@
     "icon_alt": "404 Error"
   },
   "admin": {
+    "settings": {
+      "title": "Access Restrictions",
+      "description": "Control which OAuth providers are restricted to a whitelist.",
+      "discord_restricted_label": "Restrict Discord login",
+      "discord_restricted_on": "Only members of allowed guilds can log in.",
+      "discord_restricted_off": "Anyone with a Discord account can log in.",
+      "google_restricted_label": "Restrict Google login",
+      "google_restricted_on": "Only allowed email addresses can log in.",
+      "google_restricted_off": "Anyone with a Google account can log in.",
+      "toast_saved": "Settings saved.",
+      "toast_error": "Failed to save settings."
+    },
     "page_title": "Control panel",
     "system_operational": "System operational",
     "search_placeholder": "Search...",
     "no_results": "No results",
     "nav": {
       "dashboard": "Dashboard",
+      "access": "Access Control",
       "logs": "Logs"
     },
     "roles": {
