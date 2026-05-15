@@ -1,51 +1,28 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using friendout_backend;
 using Friendout.Domain.Context;
-using Friendout.Domain.Models;
-using Friendout.Domain.Seeds;
 using Friendout.Infrastructure;
-using Friendout.Infrastructure.Interfaces;
-using Microsoft.AspNetCore.HttpOverrides;
 using friendout_backend.Controller;
+using friendout_backend.Extensions;
+using friendout_backend.Helpers;
+using Microsoft.EntityFrameworkCore;
 
-LoadEnvFiles();
+// -------------------------------------------------------
+// Environment variables (.env / .env.local)
+// -------------------------------------------------------
+EnvLoader.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Trust forwarded headers from any proxy (Docker / reverse proxy setup).
-// Without this, ASP.NET Core ignores X-Forwarded-Proto and builds OAuth
-// redirect URIs with "http" even when the public URL is "https".
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    // Clear default restrictions so all proxies in the Docker network are trusted.
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
-// -----------------------------
-// Configuration – Load order (the last one wins)
-// 1. appsettings.json          (default values)
-// 2. appsettings.{Environment}.json  (environment-specific)
-// 3. Environment variables / .env     (secrets & overrides)
-// -----------------------------
+// -------------------------------------------------------
+// Configuration
+// Load order (last wins): appsettings.json → appsettings.{env}.json → env variables
+// -------------------------------------------------------
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables(prefix: null);
 
-// Required configuration keys validation (appsettings / .env)
+// Fail fast: ensure all required keys are present before starting.
 var requiredKeys = new[]
 {
     "Jwt:Key",
@@ -58,378 +35,53 @@ var requiredKeys = new[]
 foreach (var key in requiredKeys)
 {
     if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
-    {
         throw new InvalidOperationException(
-            $"Configuration missing: The key '{key}' is required.\n" +
+            $"Configuration missing: The key '{key}' is required. " +
             "Please check your .env (or .env.local) file, appsettings.json, or environment variables.");
-    }
 }
 
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSection["Key"]!;
-var jwtIssuer = jwtSection.GetValue<string>("Issuer") ?? "friendout-backend";
-var jwtAudience = jwtSection.GetValue<string>("Audience") ?? "friendout-frontend";
-
-// -----------------------------
+// -------------------------------------------------------
 // Services
-// -----------------------------
-builder.Services.AddOpenApi();
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddSwaggerGen(opt =>
-{
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Friendout API", Version = "v1" });
-
-    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-
-    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            Array.Empty<string>()
-        }
-    });
-
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
-    if (File.Exists(xmlPath))
-    {
-        opt.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
-    }
-});
-
-builder.Services.AddControllers(options =>
-{
-    options.Conventions.Add(new RoutePrefixConvention("api"));
-})
-.AddJsonOptions(options =>
-{
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-});
-
+// -------------------------------------------------------
 var uploadsBasePath = builder.Environment.WebRootPath ?? builder.Environment.ContentRootPath;
-builder.Services.AddInfrastructure(uploadsBasePath);
 
-var connectionString = builder.Configuration.GetConnectionString("FriendoutDatabase");
-if (string.IsNullOrWhiteSpace(connectionString))
-    throw new InvalidOperationException(
+var connectionString = builder.Configuration.GetConnectionString("FriendoutDatabase")
+    ?? throw new InvalidOperationException(
         "The connection string 'ConnectionStrings:FriendoutDatabase' is missing. " +
         "Please check your .env file or appsettings.json.");
 
-builder.Services.AddDbContext<FriendoutDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+builder.Services.AddAppForwardedHeaders();
+builder.Services.AddAppSwagger();
+builder.Services.AddControllers(options => options.Conventions.Add(new RoutePrefixConvention("api")))
+                .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters
+                    .Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? GetCommaSeparatedConfig(builder.Configuration, "Cors:AllowedOrigins")
-            ?? new[] { "http://localhost:5173", "http://localhost:5122" };
+builder.Services.AddInfrastructure(uploadsBasePath);
+builder.Services.AddDbContext<FriendoutDbContext>(opt =>
+    opt.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-        policy.WithOrigins(origins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
-
+builder.Services.AddAppCors(builder.Configuration);
+builder.Services.AddAppAuthentication(builder.Configuration);
 builder.Services.AddHttpClient();
 
-// Singleton: one instance shared across all requests.
-// The blacklist must persist between requests — a scoped or transient service would lose state.
 builder.Services.AddSingleton<Friendout.Infrastructure.Interfaces.ITokenBlacklistService,
-    Friendout.Infrastructure.Services.TokenBlacklistService>();
-
+                              Friendout.Infrastructure.Services.TokenBlacklistService>();
 builder.Services.AddScoped<Friendout.Infrastructure.Interfaces.IRefreshTokenService,
-    Friendout.Infrastructure.Services.RefreshTokenService>();
+                           Friendout.Infrastructure.Services.RefreshTokenService>();
+builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
-// Runs once per day to delete expired and revoked refresh tokens.
-builder.Services.AddHostedService<friendout_backend.RefreshTokenCleanupService>();
+builder.WebHost.ConfigureKestrel(opt => opt.Limits.MaxRequestBodySize = 30 * 1024 * 1024); // 30 MB
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.Limits.MaxRequestBodySize = 30 * 1024 * 1024; // 30 MB
-});
-
-// ------------------------------------------------
-// Authentification
-// ------------------------------------------------
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        RoleClaimType = ClaimTypes.Role,
-        NameClaimType = JwtRegisteredClaimNames.Name
-    };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = context =>
-        {
-            // Check if this token has been blacklisted (i.e. the user already logged out).
-            // We use the Jti claim (unique token ID) as the blacklist key.
-            var blacklist = context.HttpContext.RequestServices
-                .GetRequiredService<Friendout.Infrastructure.Interfaces.ITokenBlacklistService>();
-
-            var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
-            if (jti != null && blacklist.IsBlacklisted(jti))
-            {
-                context.Fail("Token has been invalidated.");
-            }
-
-            return Task.CompletedTask;
-        },
-
-        OnMessageReceived = context =>
-        {
-            if (string.IsNullOrEmpty(context.Token) &&
-                context.Request.Cookies.TryGetValue("auth_token", out var token))
-            {
-                context.Token = token;
-            }
-            return Task.CompletedTask;
-        },
-
-        OnChallenge = context =>
-        {
-            context.HandleResponse();
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.Response.ContentType = "application/json";
-
-            var result = JsonSerializer.Serialize(new
-            {
-                error = "Unauthorized",
-                message = "You must be authenticated to access this resource."
-            });
-
-            return context.Response.WriteAsync(result);
-        }
-    };
-})
-.AddCookie(options =>
-{
-    options.Cookie.Name = ".AspNetCore.OAuth.Temp";
-    options.Cookie.HttpOnly = true;
-    // SameAsRequest: Secure flag is derived from the actual request scheme.
-    // CookieSecurePolicy.Always would block cookies over HTTP (Docker without TLS).
-    // When HTTPS is enabled, Secure=true is applied automatically.
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-})
-.AddGoogle(options =>
-{
-    var googleSection = builder.Configuration.GetSection("Authentication:Google");
-
-    options.ClientId = googleSection["ClientId"]!;
-    options.ClientSecret = googleSection["ClientSecret"]!;
-    options.CallbackPath = googleSection["CallbackPath"] ?? "/signin-google";
-    options.SaveTokens = true;
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-
-    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-
-    // Map the profile picture claim
-    options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
-
-    options.Scope.Add("openid");
-    options.Scope.Add("profile");
-    options.Scope.Add("email");
-
-    options.Events.OnRemoteFailure = context =>
-    {
-        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
-        context.HandleResponse();
-        context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
-        return Task.CompletedTask;
-    };
-
-    options.Events.OnTicketReceived = async context =>
-    {
-        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
-        var email = context.Principal?.FindFirstValue(ClaimTypes.Email)?.Trim().ToLowerInvariant();
-
-        var settingsService = context.HttpContext.RequestServices.GetRequiredService<ISettingsService>();
-        var settings = await settingsService.GetAccessSettingsAsync();
-
-        // Restriction disabled → open mode, everyone is allowed.
-        if (!settings.GoogleRestricted)
-        {
-            context.Success();
-            return;
-        }
-
-        // Restriction enabled → email must be in the whitelist.
-        var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
-        var appLog = context.HttpContext.RequestServices.GetRequiredService<IAppLogService>();
-        var allowedEmails = await db.AllowedEmails.Select(e => e.Email).ToListAsync();
-
-        if (string.IsNullOrEmpty(email) || !allowedEmails.Contains(email))
-        {
-            await appLog.LogWarningAsync("Auth", $"Google login refused — email not in whitelist: {email}");
-            context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
-            context.HandleResponse();
-            return;
-        }
-
-        context.Success();
-    };
-})
-.AddDiscord(options =>
-{
-    var discordSection = builder.Configuration.GetSection("Authentication:Discord");
-
-    options.ClientId = discordSection["ClientId"]!;
-    options.ClientSecret = discordSection["ClientSecret"]!;
-    options.CallbackPath = discordSection["CallbackPath"] ?? "/signin-discord";
-    options.SaveTokens = true;
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-
-    // Same reason: the OAuth correlation cookie must follow the actual request scheme.
-    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-
-    // Avatar URL custom claim
-    options.ClaimActions.MapCustomJson("urn:discord:avatar:url", user =>
-    {
-        if (!user.TryGetProperty("id", out var idProp) || !user.TryGetProperty("avatar", out var avatarProp))
-            return null;
-
-        var id = idProp.GetString();
-        var avatar = avatarProp.GetString();
-        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(avatar))
-            return null;
-
-        var ext = avatar.StartsWith("a_") ? "gif" : "png";
-        return $"https://cdn.discordapp.com/avatars/{id}/{avatar}.{ext}?size=512";
-    });
-
-    options.Scope.Add("identify");
-    options.Scope.Add("email");
-    options.Scope.Add("guilds");
-
-    options.ClaimActions.MapJsonKey("urn:discord:guilds", "guilds");
-
-    options.Events.OnTicketReceived = async context =>
-    {
-        // Read the login URL from config to generate absolute redirects.
-        // A relative redirect (/login) would also work, but an absolute URL
-        // is safer behind a reverse proxy.
-        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
-
-        var accessToken = context.Properties?.GetTokenValue("access_token");
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            // error_code: query parameter read by the React frontend (loginpage.tsx)
-            context.Response.Redirect($"{loginUrl}?error_code=no_token");
-            context.HandleResponse();
-            return;
-        }
-
-        var httpClientFactory = context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
-        var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-        var response = await client.GetAsync("https://discord.com/api/users/@me/guilds");
-        if (!response.IsSuccessStatusCode)
-        {
-            context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
-            context.HandleResponse();
-            return;
-        }
-
-        var guildsJson = await response.Content.ReadAsStringAsync();
-        var guilds = JsonSerializer.Deserialize<List<DiscordGuild>>(guildsJson) ?? new();
-
-        // Check if the user has access to at least one of the allowed guilds (if any are configured).
-        var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
-        var settingsService = context.HttpContext.RequestServices.GetRequiredService<ISettingsService>();
-        var settings = await settingsService.GetAccessSettingsAsync();
-
-        // Restriction disabled → skip guild check entirely.
-        if (!settings.DiscordRestricted)
-        {
-            context.Success();
-            return;
-        }
-
-        var allowedGuildIds = await db.AllowedGuilds
-            .Select(g => g.GuildId)
-            .ToListAsync();
-
-        if (allowedGuildIds.Count > 0 && !guilds.Any(g => allowedGuildIds.Contains(g.Id)))
-        {
-            var appLog = context.HttpContext.RequestServices.GetRequiredService<IAppLogService>();
-            await appLog.LogWarningAsync("Auth", "Login refused — no matching allowed guild.");
-            context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
-            context.HandleResponse();
-            return;
-        }
-
-        context.Success();
-    };
-
-    options.Events.OnRemoteFailure = context =>
-    {
-        // Read the login URL from config to generate absolute redirects.
-        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
-        context.HandleResponse();
-        context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
-        return Task.CompletedTask;
-    };
-});
-
+// -------------------------------------------------------
+// Pipeline
+// -------------------------------------------------------
 var app = builder.Build();
 
-// -- Migrations --
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
-    await db.Database.MigrateAsync();
-}
-
-// -----------------------------
-// Pipeline
-//-----------------------------
+await app.ApplyMigrationsAsync();
+await app.SeedDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// Seed runs in any environment when explicitly enabled — useful for first-time Docker setup.
-if (builder.Configuration.GetValue<bool>("Seed:Enabled", false))
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
-    await DatabaseSeeder.SeedAsync(db);
-}
+    app.UseAppSwagger();
 
 if (app.Environment.IsProduction())
 {
@@ -437,58 +89,11 @@ if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 
-var uploadsPath = Path.Combine(uploadsBasePath, "uploads");
-Directory.CreateDirectory(uploadsPath);
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
-});
-
-// Forwarded headers (X-Forwarded-For, X-Forwarded-Proto) for correct client IP and scheme when behind a reverse proxy.
+app.UseAppStaticFiles(uploadsBasePath);
 app.UseForwardedHeaders();
-
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
-
-// -----------------------------
-// Helpers : .env and configuration
-// -----------------------------
-
-static void LoadEnvFiles()
-{
-    var dirs = new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory };
-    foreach (var dir in dirs)
-    {
-        var envPath = Path.Combine(dir, ".env");
-        if (File.Exists(envPath))
-        {
-            DotNetEnv.Env.Load(envPath);
-            break;
-        }
-    }
-    foreach (var dir in dirs)
-    {
-        var localPath = Path.Combine(dir, ".env.local");
-        if (File.Exists(localPath))
-        {
-            DotNetEnv.Env.Load(localPath);
-            break;
-        }
-    }
-}
-
-// Helper to parse comma-separated config values (e.g. CORS origins) from either JSON array or comma-separated string.
-static string[]? GetCommaSeparatedConfig(IConfiguration configuration, string key)
-{
-    var value = configuration[key];
-    if (string.IsNullOrWhiteSpace(value)) return null;
-    return value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-}
