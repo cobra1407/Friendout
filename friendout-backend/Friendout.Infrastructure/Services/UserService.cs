@@ -1,9 +1,7 @@
-﻿using System;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
-using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,31 +11,17 @@ public class UserService : IUserService
 {
     private readonly FriendoutDbContext _friendoutDbContext;
 
-    
-    /// <summary>
-    /// Determines whether the current user being created is the first user
-    /// in the application database.
-    /// </summary>
-    /// <remarks>
-    /// This method checks if at least one user already exists in the database.
-    /// It is typically used during the account creation process to apply
-    /// special initialization logic for the very first user (e.g. assigning
-    /// an ADMIN role).
-    /// </remarks>
-    /// <returns>
-    /// <c>true</c> if no users exist in the database (first user),
-    /// otherwise <c>false</c>.
-    /// </returns>
-    private async Task<bool> IsFirstUserAsync()
-    {
-        var hasUsers = await _friendoutDbContext.Users.AnyAsync();
-        return !hasUsers;
-    }
-    
-    
     public UserService(FriendoutDbContext friendoutDbContext)
     {
         _friendoutDbContext = friendoutDbContext;
+    }
+
+    /// <summary>
+    /// Returns true if no user exists in the database yet (used to assign Admin to the first user).
+    /// </summary>
+    private async Task<bool> IsFirstUserAsync()
+    {
+        return !await _friendoutDbContext.Users.AnyAsync();
     }
 
     public async Task<ServiceResult<User>> GetUserByProviderAccountIdAsync(
@@ -53,21 +37,26 @@ public class UserService : IUserService
                 a.ProviderAccountId == providerAccountId);
 
         if (account == null)
-        {
             return ServiceResult<User>.Failure("User not found for this provider.");
-        }
 
         return ServiceResult<User>.Success(account.User);
     }
 
-
+    /// <summary>
+    /// Creates or retrieves a user from an OAuth login.
+    /// 
+    /// Three scenarios are handled:
+    ///   1. The OAuth account (provider + providerId) already exists → return the linked user.
+    ///   2. The OAuth account is new but the email is already used by another account
+    ///      → link this new provider to the existing user (account linking).
+    ///   3. Completely new user → create user + account.
+    /// </summary>
     public async Task<ServiceResult<User>> CreateUserFromOAuthAsync(
         ProviderEnum provider,
         string providerId,
         string username,
         string? email,
-        string? avatarUrl
-    )
+        string? avatarUrl)
     {
         var strategy = _friendoutDbContext.Database.CreateExecutionStrategy();
 
@@ -76,23 +65,51 @@ public class UserService : IUserService
             await using var transaction =
                 await _friendoutDbContext.Database.BeginTransactionAsync();
 
-            // 1. VÃ©rifier si le compte existe
+            var providerValue = provider.GetEnumMemberValue();
+
+            // 1. The OAuth account already exists → return its user directly.
             var existingAccount = await _friendoutDbContext.Accounts
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a =>
-                    a.Provider == provider.GetEnumMemberValue()
-                    && a.ProviderAccountId == providerId
-                );
+                    a.Provider == providerValue &&
+                    a.ProviderAccountId == providerId);
 
             if (existingAccount != null)
             {
+                await transaction.CommitAsync();
                 return ServiceResult<User>.Success(existingAccount.User);
             }
 
-            // 2. CrÃ©er l'utilisateur
-            var isFirstUser = !await _friendoutDbContext.Users.AnyAsync();
+            // 2. Different provider but same email → link to existing user.
+            User? user = null;
 
-            var user = new User
+            if (!string.IsNullOrEmpty(email))
+            {
+                user = await _friendoutDbContext.Users
+                    .FirstOrDefaultAsync(u => u.Email == email);
+            }
+
+            if (user != null)
+            {
+                // Link the new OAuth provider to the existing account.
+                var linkedAccount = new Account
+                {
+                    Provider = providerValue,
+                    ProviderAccountId = providerId,
+                    UserId = user.Id
+                };
+
+                _friendoutDbContext.Accounts.Add(linkedAccount);
+                await _friendoutDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return ServiceResult<User>.Success(user);
+            }
+
+            // 3. Brand-new user: create user then account.
+            var isFirstUser = await IsFirstUserAsync();
+
+            user = new User
             {
                 Name = username,
                 Email = email,
@@ -103,10 +120,9 @@ public class UserService : IUserService
             _friendoutDbContext.Users.Add(user);
             await _friendoutDbContext.SaveChangesAsync();
 
-            // 3. CrÃ©er le lien OAuth
             var account = new Account
             {
-                Provider = provider.GetEnumMemberValue(),
+                Provider = providerValue,
                 ProviderAccountId = providerId,
                 UserId = user.Id
             };

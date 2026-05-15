@@ -1,5 +1,6 @@
 using AspNet.Security.OAuth.Discord;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 
 namespace friendout_backend.Controller;
@@ -14,14 +15,6 @@ public class OAuthController : ControllerBase
     /// <summary>
     /// Initiates the OAuth2 login flow with Discord.
     /// </summary>
-    /// <remarks>
-    /// This endpoint triggers the Discord authentication process. The user will be redirected
-    /// to Discord's login page, and after successful authentication, they will be redirected
-    /// to the callback endpoint "/api/oauth/callback/discord".
-    /// </remarks>
-    /// <returns>
-    /// An <see cref="IActionResult"/> that challenges the user with Discord's OAuth2 authentication scheme.
-    /// </returns>
     [HttpGet("discord")]
     public IActionResult LoginWithDiscord()
     {
@@ -31,5 +24,19 @@ public class OAuthController : ControllerBase
             IsPersistent = true
         };
         return Challenge(properties, DiscordAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    /// <summary>
+    /// Initiates the OAuth2 login flow with Google.
+    /// </summary>
+    [HttpGet("google")]
+    public IActionResult LoginWithGoogle()
+    {
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = "/api/oauth/callback/google",
+            IsPersistent = true
+        };
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 }

@@ -7,6 +7,10 @@ const DISCORD_AUTH_URL =
   import.meta.env.VITE_DISCORD_AUTH_URL ??
   `${API_BASE_URL.replace(/\/$/, "")}/auth/discord`;
 
+const GOOGLE_AUTH_URL =
+  import.meta.env.VITE_GOOGLE_AUTH_URL ??
+  `${API_BASE_URL.replace(/\/$/, "")}/auth/google`;
+
 export const authApi = {
   me: async (): Promise<User | null> => {
     try {
@@ -30,5 +34,9 @@ export const authApi = {
 
   discordLogin: async () => {
     window.location.href = DISCORD_AUTH_URL;
+  },
+
+  googleLogin: async () => {
+    window.location.href = GOOGLE_AUTH_URL;
   },
 };

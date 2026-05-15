@@ -2,7 +2,8 @@
   "login_page": {
     "title": "Sign in to Friendout",
     "welcome_sentence": "Make planning with friends a breeze with Friendout",
-    "login_button": "Sign in with Discord"
+    "login_button": "Sign in with Discord",
+    "login_button_google": "Sign in with Google"
   },
   "create_activity_page": {
     "create": {
@@ -35,6 +36,7 @@
     "button_edit": "Save",
     "button_creating": "Creating...",
     "button_saving": "Saving...",
+    "equipment_label": "Required equipment (optional)",
     "toast": {
         "image_too_large": "Image must be less than {{size}}MB",
         "image_invalid_type": "The file must be an image",
@@ -107,6 +109,8 @@
     "no_token": "Could not retrieve Discord token. Please try again.",
     "user_creation_failed": "Could not create your account. Please contact an administrator.",
     "missing_id": "Discord ID is missing. Please try again.",
+    "google_access_denied": "Google authentication failed or was denied.",
+    "google_unauthorized": "Google authentication failed. Please try again.",
     "unknown_error": "An unknown error occurred."
   },
   "header": {

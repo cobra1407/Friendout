@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { DiscordLoginButton } from "../components/DiscordLoginButton";
+import { GoogleLoginButton } from "../components/GoogleLoginButton";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import defaultImage1 from "@/assets/images/default-1.png";
 import defaultImage2 from "@/assets/images/default-2.png";
@@ -25,6 +26,10 @@ export const LoginPage = () => {
 
     const handleDiscordLogin = async () => {
         await authApi.discordLogin();
+    };
+
+    const handleGoogleLogin = async () => {
+        await authApi.googleLogin();
     };
 
     return (
@@ -52,6 +57,9 @@ export const LoginPage = () => {
                     <DiscordLoginButton onClick={handleDiscordLogin}>
                         {getTranslation("login_page.login_button")}
                     </DiscordLoginButton>
+                    <GoogleLoginButton onClick={handleGoogleLogin}>
+                        {getTranslation("login_page.login_button_google")}
+                    </GoogleLoginButton>
                 </div>
                 {/* RIGHT CAROUSEL */}
                 <div className="relative w-full md:w-1/2 mt-6 md:mt-0 bg-muted/30 overflow-hidden rounded-b-2xl md:rounded-r-2xl">

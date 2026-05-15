@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,11 +16,23 @@ using Friendout.Domain.Models;
 using Friendout.Domain.Seeds;
 using Friendout.Infrastructure;
 using Friendout.Infrastructure.Interfaces;
+using Microsoft.AspNetCore.HttpOverrides;
 using friendout_backend.Controller;
 
 LoadEnvFiles();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Trust forwarded headers from any proxy (Docker / reverse proxy setup).
+// Without this, ASP.NET Core ignores X-Forwarded-Proto and builds OAuth
+// redirect URIs with "http" even when the public URL is "https".
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Clear default restrictions so all proxies in the Docker network are trusted.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // -----------------------------
 // Configuration – Load order (the last one wins)
@@ -37,7 +50,9 @@ var requiredKeys = new[]
 {
     "Jwt:Key",
     "Authentication:Discord:ClientId",
-    "Authentication:Discord:ClientSecret"
+    "Authentication:Discord:ClientSecret",
+    "Authentication:Google:ClientId",
+    "Authentication:Google:ClientSecret"
 };
 
 foreach (var key in requiredKeys)
@@ -45,8 +60,8 @@ foreach (var key in requiredKeys)
     if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
     {
         throw new InvalidOperationException(
-            $"Configuration missing: the key� '{key}' est obligatoire.\n" +
-            "Vérifiez .env (ou .env.local), appsettings.json, ou les variables d'environnement.");
+            $"Configuration missing: The key '{key}' is required.\n" +
+            "Please check your .env (or .env.local) file, appsettings.json, or environment variables.");
     }
 }
 
@@ -109,7 +124,8 @@ builder.Services.AddInfrastructure(uploadsBasePath);
 var connectionString = builder.Configuration.GetConnectionString("FriendoutDatabase");
 if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
-        "La chaîne de connexion 'ConnectionStrings:FriendoutDatabase' is missing. Vérifiez .env ou appsettings.json.");
+        "The connection string 'ConnectionStrings:FriendoutDatabase' is missing. " +
+        "Please check your .env file or appsettings.json.");
 
 builder.Services.AddDbContext<FriendoutDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
@@ -225,6 +241,34 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
 })
+.AddGoogle(options =>
+{
+    var googleSection = builder.Configuration.GetSection("Authentication:Google");
+
+    options.ClientId = googleSection["ClientId"]!;
+    options.ClientSecret = googleSection["ClientSecret"]!;
+    options.CallbackPath = googleSection["CallbackPath"] ?? "/signin-google";
+    options.SaveTokens = true;
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+
+    // Map the profile picture claim
+    options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+
+    options.Scope.Add("openid");
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+
+    options.Events.OnRemoteFailure = context =>
+    {
+        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
+        context.HandleResponse();
+        context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
+        return Task.CompletedTask;
+    };
+})
 .AddDiscord(options =>
 {
     var discordSection = builder.Configuration.GetSection("Authentication:Discord");
@@ -262,15 +306,15 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnTicketReceived = async context =>
     {
-        // Lire l'URL de login depuis la config pour générer des redirects absolus.
-        // Un redirect relatif (/login) fonctionnerait aussi, mais une URL absolue
-        // est plus sûre derrière un reverse proxy.
+        // Read the login URL from config to generate absolute redirects.
+        // A relative redirect (/login) would also work, but an absolute URL
+        // is safer behind a reverse proxy.
         var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
 
         var accessToken = context.Properties?.GetTokenValue("access_token");
         if (string.IsNullOrEmpty(accessToken))
         {
-            // error_code : paramètre lu par le frontend React (loginpage.tsx)
+            // error_code: query parameter read by the React frontend (loginpage.tsx)
             context.Response.Redirect($"{loginUrl}?error_code=no_token");
             context.HandleResponse();
             return;
