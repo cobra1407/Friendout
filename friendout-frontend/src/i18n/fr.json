@@ -264,12 +264,25 @@
     "icon_alt": "Erreur 404"
   },
   "admin": {
+    "settings": {
+      "title": "Restrictions d'accès",
+      "description": "Contrôlez quels fournisseurs OAuth sont restreints à une liste blanche.",
+      "discord_restricted_label": "Restreindre la connexion Discord",
+      "discord_restricted_on": "Seuls les membres des serveurs autorisés peuvent se connecter.",
+      "discord_restricted_off": "Tout le monde avec un compte Discord peut se connecter.",
+      "google_restricted_label": "Restreindre la connexion Google",
+      "google_restricted_on": "Seules les adresses email autorisées peuvent se connecter.",
+      "google_restricted_off": "Tout le monde avec un compte Google peut se connecter.",
+      "toast_saved": "Paramètres sauvegardés.",
+      "toast_error": "Échec de la sauvegarde des paramètres."
+    },
     "page_title": "Panneau de contrôle",
     "system_operational": "Système opérationnel",
     "search_placeholder": "Rechercher...",
     "no_results": "Aucun résultat",
     "nav": {
       "dashboard": "Tableau de bord",
+      "access": "Contrôle d'accès",
       "logs": "Journaux"
     },
     "roles": {

@@ -13,6 +13,26 @@ export const useAccessMode = () => {
     return { accessMode: data, isLoading };
 };
 
+export const useAdminSettings = () => {
+    const qc = useQueryClient();
+
+    const { data: settings, isLoading } = useQuery({
+        queryKey: ["admin", "access-settings"],
+        queryFn: adminApi.getAccessSettings,
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: adminApi.updateAccessSettings,
+        onSuccess: () => {
+            toast.success(getTranslation('admin.settings.toast_saved'));
+            qc.invalidateQueries({ queryKey: ["admin", "access-settings"] });
+        },
+        onError: () => toast.error(getTranslation('admin.settings.toast_error')),
+    });
+
+    return { settings, isLoading, updateMutation };
+};
+
 export const useAdminLogs = () => {
     const qc = useQueryClient();
     const [levelFilter, setLevelFilter] = useState<string | undefined>(undefined);

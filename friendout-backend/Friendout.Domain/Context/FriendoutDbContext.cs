@@ -26,6 +26,7 @@ namespace Friendout.Domain.Context
         public DbSet<AllowedEmail> AllowedEmails { get; set; }
         public DbSet<AccessRequest> AccessRequests { get; set; }
         public DbSet<AppLog> AppLogs { get; set; }
+        public DbSet<AppSetting> AppSettings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -257,6 +258,12 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.Email);
                 entity.HasIndex(e => e.Status);
             });
+
+            // Seed default access restriction settings.
+            modelBuilder.Entity<AppSetting>().HasData(
+                new AppSetting { Key = "discord_restricted", Value = "false", UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new AppSetting { Key = "google_restricted",  Value = "false", UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
         }
     }
 }

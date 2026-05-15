@@ -15,10 +15,12 @@ namespace friendout_backend.Controller;
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
+    private readonly ISettingsService _settingsService;
 
-    public AdminController(IAdminService adminService)
+    public AdminController(IAdminService adminService, ISettingsService settingsService)
     {
         _adminService = adminService;
+        _settingsService = settingsService;
     }
 
     private IActionResult MapError(string errorMessage) => errorMessage switch
@@ -38,6 +40,24 @@ public class AdminController : ControllerBase
     [HttpGet("admin/access-mode")]
     public async Task<IActionResult> GetAccessMode()
         => Ok(await _adminService.GetAccessModeAsync());
+
+    // -------------------------
+    // Access Settings
+    // -------------------------
+
+    /// <summary>Returns the current Discord and Google restriction toggles.</summary>
+    [HttpGet("admin/access-settings")]
+    public async Task<IActionResult> GetAccessSettings()
+        => Ok(await _settingsService.GetAccessSettingsAsync());
+
+    /// <summary>Updates the Discord and Google restriction toggles.</summary>
+    [HttpPut("admin/access-settings")]
+    public async Task<IActionResult> UpdateAccessSettings([FromBody] UpdateAccessSettingsDto dto)
+    {
+        var result = await _settingsService.UpdateAccessSettingsAsync(dto);
+        if (!result.IsSuccess) return MapError(result.ErrorMessage);
+        return Ok(result.Data);
+    }
 
     // -------------------------
     // Logs
