@@ -268,6 +268,37 @@ builder.Services.AddAuthentication(options =>
         context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
         return Task.CompletedTask;
     };
+
+    options.Events.OnTicketReceived = async context =>
+    {
+        var loginUrl = builder.Configuration["Frontend:LoginUrl"] ?? "/login";
+        var email = context.Principal?.FindFirstValue(ClaimTypes.Email)?.Trim().ToLowerInvariant();
+
+        var settingsService = context.HttpContext.RequestServices.GetRequiredService<ISettingsService>();
+        var settings = await settingsService.GetAccessSettingsAsync();
+
+        // Restriction disabled → open mode, everyone is allowed.
+        if (!settings.GoogleRestricted)
+        {
+            context.Success();
+            return;
+        }
+
+        // Restriction enabled → email must be in the whitelist.
+        var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
+        var appLog = context.HttpContext.RequestServices.GetRequiredService<IAppLogService>();
+        var allowedEmails = await db.AllowedEmails.Select(e => e.Email).ToListAsync();
+
+        if (string.IsNullOrEmpty(email) || !allowedEmails.Contains(email))
+        {
+            await appLog.LogWarningAsync("Auth", $"Google login refused — email not in whitelist: {email}");
+            context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
+            context.HandleResponse();
+            return;
+        }
+
+        context.Success();
+    };
 })
 .AddDiscord(options =>
 {
@@ -337,6 +368,16 @@ builder.Services.AddAuthentication(options =>
 
         // Check if the user has access to at least one of the allowed guilds (if any are configured).
         var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
+        var settingsService = context.HttpContext.RequestServices.GetRequiredService<ISettingsService>();
+        var settings = await settingsService.GetAccessSettingsAsync();
+
+        // Restriction disabled → skip guild check entirely.
+        if (!settings.DiscordRestricted)
+        {
+            context.Success();
+            return;
+        }
+
         var allowedGuildIds = await db.AllowedGuilds
             .Select(g => g.GuildId)
             .ToListAsync();
