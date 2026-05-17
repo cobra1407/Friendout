@@ -2,6 +2,7 @@ using AspNet.Security.OAuth.Discord;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace friendout_backend.Controller;
 
@@ -10,6 +11,7 @@ namespace friendout_backend.Controller;
 /// </summary>
 [ApiController]
 [Route("auth")]
+[EnableRateLimiting("auth")]
 public class OAuthController : ControllerBase
 {
     /// <summary>

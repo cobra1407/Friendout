@@ -4,10 +4,12 @@ using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace friendout_backend.Controller;
 
 [ApiController]
+[EnableRateLimiting("auth")]
 public class AuthController : ControllerBase
 {
     private readonly ITokenBlacklistService _blacklist;
