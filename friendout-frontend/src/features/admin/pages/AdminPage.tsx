@@ -67,7 +67,7 @@ export default function AdminPage() {
                                 }`}
                         >
                             {tab.icon}
-                            {getTranslation(tab.labelKey)}
+                            <span className="hidden sm:inline">{getTranslation(tab.labelKey)}</span>
                         </button>
                     ))}
                 </nav>
