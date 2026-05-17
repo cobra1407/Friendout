@@ -6,6 +6,7 @@ using Friendout.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace friendout_backend.Controller;
 
@@ -14,6 +15,7 @@ namespace friendout_backend.Controller;
 /// </summary>
 [ApiController]
 [Route("oauth/callback")]
+[EnableRateLimiting("auth")]
 public class OAuthCallbackController : ControllerBase
 {
     private readonly JwtService _jwt;

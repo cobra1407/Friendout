@@ -4,6 +4,8 @@ using Friendout.Infrastructure;
 using friendout_backend.Controller;
 using friendout_backend.Extensions;
 using friendout_backend.Helpers;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 // -------------------------------------------------------
@@ -71,6 +73,29 @@ builder.Services.AddScoped<Friendout.Infrastructure.Interfaces.IRefreshTokenServ
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
 builder.WebHost.ConfigureKestrel(opt => opt.Limits.MaxRequestBodySize = 30 * 1024 * 1024); // 30 MB
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Global rate limit — all endpoints, partitioned by IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+            }));
+
+    // Stricter limit for auth endpoints
+    options.AddSlidingWindowLimiter("auth", policy =>
+    {
+        policy.PermitLimit = 10;
+        policy.Window = TimeSpan.FromMinutes(1);
+        policy.SegmentsPerWindow = 6;
+    });
+});
 
 // -------------------------------------------------------
 // Pipeline
@@ -94,6 +119,6 @@ app.UseForwardedHeaders();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
-
 app.Run();
