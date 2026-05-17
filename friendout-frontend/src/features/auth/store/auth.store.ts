@@ -23,7 +23,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         user,
         isAuthenticated: !!user,
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "rate_limited") {
+        return;
+      }
       set({
         user: null,
         isAuthenticated: false,
