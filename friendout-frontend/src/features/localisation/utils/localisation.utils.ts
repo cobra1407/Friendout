@@ -1,18 +1,18 @@
-// ─────────────────────────────────────────────────────────────────────────────
-//  localisation.utils.ts
-// ─────────────────────────────────────────────────────────────────────────────
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
 
 /**
- * Normalise les différents types pouvant arriver depuis le backend.
+ * Normalizes a localisation object from the API.
+ *
+ * The backend uses JsonStringEnumConverter, so enum values arrive as PascalCase
+ * strings ("Address", "MapLink", "Virtual") instead of the numeric values (0, 1, 2)
+ * expected by the frontend. This function converts them accordingly.
  */
 export const normalizeLocalisation = (
   localisation?: Localisation | null,
 ): Localisation | null => {
   if (!localisation) return null;
 
-  // Cas standard déjà conforme
   if (
     localisation.type === LocalisationType.Address ||
     localisation.type === LocalisationType.MapLink ||
@@ -21,21 +21,25 @@ export const normalizeLocalisation = (
     return localisation;
   }
 
-  // Compatibilité avec d’éventuels anciens noms de champs
-  const legacyType = (localisation.type as unknown) as string;
-  if (legacyType === "address")
-    return { ...localisation, type: LocalisationType.Address };
-  if (legacyType === "maps_link")
-    return { ...localisation, type: LocalisationType.MapLink };
-  if (legacyType === "virtual")
-    return { ...localisation, type: LocalisationType.Virtual };
+  // Handle string values: PascalCase from backend ("Address", "MapLink", "Virtual")
+  // and legacy snake_case ("address", "maps_link", "virtual")
+  const rawType = (localisation.type as unknown) as string;
+  if (typeof rawType === "string") {
+    const lower = rawType.toLowerCase();
+    if (lower === "address")
+      return { ...localisation, type: LocalisationType.Address };
+    if (lower === "maplink" || lower === "maps_link")
+      return { ...localisation, type: LocalisationType.MapLink };
+    if (lower === "virtual")
+      return { ...localisation, type: LocalisationType.Virtual };
+  }
 
   return localisation;
 };
 
 /**
- * Helper générique utilisé dans les composants : récupère la localisation
- * depuis `localisation` ou `location` (les deux noms sont parfois utilisés).
+ * Picks the localisation from a source object, checking both `localisation`
+ * and `location` fields (both names are used across the codebase).
  */
 export const pickLocalisation = <
   T extends { localisation?: Localisation | null; location?: Localisation | null },
@@ -44,30 +48,19 @@ export const pickLocalisation = <
 ): Localisation | null => normalizeLocalisation(source?.localisation ?? source?.location ?? null);
 
 /**
- * -------------------------------------------------------------------------
- *  Fonction centrale : retour d’une URL Google Maps **toujours** valide.
- * -------------------------------------------------------------------------
- *
- * - Si `localisation.mapLink` est déjà une URL complète → on la retourne.
- * - Sinon on construit une URL à partir de l’adresse `localisation.address`.
- * - Si aucune donnée n’est disponible, on renvoie la page d’accueil Google Maps.
- *
- * @param localisation
- * @returns URL encodée prête à être ouverte dans un nouvel onglet.
+ * Returns a valid Google Maps URL from a localisation object.
+ * - If `mapLink` is a full URL, returns it directly.
+ * - Otherwise builds a search URL from `address`.
+ * - Falls back to the Google Maps homepage if no data is available.
  */
 export const getGoogleMapsUrl = (localisation?: Localisation | null): string => {
   if (!localisation) return "https://www.google.com/maps";
 
   const raw = localisation.mapLink?.trim();
-  if (raw && /^https?:\/\//i.test(raw)) {
-    return raw;
-  }
-
+  if (raw && /^https?:\/\//i.test(raw)) return raw;
 
   const address = localisation.address?.trim();
   if (!address) return "https://www.google.com/maps";
 
-
-  const encoded = encodeURIComponent(address);
-  return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 };
