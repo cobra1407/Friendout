@@ -6,6 +6,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
+  isRateLimited: boolean;
 
   fetchMe: () => Promise<void>;
   logout: () => Promise<void>;
@@ -15,6 +16,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   loading: true,
+  isRateLimited: false,
 
   fetchMe: async () => {
     try {
@@ -25,12 +27,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     } catch (error) {
       if (error instanceof Error && error.message === "rate_limited") {
+        set({ isRateLimited: true });
         return;
       }
-      set({
-        user: null,
-        isAuthenticated: false,
-      });
+      set({ user: null, isAuthenticated: false });
     } finally {
       set({ loading: false });
     }

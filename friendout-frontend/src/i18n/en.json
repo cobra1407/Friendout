@@ -350,5 +350,12 @@
       "request_denied": "Request denied",
       "request_error": "Error processing request"
     }
+  },
+  "error": {
+    "rate_limit": {
+      "title": "Too many requests",
+      "description": "You have made too many requests. Wait a few seconds and refresh the page.",
+      "retry": "Refresh"
+    }
   }
 }

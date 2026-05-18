@@ -5,6 +5,7 @@ export const useAuth = () => {
     user,
     isAuthenticated,
     loading,
+    isRateLimited,
     fetchMe,
     logout,
   } = useAuthStore();
@@ -13,6 +14,7 @@ export const useAuth = () => {
     user,
     isAuthenticated,
     loading,
+    isRateLimited,
     fetchMe,
     logout,
   };

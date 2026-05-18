@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace friendout_backend.Controller;
 
 [ApiController]
-[EnableRateLimiting("auth")]
 public class AuthController : ControllerBase
 {
     private readonly ITokenBlacklistService _blacklist;
@@ -60,6 +59,7 @@ public class AuthController : ControllerBase
     /// 4. Both new cookies are set on the response.
     /// </summary>
     [HttpPost("auth/refresh")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Refresh()
     {
         var rawToken = Request.Cookies["refresh_token"];
