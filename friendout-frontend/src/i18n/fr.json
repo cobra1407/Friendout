@@ -352,5 +352,12 @@
       "request_denied": "Demande refusée",
       "request_error": "Erreur lors du traitement de la demande"
     }
+  },
+  "error": {
+    "rate_limit": {
+      "title": "Trop de requêtes",
+      "description": "Tu as effectué trop de requêtes. Attends quelques secondes puis rafraîchis la page.",
+      "retry": "Rafraîchir"
+    }
   }
 }

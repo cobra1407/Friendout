@@ -21,6 +21,9 @@ export const authApi = {
         if (error.response?.status === 401) {
           return null; // user not authenticated
         }
+        if (error.response?.status === 429) {
+          throw new Error("rate_limited"); // preserve auth state
+        }
       }
 
       console.error("Failed to fetch user:", error);
