@@ -192,6 +192,8 @@ public class AdminService : IAdminService
         request.Status = dto.Status;
         request.ResolvedAt = DateTime.UtcNow;
 
+        var (actorId, actorName) = await GetActorAsync();
+
         // If approved, automatically add the email to the allowed list.
         if (dto.Status == AccessRequestStatus.Approved)
         {
@@ -203,6 +205,12 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
+
+            if (dto.Status == AccessRequestStatus.Approved)
+                await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) approved access request for {request.Email}");
+            else
+                await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) rejected access request for {request.Email}");
+
             return ServiceResult<AccessRequestDto>.Success(
                 new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt, request.ResolvedAt));
         }
@@ -216,6 +224,11 @@ public class AdminService : IAdminService
     public async Task<ServiceResult<bool>> SubmitAccessRequestAsync(SubmitAccessRequestDto dto)
     {
         var email = dto.Email.Trim().ToLowerInvariant();
+
+        // Reject if the message exceeds the allowed length.
+        const int MaxMessageLength = 500;
+        if (dto.Message != null && dto.Message.Trim().Length > MaxMessageLength)
+            return ServiceResult<bool>.Failure("message_too_long");
 
         // Reject if a pending request already exists for this email.
         if (await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending))

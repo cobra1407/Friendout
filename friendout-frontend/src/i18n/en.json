@@ -122,7 +122,8 @@
     "error_already_pending": "A request is already pending for this email.",
     "error_already_approved": "This email is already authorized. Try signing in.",
     "error_generic": "Something went wrong. Please try again.",
-    "error_too_many_pending": "Too many requests are pending right now. Please try again later."
+    "error_too_many_pending": "Too many requests are pending right now. Please try again later.",
+    "error_message_too_long": "Message cannot exceed 500 characters."
   },
   "errors": {
     "discord_access_denied": "You are not part of an authorized Discord server.",

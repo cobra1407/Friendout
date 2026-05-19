@@ -1,4 +1,4 @@
-import { AlertCircle, Check, X } from "lucide-react";
+import { AlertCircle, Check, User2Icon, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalHeader, ModalTitle, ModalDescription } from "@/components/ui/modal";
@@ -31,7 +31,7 @@ export const AdminAccessRequestsModal = ({ open, onClose }: AdminAccessRequestsM
                 </ModalDescription>
             </ModalHeader>
 
-            <div className="mt-2">
+            <div className="mt-2 w-full">
                 {isLoading ? (
                     <div className="flex justify-center py-8"><Spinner /></div>
                 ) : requests.length === 0 ? (
@@ -40,21 +40,26 @@ export const AdminAccessRequestsModal = ({ open, onClose }: AdminAccessRequestsM
                         <p className="text-sm italic">{getTranslation('admin.requests.empty')}</p>
                     </div>
                 ) : (
-                    <ul className="divide-y max-h-[60vh] overflow-y-auto">
+                    <ul className="divide-y max-h-[60vh] overflow-y-auto w-full pr-1">
                         {requests.map((r) => (
-                            <li key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 first:pt-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-sm font-semibold shrink-0">
-                                        {r.email[0].toUpperCase()}
+                            <li key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 first:pt-0 w-full min-w-0">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="h-8 w-8 rounded-full bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                        <User2Icon className="w-5 h-5 text-muted-foreground shrink-0" />
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium">{r.email}</p>
+
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{r.email}</p>
                                         {r.message && (
-                                            <p className="text-xs text-muted-foreground italic mt-0.5">"{r.message}"</p>
+                                            /* break-all safely splits long continuous strings like code logs or unspaced URLs */
+                                            <p className="text-xs text-muted-foreground italic mt-0.5 break-all whitespace-pre-line block w-full">
+                                                "{r.message}"
+                                            </p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
+                                {/* Action buttons */}
+                                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                                     <Button
                                         variant="outline"
                                         size="sm"

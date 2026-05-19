@@ -124,7 +124,8 @@
     "error_already_pending": "Une demande est déjà en cours pour cet email.",
     "error_already_approved": "Cet email est déjà autorisé. Essayez de vous connecter.",
     "error_generic": "Une erreur est survenue. Veuillez réessayer.",
-    "error_too_many_pending": "Trop de demandes sont en attente pour le moment. Réessayez plus tard."
+    "error_too_many_pending": "Trop de demandes sont en attente pour le moment. Réessayez plus tard.",
+    "error_message_too_long": "Le message ne peut pas dépasser 500 caractères."
   },
   "errors": {
     "discord_access_denied": "Vous ne faites pas partie d'un serveur Discord autorisé.",

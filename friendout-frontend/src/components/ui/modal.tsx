@@ -34,7 +34,7 @@ const Modal = ({ open, onClose, children, className }: ModalProps) => {
                     onClick={onClose}
                     className="absolute top-4 right-4 opacity-70 hover:opacity-100 transition-opacity rounded-xs focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 cursor-pointer" />
                     <span className="sr-only">Close</span>
                 </button>
                 {children}
