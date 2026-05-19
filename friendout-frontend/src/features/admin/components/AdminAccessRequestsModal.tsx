@@ -45,11 +45,10 @@ export const AdminAccessRequestsModal = ({ open, onClose }: AdminAccessRequestsM
                             <li key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 first:pt-0">
                                 <div className="flex items-center gap-3">
                                     <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-sm font-semibold shrink-0">
-                                        {r.name?.[0]?.toUpperCase() ?? "?"}
+                                        {r.email[0].toUpperCase()}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium">{r.name ?? getTranslation('admin.requests.unknown_name')}</p>
-                                        <p className="text-xs text-muted-foreground">{r.email}</p>
+                                        <p className="text-sm font-medium">{r.email}</p>
                                         {r.message && (
                                             <p className="text-xs text-muted-foreground italic mt-0.5">"{r.message}"</p>
                                         )}

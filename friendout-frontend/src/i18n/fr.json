@@ -3,7 +3,9 @@
     "title": "Connexion à Friendout",
     "welcome_sentence": "Avec Friendout, vos plans entre amis deviennent simples",
     "login_button": "Se connecter avec Discord",
-    "login_button_google": "Se connecter avec Google"
+    "login_button_google": "Se connecter avec Google",
+    "request_access_link": "Vous n'avez pas accès ?",
+    "request_access_button": "Demander l'accès"
   },
   "create_activity_page":{
     "create" : {
@@ -105,6 +107,25 @@
     "empty_label": "Aucune sous-activité ajoutée",
     "time_picker_aria": "Choisir l'heure"
 },
+  "access_request": {
+    "modal_title": "Rejoindre Friendout 👋",
+    "modal_description": "Pas encore autorisé ? Laissez votre email et on s'occupe du reste. L'admin vous confirmera l'accès dès que possible.",
+    "email_label": "Votre adresse email",
+    "email_placeholder": "votre@email.com",
+    "email_hint": "Utilisez l'adresse email liée à votre compte Google.",
+    "message_label": "Un mot pour se présenter ? (optionnel)",
+    "message_placeholder": "Dites-nous en deux mots qui vous êtes ou comment vous nous avez trouvé 😊",
+    "submit_button": "Envoyer ma demande",
+    "submitting": "Envoi en cours...",
+    "success_title": "Demande envoyée !",
+    "success_description": "On a bien reçu votre demande. L'admin reviendra vers vous dès qu'il l'aura traitée.",
+    "error_email_required": "L'adresse email est obligatoire.",
+    "error_email_invalid": "Veuillez saisir une adresse email valide.",
+    "error_already_pending": "Une demande est déjà en cours pour cet email.",
+    "error_already_approved": "Cet email est déjà autorisé. Essayez de vous connecter.",
+    "error_generic": "Une erreur est survenue. Veuillez réessayer.",
+    "error_too_many_pending": "Trop de demandes sont en attente pour le moment. Réessayez plus tard."
+  },
   "errors": {
     "discord_access_denied": "Vous ne faites pas partie d'un serveur Discord autorisé.",
     "discord_unauthorized": "L'authentification Discord a échoué. Veuillez réessayer.",
@@ -133,6 +154,7 @@
     "delete": "Supprimer",
     "cancel": "Annuler",
     "save": "Enregistrer",
+    "close": "Fermer",
     "free": "Gratuit",
     "loading": "Chargement...",
     "export_calendar": "Exporter au calendrier",
