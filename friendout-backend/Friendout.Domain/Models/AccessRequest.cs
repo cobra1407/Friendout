@@ -26,10 +26,6 @@ public class AccessRequest
     [MaxLength(191)]
     public string Email { get; set; } = null!;
 
-    [Column("name")]
-    [MaxLength(191)]
-    public string? Name { get; set; }
-
     /// <summary>Optional message from the requester explaining why they want access.</summary>
     [Column("message")]
     [MaxLength(500)]

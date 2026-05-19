@@ -175,7 +175,7 @@ public class AdminService : IAdminService
 
         return await query
             .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new AccessRequestDto(r.Id, r.Email, r.Name, r.Message, r.Status, r.CreatedAt, r.ResolvedAt))
+            .Select(r => new AccessRequestDto(r.Id, r.Email, r.Message, r.Status, r.CreatedAt, r.ResolvedAt))
             .ToListAsync();
     }
 
@@ -204,12 +204,50 @@ public class AdminService : IAdminService
         {
             await _db.SaveChangesAsync();
             return ServiceResult<AccessRequestDto>.Success(
-                new AccessRequestDto(request.Id, request.Email, request.Name, request.Message, request.Status, request.CreatedAt, request.ResolvedAt));
+                new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt, request.ResolvedAt));
         }
         catch (Exception ex)
         {
             await _appLog.LogErrorAsync("Admin", $"Failed to resolve access request {id}", ex);
             return ServiceResult<AccessRequestDto>.Failure("unexpected_error");
+        }
+    }
+
+    public async Task<ServiceResult<bool>> SubmitAccessRequestAsync(SubmitAccessRequestDto dto)
+    {
+        var email = dto.Email.Trim().ToLowerInvariant();
+
+        // Reject if a pending request already exists for this email.
+        if (await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending))
+            return ServiceResult<bool>.Failure("already_pending");
+
+        // Reject if the email is already in the allowed list.
+        if (await _db.AllowedEmails.AnyAsync(e => e.Email == email))
+            return ServiceResult<bool>.Failure("already_approved");
+
+        // Cap: refuse new requests when too many are already pending.
+        // Protects the database from flooding via multiple IPs or generated emails.
+        const int MaxPendingRequests = 50;
+        if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= MaxPendingRequests)
+            return ServiceResult<bool>.Failure("too_many_pending");
+
+        _db.AccessRequests.Add(new AccessRequest
+        {
+            Email   = email,
+            Message = dto.Message?.Trim(),
+            Status  = AccessRequestStatus.Pending
+        });
+
+        try
+        {
+            await _db.SaveChangesAsync();
+            await _appLog.LogInfoAsync("AccessRequest", $"New access request from {email}");
+            return ServiceResult<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            await _appLog.LogErrorAsync("AccessRequest", $"Failed to save access request for {email}", ex);
+            return ServiceResult<bool>.Failure("unexpected_error");
         }
     }
 

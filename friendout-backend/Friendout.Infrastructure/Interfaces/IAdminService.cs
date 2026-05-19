@@ -27,6 +27,7 @@ public interface IAdminService
     // Access Requests
     Task<List<AccessRequestDto>> GetAccessRequestsAsync(string? status);
     Task<ServiceResult<AccessRequestDto>> ResolveAccessRequestAsync(int id, ResolveAccessRequestDto dto);
+    Task<ServiceResult<bool>> SubmitAccessRequestAsync(SubmitAccessRequestDto dto);
 
     // Users
     Task<List<UserAdminDto>> GetUsersAsync();
