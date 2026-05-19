@@ -3,7 +3,9 @@
     "title": "Sign in to Friendout",
     "welcome_sentence": "Make planning with friends a breeze with Friendout",
     "login_button": "Sign in with Discord",
-    "login_button_google": "Sign in with Google"
+    "login_button_google": "Sign in with Google",
+    "request_access_link": "No access yet?",
+    "request_access_button": "Request access"
   },
   "create_activity_page": {
     "create": {
@@ -103,6 +105,25 @@
     "description_label": "Description",
     "empty_label": "No sub-activity added",
     "time_picker_aria": "Choose time"},
+  "access_request": {
+    "modal_title": "Join Friendout 👋",
+    "modal_description": "Not authorized yet? Drop your email and we'll take it from there. The admin will get back to you as soon as possible.",
+    "email_label": "Your email address",
+    "email_placeholder": "your@email.com",
+    "email_hint": "Use the email address linked to your Google account.",
+    "message_label": "Want to introduce yourself? (optional)",
+    "message_placeholder": "Tell us in a few words who you are or how you found us \ud83d\ude0a",
+    "submit_button": "Send my request",
+    "submitting": "Sending...",
+    "success_title": "Request sent!",
+    "success_description": "We got your request. The admin will get back to you once it's been reviewed.",
+    "error_email_required": "Email address is required.",
+    "error_email_invalid": "Please enter a valid email address.",
+    "error_already_pending": "A request is already pending for this email.",
+    "error_already_approved": "This email is already authorized. Try signing in.",
+    "error_generic": "Something went wrong. Please try again.",
+    "error_too_many_pending": "Too many requests are pending right now. Please try again later."
+  },
   "errors": {
     "discord_access_denied": "You are not part of an authorized Discord server.",
     "discord_unauthorized": "Discord authentication failed. Please try again.",
@@ -131,6 +152,7 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "save": "Save",
+    "close": "Close",
     "free": "Free",
     "loading": "Loading...",
     "export_calendar": "Export to Calendar",

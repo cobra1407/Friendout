@@ -27,7 +27,6 @@ export interface UserAdminDto {
 export interface AccessRequestDto {
     id: number;
     email: string;
-    name: string | null;
     message: string | null;
     status: "Pending" | "Approved" | "Denied";
     createdAt: string;
@@ -90,4 +89,7 @@ export const adminApi = {
         api.get<AccessRequestDto[]>("/admin/access-requests", { params: { status } }).then(r => r.data),
     resolveAccessRequest: (id: number, status: "Approved" | "Denied") =>
         api.put<AccessRequestDto>(`/admin/access-requests/${id}`, { status }).then(r => r.data),
+
+    submitAccessRequest: (dto: { email: string; message?: string }) =>
+        api.post("/access-requests", dto),
 };
