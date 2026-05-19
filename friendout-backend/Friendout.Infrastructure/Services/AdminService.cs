@@ -192,6 +192,8 @@ public class AdminService : IAdminService
         request.Status = dto.Status;
         request.ResolvedAt = DateTime.UtcNow;
 
+        var (actorId, actorName) = await GetActorAsync();
+
         // If approved, automatically add the email to the allowed list.
         if (dto.Status == AccessRequestStatus.Approved)
         {
@@ -203,6 +205,12 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
+
+            if (dto.Status == AccessRequestStatus.Approved)
+                await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) approved access request for {request.Email}");
+            else
+                await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) rejected access request for {request.Email}");
+
             return ServiceResult<AccessRequestDto>.Success(
                 new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt, request.ResolvedAt));
         }
