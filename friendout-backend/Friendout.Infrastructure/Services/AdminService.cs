@@ -225,6 +225,11 @@ public class AdminService : IAdminService
     {
         var email = dto.Email.Trim().ToLowerInvariant();
 
+        // Reject if the message exceeds the allowed length.
+        const int MaxMessageLength = 500;
+        if (dto.Message != null && dto.Message.Trim().Length > MaxMessageLength)
+            return ServiceResult<bool>.Failure("message_too_long");
+
         // Reject if a pending request already exists for this email.
         if (await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending))
             return ServiceResult<bool>.Failure("already_pending");

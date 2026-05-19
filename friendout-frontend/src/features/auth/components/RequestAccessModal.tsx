@@ -10,12 +10,14 @@ import { FieldError } from "@/components/ui/FieldError";
 import { getTranslation } from "@/i18n";
 import { adminApi } from "@/features/admin/api/admin.api";
 
+const MAX_MESSAGE_LENGTH = 500;
+
 const accessRequestSchema = z.object({
     email: z.string().min(1).email(),
-    message: z.string().optional(),
+    message: z.string().max(MAX_MESSAGE_LENGTH).optional(),
 });
 
-type FieldErrors = { email?: string; api?: string };
+type FieldErrors = { email?: string; message?: string; api?: string };
 
 interface RequestAccessModalProps {
     open: boolean;
@@ -23,10 +25,10 @@ interface RequestAccessModalProps {
 }
 
 export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) => {
-    const [email, setEmail]         = useState("");
-    const [message, setMessage]     = useState("");
-    const [honeypot, setHoneypot]   = useState("");
-    const [errors, setErrors]       = useState<FieldErrors>({});
+    const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
+    const [honeypot, setHoneypot] = useState("");
+    const [errors, setErrors] = useState<FieldErrors>({});
     const [submitted, setSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -72,6 +74,8 @@ export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) =
                     setErrors({ email: getTranslation("access_request.error_already_pending") });
                 } else if (code === "already_approved") {
                     setErrors({ email: getTranslation("access_request.error_already_approved") });
+                } else if (code === "message_too_long") {
+                    setErrors({ message: getTranslation("access_request.error_message_too_long") });
                 } else if (code === "too_many_pending") {
                     setErrors({ api: getTranslation("access_request.error_too_many_pending") });
                 } else {
@@ -147,10 +151,21 @@ export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) =
                         <Textarea
                             id="req-message"
                             value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            onChange={(e) => { setMessage(e.target.value); setErrors((prev) => ({ ...prev, message: undefined })); }}
                             placeholder={getTranslation("access_request.message_placeholder")}
                             rows={3}
+                            maxLength={MAX_MESSAGE_LENGTH}
+                            aria-invalid={!!errors.message}
+                            className={errors.message ? "border-red-500 focus-visible:ring-red-500" : ""}
                         />
+                        <div className="flex justify-between items-center">
+                            <FieldError message={errors.message} />
+                            <span className={`text-xs ml-auto ${
+                                message.length > MAX_MESSAGE_LENGTH ? "text-red-500" : "text-muted-foreground"
+                            }`}>
+                                {message.length} / {MAX_MESSAGE_LENGTH}
+                            </span>
+                        </div>
                     </div>
 
                     <FieldError message={errors.api} />
