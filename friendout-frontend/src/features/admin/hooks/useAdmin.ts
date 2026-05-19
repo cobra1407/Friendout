@@ -164,6 +164,9 @@ export const useAdminAccessRequests = () => {
                     : getTranslation('admin.toast.request_denied')
             );
             qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
+            if (vars.status === "Approved") {
+                qc.invalidateQueries({ queryKey: ["admin", "emails"] });
+            }
         },
         onError: () => toast.error(getTranslation('admin.toast.request_error')),
     });
