@@ -12,13 +12,13 @@ namespace Friendout.Domain.Models
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
-        [Column("sessionToken")]
+        [Column("session_token")]
         [MaxLength(255)]
         public string SessionToken { get; set; } = null!;
 
 
         [Required]
-        [Column("userId")]
+        [Column("user_id")]
         [MaxLength(191)]
         public string UserId { get; set; } = null!;
 

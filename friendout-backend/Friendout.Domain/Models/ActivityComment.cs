@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Friendout.Domain.Models
 {
-    [Table("Activity_comment")]
+    [Table("activity_comments")]
     public class ActivityComment
     {
         [Key]
@@ -11,11 +11,11 @@ namespace Friendout.Domain.Models
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
-        [Column("activityId", TypeName = "varchar(191)")]
+        [Column("activity_id", TypeName = "varchar(191)")]
         public string ActivityId { get; set; } = null!;
 
         [Required]
-        [Column("userId", TypeName = "varchar(191)")]
+        [Column("user_id", TypeName = "varchar(191)")]
         public string UserId { get; set; } = null!;
 
         [Required]
@@ -23,11 +23,11 @@ namespace Friendout.Domain.Models
         public string Content { get; set; } = null!;
 
         [Required]
-        [Column("createdAt", TypeName = "datetime(3)")]
+        [Column("created_at", TypeName = "datetime(3)")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [Column("updatedAt", TypeName = "datetime(3)")]
+        [Column("updated_at", TypeName = "datetime(3)")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Relations

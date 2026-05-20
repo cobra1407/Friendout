@@ -7,12 +7,12 @@ namespace Friendout.Domain.Models
     public class UserEquipment
     {
         [Required]
-        [Column("userId")]
+        [Column("user_id")]
         [MaxLength(191)]
         public string UserId { get; set; } = null!;
 
         [Required]
-        [Column("equipmentId")]
+        [Column("equipment_id")]
         [MaxLength(191)]
         public string EquipmentId { get; set; } = null!;
         

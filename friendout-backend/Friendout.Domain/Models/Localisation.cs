@@ -4,7 +4,7 @@ using Friendout.Domain.Enums;
 
 namespace Friendout.Domain.Models
 {
-    [Table("localisation")]
+    [Table("localisations")]
     public class Localisation
     {
         [Key]
@@ -18,13 +18,13 @@ namespace Friendout.Domain.Models
         [Column("address", TypeName = "varchar(500)")]
         public string? Address { get; set; }
 
-        [Column("mapLink", TypeName = "varchar(500)")]
+        [Column("map_link", TypeName = "varchar(500)")]
         public string? MapLink { get; set; }
 
-        [Column("virtualUrl", TypeName = "varchar(500)")]
+        [Column("virtual_url", TypeName = "varchar(500)")]
         public string? VirtualUrl { get; set; }
 
-        [Column("displayName", TypeName = "varchar(100)")]
+        [Column("display_name", TypeName = "varchar(100)")]
         public string? DisplayName { get; set; }
         
 

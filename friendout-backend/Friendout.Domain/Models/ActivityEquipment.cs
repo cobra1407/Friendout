@@ -11,11 +11,11 @@ namespace Friendout.Domain.Models
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
-        [Column("activityId", TypeName = "varchar(191)")]
+        [Column("activity_id", TypeName = "varchar(191)")]
         public string ActivityId { get; set; } = null!;
 
         [Required]
-        [Column("equipmentId", TypeName = "varchar(191)")]
+        [Column("equipment_id", TypeName = "varchar(191)")]
         public string EquipmentId { get; set; } = null!;
 
         [Required]
@@ -27,11 +27,11 @@ namespace Friendout.Domain.Models
         public int Quantity { get; set; } = 1;
 
         [Required]
-        [Column("createdAt", TypeName = "datetime(3)")]
+        [Column("created_at", TypeName = "datetime(3)")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [Column("updatedAt", TypeName = "datetime(3)")]
+        [Column("updated_at", TypeName = "datetime(3)")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Relations

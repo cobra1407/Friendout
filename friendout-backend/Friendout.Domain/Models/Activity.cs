@@ -19,34 +19,34 @@ namespace Friendout.Domain.Models
         public string Description { get; set; } = null!;
         
         [Required]
-        [Column("startAt", TypeName = "datetime(3)")]
+        [Column("start_at", TypeName = "datetime(3)")]
         public DateTime StartAt { get; set; }
         
-        [Column("endAt", TypeName = "datetime(3)")]
+        [Column("end_at", TypeName = "datetime(3)")]
         public DateTime? EndAt { get; set; }
         
         [ForeignKey(nameof(LocalisationId))]
         public required Localisation Localisation { get; set; }
         
-        [Column("localisationId", TypeName = "varchar(191)")]
+        [Column("localisation_id", TypeName = "varchar(191)")]
         public string? LocalisationId { get; set; }
 
-        [Column("estimatedPrice")]
+        [Column("estimated_price")]
         public double? EstimatedPrice { get; set; }
 
-        [Column("imageId", TypeName = "varchar(191)")]
+        [Column("image_id", TypeName = "varchar(191)")]
         public string? ImageId { get; set; }
 
         [Required]
-        [Column("createdBy", TypeName = "varchar(191)")]
+        [Column("created_by", TypeName = "varchar(191)")]
         public string CreatedBy { get; set; } = null!;
 
         [Required]
-        [Column("createdAt", TypeName = "datetime(3)")]
+        [Column("created_at", TypeName = "datetime(3)")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [Column("updatedAt", TypeName = "datetime(3)")]
+        [Column("updated_at", TypeName = "datetime(3)")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Relations
