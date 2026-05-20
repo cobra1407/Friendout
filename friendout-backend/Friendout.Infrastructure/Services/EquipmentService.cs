@@ -157,6 +157,34 @@ public class EquipmentService : IEquipmentService
 
             return await GetUserEquipmentsAsync(userId, activityId);
         }
+        catch (DbUpdateException ex) when (IsDuplicateKeyException(ex))
+        {
+            // A concurrent request inserted the same row between our FirstOrDefaultAsync (null)
+            // and our SaveChangesAsync. Clear the tracker and retry as an update.
+            _logger.LogWarning(
+                "Duplicate key race condition on UserEquipment (userId={UserId}, equipmentId={EquipmentId}, activityId={ActivityId}). Retrying as update.",
+                userId, equipmentId, activityId);
+
+            _friendoutDbContext.ChangeTracker.Clear();
+
+            var conflictEntry = await _friendoutDbContext.UserEquipment
+                .FirstOrDefaultAsync(ue =>
+                    ue.UserId == userId &&
+                    ue.EquipmentId == equipmentId &&
+                    ue.ActivityId == activityId);
+
+            if (conflictEntry is not null)
+            {
+                if (quantity <= 0)
+                    _friendoutDbContext.UserEquipment.Remove(conflictEntry);
+                else
+                    conflictEntry.Quantity = quantity;
+
+                await _friendoutDbContext.SaveChangesAsync();
+            }
+
+            return await GetUserEquipmentsAsync(userId, activityId);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex,
@@ -167,6 +195,12 @@ public class EquipmentService : IEquipmentService
             return ServiceResult<List<UserEquipmentDto>>
                 .Failure("An error occurred while updating user equipment");
         }
+    }
+
+    private static bool IsDuplicateKeyException(DbUpdateException ex)
+    {
+        return ex.InnerException?.Message.Contains("Duplicate entry", StringComparison.OrdinalIgnoreCase) == true
+            || ex.InnerException?.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) == true;
     }
 
 
