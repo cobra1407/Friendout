@@ -199,8 +199,7 @@ public class EquipmentService : IEquipmentService
 
     private static bool IsDuplicateKeyException(DbUpdateException ex)
     {
-        return ex.InnerException?.Message.Contains("Duplicate entry", StringComparison.OrdinalIgnoreCase) == true
-            || ex.InnerException?.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) == true;
+        return ex.InnerException is MySqlException { Number: 1062 };
     }
 
 
