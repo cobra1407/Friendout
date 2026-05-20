@@ -135,6 +135,8 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.ActivityId);
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => new { e.Id }).IsUnique();
+                // Prevent duplicate participations (race condition protection)
+                entity.HasIndex(e => new { e.UserId, e.ActivityId, e.SubActivityId }).IsUnique();
 
                 entity.HasOne(e => e.Activity)
                     .WithMany(e => e.UserParticipations)

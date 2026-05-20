@@ -231,6 +231,65 @@ public class ParticipantServiceTests
             p.SubActivityId == sub1.Id).Should().Be(1);
     }
 
+    [Test]
+    public async Task SaveParticipationAsync_CannotParticipateTwiceInMainActivity_ButCanInSubActivity()
+    {
+        // Arrange
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_CannotParticipateTwiceInMainActivity_ButCanInSubActivity));
+
+        var user = new User { Id = "user-1", Name = "Bob", Email = "bob@example.com" };
+        var activity = CreateActivity("activity-unique-test", user);
+
+        var subActivity = new SubActivity
+        {
+            Id = "sub-1",
+            ActivityId = activity.Id,
+            Activity = activity,
+            Name = "Sous-Activité 1",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(1),
+            Localisation = new Localisation { Id = "loc-sub-1", Type = Friendout.Domain.Enums.LocalisationType.Address, DisplayName = "Sub" }
+        };
+
+        context.Users.Add(user);
+        context.Activities.Add(activity);
+        context.SubActivities.Add(subActivity);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+
+        await service.SaveParticipationAsync(new UpdateParticipationCommand
+        {
+            ActivityId = activity.Id,
+            Status = ParticipationStatus.Participating,
+            SubActivityIds = new List<string>()
+        }, user.Id);
+
+        await service.SaveParticipationAsync(new UpdateParticipationCommand
+        {
+            ActivityId = activity.Id,
+            Status = ParticipationStatus.Participating,
+            SubActivityIds = new List<string>()
+        }, user.Id);
+
+        await service.SaveParticipationAsync(new UpdateParticipationCommand
+        {
+            ActivityId = activity.Id,
+            Status = ParticipationStatus.Participating,
+            SubActivityIds = new List<string> { subActivity.Id }
+        }, user.Id);
+
+        var allParticipations = context.UserParticipation.Where(p => p.UserId == user.Id).ToList();
+
+        allParticipations.Should().HaveCount(2);
+
+        allParticipations.Should().ContainSingle(p => p.ActivityId == activity.Id && p.SubActivityId == null,
+            "User should have only one main participation for the activity");
+
+        allParticipations.Should().ContainSingle(p => p.ActivityId == activity.Id && p.SubActivityId == subActivity.Id,
+            "User should have only one participation for the sub-activity");
+    }
+
     private static Activity CreateActivity(string activityId, User creator)
     {
         var startAt = DateTime.UtcNow.AddHours(1);
