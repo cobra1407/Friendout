@@ -9,6 +9,7 @@ using Friendout.Infrastructure.Command.Participant;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 
 namespace Friendout.Infrastructure.Services;
 
@@ -78,20 +79,20 @@ public class ParticipantService : IParticipantService
     UpdateParticipationCommand command,
     string userId)
     {
-        // VÃ©rifie si l'activitÃ© existe
+        // Check if activity exists
         var activity = await _friendoutDbContext.Activities
             .FirstOrDefaultAsync(a => a.Id == command.ActivityId);
 
         if (activity is null)
             return ServiceResult<UserActivityParticipationDto>.Failure("Can't participate to this activity"); // Activity doesn't exist
-
+        
         // Prevent joining if activity already started
         if (activity.StartAt < DateTime.UtcNow)
             return ServiceResult<UserActivityParticipationDto>.Failure("This activity is already started");
 
         try
         {
-            // PrÃ©charge toutes les participations existantes pour cet utilisateur + activitÃ©
+            // Load existing participations for this user and activity
             var existingParticipations = await _friendoutDbContext.UserParticipation
                 .Where(up => up.UserId == userId && up.ActivityId == command.ActivityId)
                 .ToListAsync();
@@ -135,7 +136,7 @@ public class ParticipantService : IParticipantService
             else
             {
                 // ----------------
-                // PARTICIPATION AUX SOUS-ACTIVITÃ‰S
+                // SUB ACTIVITIES PARTICIPATION
                 // ----------------
                 var validSubActivityIds = await _friendoutDbContext.SubActivities
                     .Where(sa => sa.ActivityId == command.ActivityId && subActivityIds.Contains(sa.Id))
@@ -166,12 +167,33 @@ public class ParticipantService : IParticipantService
                     }
                 }
             }
+            
+            try
+            {
+                await _friendoutDbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is MySqlException { Number: 1062 }) // duplicate entry
+            {
+                // Race condition: another request inserted the same participation concurrently
+                // Clear the change tracker and retry as an update
+                _logger.LogWarning("Duplicate participation detected for user {UserId} on activity {ActivityId}. Retrying as update.", userId, command.ActivityId);
+                _friendoutDbContext.ChangeTracker.Clear();
 
-            // Save all
-            await _friendoutDbContext.SaveChangesAsync();
+                var conflicted = await _friendoutDbContext.UserParticipation
+                    .Where(up => up.UserId == userId && up.ActivityId == command.ActivityId)
+                    .ToListAsync();
+
+                foreach (var p in conflicted)
+                {
+                    p.Status = command.Status;
+                    p.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _friendoutDbContext.SaveChangesAsync();
+            }
 
             // ----------------
-            // RÃ©cupÃ¨re toutes les participations pour cette activitÃ©
+            // RETRIEVE PARTICIPATIONS FOR THIS ACTIVITY
             // ----------------
             var userParticipations = await _friendoutDbContext.UserParticipation
                 .Where(up =>
