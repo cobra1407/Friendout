@@ -12,15 +12,15 @@ namespace Friendout.Domain.Models
         public int Id { get; set; }
 
         [Required]
-        [Column("userId")]
+        [Column("user_id")]
         [MaxLength(191)]
         public string UserId { get; set; } = null!;
 
         [Required]
-        [Column("achievementId")]
+        [Column("achievement_id")]
         public int AchievementId { get; set; }
 
-        [Column("unlockedAt")]
+        [Column("unlocked_at")]
         public DateTime UnlockedAt { get; set; } = DateTime.UtcNow;
 
         // Relations

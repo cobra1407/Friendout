@@ -4,7 +4,7 @@ using Friendout.Domain.Enums;
 
 namespace Friendout.Domain.Models
 {
-    [Table("user_participation")]
+    [Table("user_participations")]
     public class UserParticipation
     {
         [Key]
@@ -13,16 +13,16 @@ namespace Friendout.Domain.Models
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
-        [Column("activityId")]
+        [Column("activity_id")]
         [MaxLength(191)]
         public string ActivityId { get; set; } = null!;
 
-        [Column("subActivityId")]
+        [Column("sub_activity_id")]
         [MaxLength(191)]
         public string? SubActivityId { get; set; }
 
         [Required]
-        [Column("userId")]
+        [Column("user_id")]
         [MaxLength(191)]
         public string UserId { get; set; } = null!;
 
@@ -41,10 +41,10 @@ namespace Friendout.Domain.Models
         public User User { get; set; } = null!;
 
         [Required]
-        [Column("createdAt")]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updatedAt")]
+        [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
     }
 }

@@ -19,15 +19,15 @@ namespace Friendout.Domain.Models
         [ForeignKey(nameof(LocalisationId))]
         public required Localisation Localisation { get; set; }
         
-        [Column("localisationId", TypeName = "varchar(191)")]
+        [Column("localisation_id", TypeName = "varchar(191)")]
         public string? LocalisationId { get; set; }
 
         [Required]
-        [Column("startTime", TypeName = "datetime(3)")]
+        [Column("start_time", TypeName = "datetime(3)")]
         public DateTime StartTime { get; set; }
 
         [Required]
-        [Column("endTime", TypeName = "datetime(3)")]
+        [Column("end_time", TypeName = "datetime(3)")]
         public DateTime EndTime { get; set; }
 
         [Column("description", TypeName = "text")]
@@ -37,14 +37,14 @@ namespace Friendout.Domain.Models
         public double? Price { get; set; }
 
         [Required]
-        [Column("activityId")]
+        [Column("activity_id")]
         [MaxLength(191)]
         public string ActivityId { get; set; } = null!;
 
-        [Column("createdAt")]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updatedAt")]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Relations

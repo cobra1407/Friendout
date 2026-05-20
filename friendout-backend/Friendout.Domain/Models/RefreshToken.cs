@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Friendout.Domain.Models;
 
 /// <summary>
@@ -7,21 +10,31 @@ namespace Friendout.Domain.Models;
 /// requiring the user to log in again. Each token is single-use: once consumed,
 /// it is replaced by a new one (token rotation).
 /// </summary>
+[Table("refresh_tokens")]
 public class RefreshToken
 {
     /// <summary>Primary key — the raw token value stored as a hash in practice.</summary>
+    [Key]
+    [Column("token")]
+    [MaxLength(191)]
     public string Token { get; set; } = null!;
 
     /// <summary>The user this token belongs to.</summary>
+    [Required]
+    [Column("user_id")]
+    [MaxLength(191)]
     public string UserId { get; set; } = null!;
     public User User { get; set; } = null!;
 
     /// <summary>When the token was created.</summary>
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>When the token expires (30 days after creation).</summary>
+    [Column("expires_at")]
     public DateTime ExpiresAt { get; set; }
 
     /// <summary>Whether the token has been revoked (e.g. on logout or suspicious activity).</summary>
+    [Column("is_revoked")]
     public bool IsRevoked { get; set; } = false;
 }

@@ -21,7 +21,7 @@ namespace Friendout.Domain.Models
         [Column("description", TypeName = "text")]
         public string? Description { get; set; }
 
-        [Column("mimeType", TypeName = "varchar(191)")]
+        [Column("mime_type", TypeName = "varchar(191)")]
         public string? MimeType { get; set; }
 
         [Column("size")]
@@ -33,11 +33,11 @@ namespace Friendout.Domain.Models
         [Column("height")]
         public int? Height { get; set; }
 
-        [Column("altText", TypeName = "text")]
+        [Column("alt_text", TypeName = "text")]
         public string? AltText { get; set; }
 
         [Required]
-        [Column("createdBy", TypeName = "varchar(191)")]
+        [Column("created_by", TypeName = "varchar(191)")]
         public string CreatedBy { get; set; } = null!;
     }
 }
