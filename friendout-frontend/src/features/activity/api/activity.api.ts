@@ -140,6 +140,10 @@ const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
     formData.append("ActivityImage", payload.activityImage);
   }
 
+  if (payload.removeImage) {
+    formData.append("RemoveImage", "true");
+  }
+
   return formData;
 };
 
