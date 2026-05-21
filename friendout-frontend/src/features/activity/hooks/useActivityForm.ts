@@ -67,6 +67,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         getInitialRequiredEquipment(initialData)
     )
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [shouldRemoveImage, setShouldRemoveImage] = useState(false)
     const [image, setImage] = useState<string | null>(
         formatImageUrl(initialData?.image?.url ?? null)
     )
@@ -107,6 +108,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         }
 
         setImageFile(file)
+        setShouldRemoveImage(false)
         const reader = new FileReader()
         reader.onload = (e) => {
             const result = e.target?.result
@@ -118,6 +120,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
     const removeImage = () => {
         setImage(null)
         setImageFile(null)
+        setShouldRemoveImage(true)
     }
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -142,6 +145,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : undefined,
             localisation: localisationData,
             activityImage: imageFile ?? undefined,
+            removeImage: shouldRemoveImage,
             requiredEquipmentNames: requiredEquipment,
             subActivities,
         }

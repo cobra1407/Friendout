@@ -46,6 +46,7 @@ const baseSchema = z.object({
   endAt:       z.date().optional(),
   estimatedPrice: z.number().min(0).optional(),
   localisation: localisationSchema.nullable(),
+    removeImage: z.boolean().optional().default(false),
   activityImage: z.instanceof(File).optional(),
   requiredEquipmentNames: z.array(z.string().trim().min(1)).optional().default([]),
   subActivities: z.array(subActivitySchema).optional().default([]),

@@ -17,4 +17,5 @@ public class UpdateActivityDto
     public List<string> RequiredEquipmentNames { get; set; } = new();
     public List<CreateSubActivityDto> SubActivities { get; set; } = new();
     public FileUpload? ActivityImage { get; set; }
+    public bool RemoveImage { get; set; } = false;
 }

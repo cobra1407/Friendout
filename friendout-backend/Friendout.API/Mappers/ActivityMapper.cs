@@ -131,7 +131,8 @@ namespace friendout_backend.Mappers
                 EstimatedPrice = request.EstimatedPrice,
                 RequiredEquipmentNames = NormalizeEquipmentNames(request.ResolveRequiredEquipmentNames()),
                 SubActivities = NormalizeSubActivities(request.StartAt, request.ResolveSubActivities()),
-                ActivityImage = activityImage
+                ActivityImage = activityImage,
+                RemoveImage = request.RemoveImage
             };
         }
     }

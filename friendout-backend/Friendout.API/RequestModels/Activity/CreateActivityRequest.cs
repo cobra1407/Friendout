@@ -94,6 +94,11 @@ public class CreateActivityRequest : IValidatableObject
         /// </summary>
         public IFormFile? ActivityImage { get; set; }
 
+        /// <summary>
+        /// Set to true to explicitly remove the current image and revert to the default.
+        /// </summary>
+        public bool RemoveImage { get; set; } = false;
+
         public List<string> ResolveRequiredEquipmentNames()
         {
             if (RequiredEquipmentNames is { Count: > 0 })

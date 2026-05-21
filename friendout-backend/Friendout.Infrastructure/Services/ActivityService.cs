@@ -108,7 +108,7 @@ public class ActivityService : IActivityService
             // 1ï¸âƒ£ Filtrer par utilisateur si OnlyMine = true
             if (filter.OnlyOwnActivity)
                 query = query.Where(a => a.CreatedBy == userId);
-            
+
             // 2ï¸âƒ£ Filtrer passée / Ã  venir
             var now = DateTime.UtcNow;
             query = filter.TimeFilter switch
@@ -121,11 +121,11 @@ public class ActivityService : IActivityService
             // Tri : Ã  venir en premier (asc), passÃ© ensuite (desc)
             query = query
                 .OrderBy(a => a.StartAt < now)
-                .ThenBy(a => a.StartAt < now 
-                    ? DateTime.MaxValue 
+                .ThenBy(a => a.StartAt < now
+                    ? DateTime.MaxValue
                     : a.StartAt)
-                .ThenByDescending(a => a.StartAt < now 
-                    ? a.StartAt 
+                .ThenByDescending(a => a.StartAt < now
+                    ? a.StartAt
                     : DateTime.MinValue);
 
 
@@ -133,7 +133,7 @@ public class ActivityService : IActivityService
             if (!string.IsNullOrEmpty(filter.Search))
             {
                 var search = filter.Search.ToLower();
-                query = query.Where(a => a.Title.ToLower().Contains(search) 
+                query = query.Where(a => a.Title.ToLower().Contains(search)
                                       || a.Description.ToLower().Contains(search));
             }
 
@@ -222,7 +222,7 @@ public class ActivityService : IActivityService
                     Name = eu.Equipment.Name
                 })
                 .ToListAsync();
-            
+
             var activity = await _friendoutDbContext.Activities
                 .AsNoTracking()
                 .Where(a => a.Id == activityId)
@@ -239,8 +239,8 @@ public class ActivityService : IActivityService
                     EstimatedPrice = a.EstimatedPrice,
                     TotalPrice =
                         (a.EstimatedPrice ?? 0) +
-                        (a.SubActivities.Any() 
-                            ? a.SubActivities.Sum(sa => sa.Price ?? 0) 
+                        (a.SubActivities.Any()
+                            ? a.SubActivities.Sum(sa => sa.Price ?? 0)
                             : 0),
 
                     CreatedBy = a.Creator.Name,
@@ -313,7 +313,7 @@ public class ActivityService : IActivityService
                             Quantity = ae.Quantity
                         })
                         .ToList(),
-                    
+
                     // =========================
                     // User equipments
                     // =========================
@@ -382,7 +382,7 @@ public class ActivityService : IActivityService
                         .ToList()
                 })
                 .FirstOrDefaultAsync();
-            
+
             if (activity == null)
                 return ServiceResult<ActivityDetailsDto>
                     .Failure("Activity not found");
@@ -459,9 +459,17 @@ public class ActivityService : IActivityService
             // Image
             if (createActivityDto.ActivityImage != null)
             {
-                var fileName = await _fileService.SaveFileAsync(
-                    createActivityDto.ActivityImage,
-                    FileCategory.ActivityImage);
+                string fileName;
+                try
+                {
+                    fileName = await _fileService.SaveFileAsync(
+                        createActivityDto.ActivityImage,
+                        FileCategory.ActivityImage);
+                }
+                catch (ArgumentException ex)
+                {
+                    return ServiceResult<ActivityDto>.Failure($"Image invalide : {ex.Message}");
+                }
 
                 var fileUrl = _fileService.GetFileUrl(
                     fileName,
@@ -473,7 +481,7 @@ public class ActivityService : IActivityService
                     Url = fileUrl,
                     Name = createActivityDto.ActivityImage.FileName,
                     MimeType = createActivityDto.ActivityImage.ContentType,
-                    Size = (int)createActivityDto.ActivityImage.Length,
+                    Size = createActivityDto.ActivityImage.Length,
                     CreatedBy = userId
                 };
 
@@ -637,7 +645,7 @@ public class ActivityService : IActivityService
 
             await _friendoutDbContext.SaveChangesAsync();
 
-            // Convert to Dto 
+            // Convert to Dto
             var updatedActivityDto = await _friendoutDbContext.Activities
                 .AsNoTracking()
                 .Where(a => a.Id == activity.Id)
@@ -703,7 +711,7 @@ public class ActivityService : IActivityService
                 "Une erreur s'est produite lors de la création de l'activité");
         }
     }
-    
+
     public async Task<ServiceResult<ActivityDto>> UpdateActivityAsync(UpdateActivityDto activityDto, string userId)
     {
         try
@@ -772,7 +780,23 @@ public class ActivityService : IActivityService
                 })
                 .ToList();
 
-            if (activityDto.ActivityImage != null)
+            if (activityDto.RemoveImage && activity.Image != null)
+            {
+                // Supprimer le fichier physique
+                var removeParts = activity.Image.Url.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                var removeFileName = removeParts.Length > 0 ? removeParts[^1] : null;
+                if (!string.IsNullOrWhiteSpace(removeFileName))
+                {
+                    try { await _fileService.DeleteFileAsync(removeFileName, FileCategory.ActivityImage); }
+                    catch { /* ignore */ }
+                }
+
+                // Supprimer le record Image en base et détacher l'activité
+                _friendoutDbContext.Images.Remove(activity.Image);
+                activity.ImageId = null;
+                activity.Image = null;
+            }
+            else if (activityDto.ActivityImage != null)
             {
                 string? previousFileName = null;
                 if (activity.Image?.Url is { Length: > 0 } previousUrl)
@@ -781,19 +805,22 @@ public class ActivityService : IActivityService
                     previousFileName = parts.Length > 0 ? parts[^1] : null;
                 }
 
-                var fileName = await _fileService.SaveFileAsync(activityDto.ActivityImage, FileCategory.ActivityImage);
-                var fileUrl = _fileService.GetFileUrl(fileName, FileCategory.ActivityImage);
+                string newFileName;
+                try
+                {
+                    newFileName = await _fileService.SaveFileAsync(activityDto.ActivityImage, FileCategory.ActivityImage);
+                }
+                catch (ArgumentException ex)
+                {
+                    return ServiceResult<ActivityDto>.Failure($"Image invalide : {ex.Message}");
+                }
+
+                var fileUrl = _fileService.GetFileUrl(newFileName, FileCategory.ActivityImage);
 
                 if (!string.IsNullOrWhiteSpace(previousFileName))
                 {
-                    try
-                    {
-                        await _fileService.DeleteFileAsync(previousFileName, FileCategory.ActivityImage);
-                    }
-                    catch
-                    {
-                        // Ignore file deletion errors to avoid blocking the update.
-                    }
+                    try { await _fileService.DeleteFileAsync(previousFileName, FileCategory.ActivityImage); }
+                    catch { /* ignore */ }
                 }
 
                 if (activity.Image is null)
@@ -804,7 +831,7 @@ public class ActivityService : IActivityService
                         Url = fileUrl,
                         Name = activityDto.ActivityImage.FileName,
                         MimeType = activityDto.ActivityImage.ContentType,
-                        Size = (int)activityDto.ActivityImage.Length,
+                        Size = activityDto.ActivityImage.Length,
                         CreatedBy = userId
                     };
                     _friendoutDbContext.Images.Add(image);
@@ -1173,4 +1200,3 @@ public class ActivityService : IActivityService
         return ServiceResult<ActivityDto>.Success(activityDto);
     }
 }
-
