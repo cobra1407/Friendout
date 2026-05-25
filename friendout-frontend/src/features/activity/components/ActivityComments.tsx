@@ -98,7 +98,7 @@ export default function ActivityComments({
                                                     <button
                                                         type="button"
                                                         onClick={onUpdate}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                                                         title="Enregistrer"
                                                     >
                                                         <Check className="h-3.5 w-3.5" />
@@ -107,7 +107,7 @@ export default function ActivityComments({
                                                     <button
                                                         type="button"
                                                         onClick={onCancelEdit}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                                                         title="Annuler"
                                                     >
                                                         <X className="h-3.5 w-3.5" />
@@ -118,7 +118,7 @@ export default function ActivityComments({
                                                     <button
                                                         type="button"
                                                         onClick={() => onEdit(comment.commentId, comment.content)}
-                                                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                                                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                                                         title="Modifier le commentaire"
                                                     >
                                                         <Edit className="h-3.5 w-3.5" />
@@ -131,7 +131,7 @@ export default function ActivityComments({
                                                                 onDelete(comment.commentId);
                                                             }
                                                         }}
-                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
                                                         title="Supprimer le commentaire"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />

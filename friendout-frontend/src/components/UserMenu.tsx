@@ -121,7 +121,7 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
                 <div className="p-2">
                     <button
                         onClick={() => { setIsPopoverOpen(false); onLogout(); }}
-                        className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors group/logout"
+                        className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors group/logout cursor-pointer"
                     >
                         <LogOut className="w-4 h-4 group-hover/logout:-translate-x-0.5 transition-transform" />
                         {getTranslation("header.logout")}
@@ -142,7 +142,7 @@ interface MenuButtonProps {
 const MenuButton = ({ icon, label, badge, onClick }: MenuButtonProps) => (
     <button
         onClick={onClick}
-        className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted transition-colors text-left group/btn"
+        className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted transition-colors text-left group/btn cursor-pointer"
     >
         <span className="text-muted-foreground group-hover/btn:text-primary transition-colors">{icon}</span>
         <span className="flex-1">{label}</span>

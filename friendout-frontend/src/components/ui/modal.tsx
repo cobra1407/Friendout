@@ -24,7 +24,7 @@ const Modal = ({ open, onClose, children, className }: ModalProps) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Overlay */}
-            <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
             {/* Content */}
             <div className={cn(
                 "relative z-50 w-full max-w-[calc(100%-2rem)] sm:max-w-lg bg-background rounded-lg border shadow-lg p-6 grid gap-4",
@@ -32,7 +32,7 @@ const Modal = ({ open, onClose, children, className }: ModalProps) => {
             )}>
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 opacity-70 hover:opacity-100 transition-opacity rounded-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="absolute top-4 right-4 opacity-70 hover:opacity-100 transition-opacity rounded-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
                 >
                     <X className="h-4 w-4 cursor-pointer" />
                     <span className="sr-only">Close</span>

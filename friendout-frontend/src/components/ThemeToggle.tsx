@@ -29,7 +29,7 @@ export const ThemeToggle = () => {
               key={t.value}
               onClick={() => setBaseTheme(t.value)}
               className={cn(
-                'px-3 py-1 rounded-md text-sm font-medium transition-all',
+                'px-3 py-1 rounded-md text-sm font-medium transition-all cursor-pointer',
                 'hover:bg-accent hover:text-accent-foreground',
                 baseTheme === t.value
                   ? 'bg-primary text-primary-foreground'
@@ -52,7 +52,7 @@ export const ThemeToggle = () => {
               onClick={() => setAccentColor(c.value)}
               title={c.label}
               className={cn(
-                'w-6 h-6 rounded-full transition-all border-2',
+                'w-6 h-6 rounded-full transition-all border-2 cursor-pointer',
                 c.color,
                 accentColor === c.value
                   ? 'border-foreground scale-110'
