@@ -197,7 +197,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
                                     <div className="flex flex-col gap-2">
                                         <button
                                             onClick={handleExportGoogle}
-                                            className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left"
+                                            className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left cursor-pointer"
                                         >
                                             <div className="w-8 h-8 rounded-md bg-white border flex items-center justify-center shrink-0">
                                                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
@@ -210,7 +210,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
 
                                         <button
                                             onClick={handleExportOutlook}
-                                            className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left"
+                                            className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left cursor-pointer"
                                         >
                                             <div className="w-8 h-8 rounded-md bg-[#0078D4] flex items-center justify-center shrink-0">
                                                 <img src="https://outlook.com/favicon.ico" alt="Outlook" className="w-4 h-4" />
@@ -225,7 +225,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
 
                                         <button
                                             onClick={handleExportIcs}
-                                            className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left"
+                                            className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left cursor-pointer"
                                         >
                                             <div className="w-8 h-8 rounded-md bg-muted border flex items-center justify-center shrink-0">
                                                 <Calendar className="w-4 h-4 text-muted-foreground" />

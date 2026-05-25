@@ -172,15 +172,15 @@ export default function EnhancedLocationInput({
 
             <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value={TAB_VALUES.address} className="flex items-center gap-2 hover:cursor-pointer hover:bg-blue-100">
+                    <TabsTrigger value={TAB_VALUES.address} className="flex items-center gap-2 cursor-pointer hover:bg-blue-100">
                         <MapPin className="w-4 h-4" />
                         <span className="hidden sm:inline">{getTranslation("enhanced_location_input.tab_address")}</span>
                     </TabsTrigger>
-                    <TabsTrigger value={TAB_VALUES.mapsLink} className="flex items-center gap-2 hover:cursor-pointer hover:bg-blue-100">
+                    <TabsTrigger value={TAB_VALUES.mapsLink} className="flex items-center gap-2 cursor-pointer hover:bg-blue-100">
                         <Link className="w-4 h-4" />
                         <span className="hidden sm:inline">{getTranslation("enhanced_location_input.tab_maps_link")}</span>
                     </TabsTrigger>
-                    <TabsTrigger value={TAB_VALUES.virtual} className="flex items-center gap-2 hover:cursor-pointer hover:bg-blue-100">
+                    <TabsTrigger value={TAB_VALUES.virtual} className="flex items-center gap-2 cursor-pointer hover:bg-blue-100">
                         <MessageCircle className="w-4 h-4" />
                         <span className="hidden sm:inline">{getTranslation("enhanced_location_input.tab_virtual")}</span>
                     </TabsTrigger>

@@ -195,7 +195,7 @@ const SubActivityDetailsCard = ({ subActivity, maxVisibleParticipants, onRespons
                                 {showMoreCount > 0 && (
                                     <button
                                         type="button"
-                                        className="text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-primary/5 px-2 py-1 rounded-lg transition hover:cursor-pointer"
+                                        className="text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-primary/5 px-2 py-1 rounded-lg transition cursor-pointer"
                                     >
                                         +{showMoreCount} {getTranslation('sub_activity.more_others')}
                                     </button>

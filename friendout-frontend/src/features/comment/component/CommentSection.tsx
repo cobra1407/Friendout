@@ -103,7 +103,7 @@ export default function CommentsSection({
                                                     <button
                                                         type="button"
                                                         onClick={() => handleUpdateComment(comment.commentId)}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                                                         title={getTranslation('common.save')}
                                                     >
                                                         <Check className="h-3.5 w-3.5" />
@@ -111,7 +111,7 @@ export default function CommentsSection({
                                                     <button
                                                         type="button"
                                                         onClick={cancelEdit}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                                                         title={getTranslation('common.cancel')}
                                                     >
                                                         <X className="h-3.5 w-3.5" />
