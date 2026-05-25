@@ -19,12 +19,14 @@ public class AdminService : IAdminService
     private readonly FriendoutDbContext _db;
     private readonly IAppLogService _appLog;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly INotificationDispatcher _notificationDispatcher;
 
-    public AdminService(FriendoutDbContext db, IAppLogService appLog, IHttpContextAccessor httpContextAccessor)
+    public AdminService(FriendoutDbContext db, IAppLogService appLog, IHttpContextAccessor httpContextAccessor, INotificationDispatcher notificationDispatcher)
     {
         _db = db;
         _appLog = appLog;
         _httpContextAccessor = httpContextAccessor;
+        _notificationDispatcher = notificationDispatcher;
     }
 
     /// <summary>Returns the (id, name) of the currently authenticated admin.</summary>
@@ -205,6 +207,22 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
+
+            // Notify the user by email after resolution.
+            var notificationType = dto.Status == AccessRequestStatus.Approved
+                ? NotificationType.AccessRequestApproved
+                : NotificationType.AccessRequestDenied;
+
+            await _notificationDispatcher.DispatchNotificationAsync(
+                Guid.Empty, // No UserId yet — recipient has no account, email sent directly via RecipientEmail
+                notificationType,
+                new Dictionary<string, string>
+                {
+                    { "RecipientEmail", request.Email },
+                    { "UserEmail",      request.Email },
+                    { "AppUrl",        "https://friendout.app" } // TODO: move to configuration
+                }
+            );
 
             if (dto.Status == AccessRequestStatus.Approved)
                 await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) approved access request for {request.Email}");
