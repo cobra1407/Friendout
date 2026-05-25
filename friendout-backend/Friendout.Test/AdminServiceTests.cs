@@ -23,8 +23,16 @@ public class AdminServiceTests
         public Task LogErrorAsync(string category, string message, Exception? ex = null) => Task.CompletedTask;
     }
 
+    /// <summary>No-op INotificationDispatcher for tests — dispatches nothing.</summary>
+    private sealed class NullNotificationDispatcher : INotificationDispatcher
+    {
+        public static readonly NullNotificationDispatcher Instance = new();
+        public Task DispatchNotificationAsync(Guid userId, Friendout.Domain.Enums.NotificationType type, Dictionary<string, string> data)
+            => Task.CompletedTask;
+    }
+
     private static AdminService CreateService(Friendout.Domain.Context.FriendoutDbContext db)
-        => new(db, NullAppLogService.Instance, new HttpContextAccessor());
+        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance);
 
     // -------------------------
     // GetLogsAsync
