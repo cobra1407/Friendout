@@ -31,7 +31,10 @@ var requiredKeys = new[]
     "Authentication:Discord:ClientId",
     "Authentication:Discord:ClientSecret",
     "Authentication:Google:ClientId",
-    "Authentication:Google:ClientSecret"
+    "Authentication:Google:ClientSecret",
+    "Smtp:Server",
+    "Smtp:UserName",
+    "Smtp:Password"
 };
 
 foreach (var key in requiredKeys)
@@ -58,7 +61,7 @@ builder.Services.AddControllers(options => options.Conventions.Add(new RoutePref
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters
                     .Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
-builder.Services.AddInfrastructure(uploadsBasePath);
+builder.Services.AddInfrastructure(uploadsBasePath, builder.Configuration);
 builder.Services.AddDbContext<FriendoutDbContext>(opt =>
     opt.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 

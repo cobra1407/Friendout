@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.Enums;
@@ -134,5 +136,20 @@ public class UserService : IUserService
 
             return ServiceResult<User>.Success(user);
         });
+    }
+    
+    public async Task<ServiceResult<string>> GetUserEmailAsync(string  userId)
+    {
+        var user = await _friendoutDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        
+        // check if user exists
+        if (user is null)
+        {
+            return ServiceResult<string>.Failure("User not found");
+        }
+
+        if (user.Email != null) return ServiceResult<string>.Success(user.Email);
+        
+        return ServiceResult<string>.Failure("User has no email");
     }
 }

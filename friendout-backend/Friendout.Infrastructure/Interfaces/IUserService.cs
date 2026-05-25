@@ -1,7 +1,7 @@
+using System;
 using System.Threading.Tasks;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
-using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Services;
 
 namespace Friendout.Infrastructure.Interfaces;
@@ -9,19 +9,33 @@ namespace Friendout.Infrastructure.Interfaces;
 public interface IUserService
 {
     /// <summary>
-    /// Recherche un utilisateur par son compte externe (Discord, Google, etc.)
+    /// Returns the user with the given provider and provider account id.
     /// </summary>
-    /// <returns>Success avec User si trouvé, Failure si erreur base</returns>
+    /// <param name="provider"></param>
+    /// <param name="providerAccountId"></param>
+    /// <returns></returns>
     Task<ServiceResult<User>> GetUserByProviderAccountIdAsync(ProviderEnum provider, string providerAccountId);
 
     /// <summary>
-    /// Crée un nouvel utilisateur à partir des infos Discord
-    /// Applique le rôle ADMIN si c'est le premier utilisateur
+    /// Creates a new user from OAuth data.
     /// </summary>
+    /// <param name="provider"></param>
+    /// <param name="providerId"></param>
+    /// <param name="username"></param>
+    /// <param name="email"></param>
+    /// <param name="avatarUrl"></param>
+    /// <returns></returns>
     Task<ServiceResult<User>> CreateUserFromOAuthAsync(
         ProviderEnum provider,
         string providerId, 
         string username, 
         string? email, 
         string? avatarUrl);
+    
+    /// <summary>
+    /// Returns the email of the user with the given id.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task<ServiceResult<string>> GetUserEmailAsync(string userId);
 } 

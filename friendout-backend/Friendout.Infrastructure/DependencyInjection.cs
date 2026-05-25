@@ -1,5 +1,6 @@
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Friendout.Infrastructure;
@@ -11,9 +12,9 @@ public static class DependencyInjection
     /// </summary>
     /// <param name="services">The collection of services.</param>
     /// <param name="webRootPath">The root web path where files will be stored (usually from IWebHostEnvironment.WebRootPath or ContentRootPath).</param>
-    public static void AddInfrastructure(this IServiceCollection services, string webRootPath)
+    public static void AddInfrastructure(this IServiceCollection services, string webRootPath, IConfiguration configuration)
     {
-        // Add services 
+        // Add services
         services.AddHttpContextAccessor();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ISettingsService, SettingsService>();
@@ -23,7 +24,15 @@ public static class DependencyInjection
         services.AddScoped<IEquipmentService, EquipmentService>();
         services.AddScoped<IParticipantService, ParticipantService>();
         services.AddScoped<ICommentService, CommentService>();
-        
+
+        // Notification System
+        services.Configure<SmtpSettings>(configuration.GetSection("Smtp"));
+        services.AddScoped<INotificationTemplateProvider, NotificationTemplateProvider>();
+        services.AddScoped<ITemplateEngine, SimpleTemplateEngine>();
+        services.AddScoped<INotificationStrategy, EmailNotificationStrategy>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
+
         // File validation service (must be registered before FileService)
         services.AddScoped<IFileValidationService, FileValidationService>();
         
