@@ -32,7 +32,7 @@ namespace Friendout.Domain.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
+
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasIndex(e => e.Email).IsUnique();
@@ -72,7 +72,7 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-            
+
             modelBuilder.Entity<Account>(entity =>
             {
                 entity.HasIndex(e => new { e.Provider, e.ProviderAccountId }).IsUnique();
@@ -85,7 +85,7 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.UserId);
             });
 
-            
+
             modelBuilder.Entity<Activity>(entity =>
             {
                 entity.HasIndex(e => e.CreatedBy);
@@ -113,13 +113,13 @@ namespace Friendout.Domain.Context
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
                     .OnDelete(DeleteBehavior.Cascade);
-                
+
                 entity.HasMany(e => e.ActivityEquipments)
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-            
+
             modelBuilder.Entity<SubActivity>(entity =>
             {
                 entity.HasIndex(e => e.ActivityId);
@@ -129,7 +129,7 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.SubActivityId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
-            
+
             modelBuilder.Entity<UserParticipation>(entity =>
             {
                 entity.HasIndex(e => e.ActivityId);
@@ -154,12 +154,12 @@ namespace Friendout.Domain.Context
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            
+
             modelBuilder.Entity<ActivityComment>(entity =>
             {
                 entity.HasIndex(e => e.ActivityId);
             });
-            
+
             modelBuilder.Entity<Equipment>(entity =>
             {
                 entity.HasIndex(e => e.Name).IsUnique();
@@ -174,13 +174,10 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.EquipmentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-            
+
             modelBuilder.Entity<UserEquipment>(entity =>
             {
-                entity.HasKey(e => new { e.UserId, e.EquipmentId });
-
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.EquipmentId);
+                entity.HasKey(e => new { e.UserId, e.EquipmentId, e.ActivityId });
 
                 entity.HasOne(e => e.User)
                     .WithMany(e => e.UserEquipments)
@@ -191,13 +188,18 @@ namespace Friendout.Domain.Context
                     .WithMany(e => e.UserEquipments)
                     .HasForeignKey(e => e.EquipmentId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Activity)
+                    .WithMany(e => e.UserEquipments)
+                    .HasForeignKey(e => e.ActivityId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
-            
+
             modelBuilder.Entity<ActivityEquipment>(entity =>
             {
                 entity.HasIndex(e => new { e.ActivityId, e.EquipmentId }).IsUnique();
             });
-            
+
             modelBuilder.Entity<UserAchievement>(entity =>
             {
                 entity.HasIndex(e => new { e.UserId, e.AchievementId })
@@ -216,7 +218,7 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.AchievementId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-            
+
             modelBuilder.Entity<VerificationToken>(entity =>
             {
                 entity.HasKey(e => e.Token);

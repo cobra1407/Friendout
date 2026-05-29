@@ -17,17 +17,17 @@ namespace Friendout.Domain.Models
         [Required]
         [Column("description", TypeName = "text")]
         public string Description { get; set; } = null!;
-        
+
         [Required]
         [Column("start_at", TypeName = "datetime(3)")]
         public DateTime StartAt { get; set; }
-        
+
         [Column("end_at", TypeName = "datetime(3)")]
         public DateTime? EndAt { get; set; }
-        
+
         [ForeignKey(nameof(LocalisationId))]
         public required Localisation Localisation { get; set; }
-        
+
         [Column("localisation_id", TypeName = "varchar(191)")]
         public string? LocalisationId { get; set; }
 
@@ -57,7 +57,7 @@ namespace Friendout.Domain.Models
         public Image? Image { get; set; }
 
         public ICollection<SubActivity> SubActivities { get; set; } = new List<SubActivity>();
-        
+        public ICollection<UserEquipment> UserEquipments { get; set; } = [];
         public ICollection<UserParticipation> UserParticipations { get; set; } = new List<UserParticipation>();
         public ICollection<ActivityComment> Comments { get; set; } = new List<ActivityComment>();
         public List<ActivityEquipment>? ActivityEquipments { get; set; } = new List<ActivityEquipment>();
