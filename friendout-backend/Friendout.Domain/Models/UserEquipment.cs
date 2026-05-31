@@ -15,20 +15,23 @@ namespace Friendout.Domain.Models
         [Column("equipment_id")]
         [MaxLength(191)]
         public string EquipmentId { get; set; } = null!;
-        
+
         [Required]
         [Column("activity_id", TypeName = "varchar(191)")]
         public string ActivityId { get; set; } = null!;
 
-        [ForeignKey("ActivityId")]
-        
         [Required]
         [Column("quantity")]
         public int Quantity { get; set; } = 1;
 
-        // Relations
+        // Navigation properties
+        [ForeignKey("UserId")]
         public User User { get; set; } = null!;
-        public Equipment Equipment { get; set; } = null!;
-    }
 
+        [ForeignKey("EquipmentId")]
+        public Equipment Equipment { get; set; } = null!;
+
+        [ForeignKey("ActivityId")]
+        public Activity Activity { get; set; } = null!;
+    }
 }
