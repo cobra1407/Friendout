@@ -10,51 +10,13 @@ namespace Friendout.Domain.Migrations
         /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropForeignKey(
-            name: "FK_user_equipment_users_user_id",
-            table: "user_equipment");
+        // Remove orphaned rows referencing non-existent activities before adding the FK constraint
+        migrationBuilder.Sql(@"
+            DELETE FROM user_equipment 
+            WHERE activity_id NOT IN (SELECT id FROM activities)
+        ");
 
-        migrationBuilder.DropForeignKey(
-            name: "FK_user_equipment_equipment_equipment_id",
-            table: "user_equipment");
-
-        // drop old PK
-        migrationBuilder.DropPrimaryKey(
-            name: "PK_user_equipment",
-            table: "user_equipment");
-
-        migrationBuilder.DropIndex(
-            name: "IX_user_equipment_user_id",
-            table: "user_equipment");
-
-        // new composite PK
-        migrationBuilder.AddPrimaryKey(
-            name: "PK_user_equipment",
-            table: "user_equipment",
-            columns: new[] { "user_id", "equipment_id", "activity_id" });
-
-        migrationBuilder.AddForeignKey(
-            name: "FK_user_equipment_users_user_id",
-            table: "user_equipment",
-            column: "user_id",
-            principalTable: "users",
-            principalColumn: "id",
-            onDelete: ReferentialAction.Cascade);
-
-        migrationBuilder.AddForeignKey(
-            name: "FK_user_equipment_equipment_equipment_id",
-            table: "user_equipment",
-            column: "equipment_id",
-            principalTable: "equipment",
-            principalColumn: "id",
-            onDelete: ReferentialAction.Cascade);
-
-        // 5. Index et FK activity_id
-        migrationBuilder.CreateIndex(
-            name: "IX_user_equipment_activity_id",
-            table: "user_equipment",
-            column: "activity_id");
-
+        // Add the missing FK constraint linking user_equipment.activity_id to activities
         migrationBuilder.AddForeignKey(
             name: "FK_user_equipment_activities_activity_id",
             table: "user_equipment",
@@ -63,6 +25,7 @@ namespace Friendout.Domain.Migrations
             principalColumn: "id",
             onDelete: ReferentialAction.Cascade);
 
+        // Add unique index to prevent duplicate participations (race condition protection)
         migrationBuilder.CreateIndex(
             name: "IX_user_participations_user_id_activity_id_sub_activity_id",
             table: "user_participations",
