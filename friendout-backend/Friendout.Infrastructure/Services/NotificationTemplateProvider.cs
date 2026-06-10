@@ -36,26 +36,26 @@ public class NotificationTemplateProvider : INotificationTemplateProvider
     {
         var typeName = type.ToString().ToLowerInvariant();
 
-        // 1. Exact match: e.g. activityreminder.fr.html
-        var exactPath = Path.Combine(_templatesPath, $"{typeName}.{locale}.html");
+        // 1. Exact match: e.g. fr/activityreminder.fr.html
+        var exactPath = Path.Combine(_templatesPath, locale, $"{typeName}.{locale}.html");
         if (File.Exists(exactPath))
             return await File.ReadAllTextAsync(exactPath);
 
         _logger.LogWarning("Template not found: {File}. Trying English fallback.", exactPath);
 
-        // 2. English fallback: e.g. activityreminder.en.html
-        var englishPath = Path.Combine(_templatesPath, $"{typeName}.en.html");
+        // 2. English fallback: e.g. en/activityreminder.en.html
+        var englishPath = Path.Combine(_templatesPath, "en", $"{typeName}.en.html");
         if (File.Exists(englishPath))
             return await File.ReadAllTextAsync(englishPath);
 
         _logger.LogWarning("English template not found: {File}. Falling back to general template.", englishPath);
 
-        // 3. General template in user's locale: general.fr.html
+        // 3. General template in user's locale: e.g. fr/general.fr.html
         if (type != NotificationType.General)
             return await GetTemplateAsync(NotificationType.General, locale);
 
-        // 4. General template in English: general.en.html
-        var generalEnglishPath = Path.Combine(_templatesPath, "general.en.html");
+        // 4. General template in English: en/general.en.html
+        var generalEnglishPath = Path.Combine(_templatesPath, "en", "general.en.html");
         if (File.Exists(generalEnglishPath))
             return await File.ReadAllTextAsync(generalEnglishPath);
 

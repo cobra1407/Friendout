@@ -46,7 +46,7 @@ public class EmailNotificationStrategy : INotificationStrategy
 
     public async Task SendAsync(string userId, NotificationType type, Dictionary<string, string> data)
     {
-        // 1. Resolve the user's email address.
+        // Resolve the user's email address.
         var emailResult = await _userService.GetUserEmailAsync(userId);
         if (!emailResult.IsSuccess || string.IsNullOrEmpty(emailResult.Data))
         {
@@ -56,19 +56,19 @@ public class EmailNotificationStrategy : INotificationStrategy
 
         var recipientEmail = emailResult.Data;
 
-        // 2. Render the template in the user's locale (defaults to "fr").
+        // Render the template in the user's locale (defaults to "en").
         data.TryGetValue("Locale", out var locale);
-        var rawTemplate = await _templateProvider.GetTemplateAsync(type, locale ?? "fr");
+        var rawTemplate = await _templateProvider.GetTemplateAsync(type, locale ?? "en");
         var body        = _templateEngine.Render(rawTemplate, data);
 
-        // 3. Build the MIME message.
+        // Build the MIME message.
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_smtp.FromName, _smtp.FromAddress));
         message.To.Add(MailboxAddress.Parse(recipientEmail));
-        message.Subject = GetSubject(type);
+        message.Subject = GetSubject(type, locale);
         message.Body    = new TextPart("html") { Text = body };
 
-        // 4. Send via MailKit SMTP client.
+        // Send via MailKit SMTP client.
         using var client = new SmtpClient();
         await client.ConnectAsync(_smtp.Server, _smtp.Port,
             _smtp.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
@@ -83,9 +83,31 @@ public class EmailNotificationStrategy : INotificationStrategy
     }
 
     /// <summary>
-    /// Maps each NotificationType to a human-readable email subject.
+    /// Returns a localized email subject based on the notification type and user's locale.
     /// </summary>
-    private static string GetSubject(NotificationType type) => type switch
+    /// <param name="type">The notification type.</param>
+    /// <param name="locale">The user's locale.</param>
+    /// <returns>The localized email subject.</returns>
+    private static string GetSubject(NotificationType type, string? locale = "en")
+{
+    var currentLocale = locale?.ToLower() ?? "en";
+
+    if (currentLocale == "fr")
+    {
+        return type switch
+        {
+            NotificationType.AccessRequestApproved => "Votre accès à Friendout a été approuvé",
+            NotificationType.AccessRequestDenied   => "Mise à jour de votre demande d'accès à Friendout",
+            NotificationType.ActivityModified      => "Une activité à laquelle vous avez participé a été mise à jour",
+            NotificationType.ActivityCanceled      => "Une activité a été annulée",
+            NotificationType.ActivityReminder      => "Rappel : activité à venir",
+            NotificationType.InvitationReceived    => "Vous avez été invité à une activité",
+            NotificationType.AccountDeleted        => "Votre compte Friendout a été supprimé",
+            _                                      => "Notification de Friendout"
+        };
+    }
+
+    return type switch
     {
         NotificationType.AccessRequestApproved => "Your Friendout access has been approved",
         NotificationType.AccessRequestDenied   => "Update on your Friendout access request",
@@ -96,4 +118,5 @@ public class EmailNotificationStrategy : INotificationStrategy
         NotificationType.AccountDeleted        => "Your Friendout account has been deleted",
         _                                      => "Notification from Friendout"
     };
+}
 }

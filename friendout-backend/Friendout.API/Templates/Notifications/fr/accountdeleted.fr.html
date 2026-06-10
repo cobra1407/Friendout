@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Votre compte Friendout a été supprimé — Friendout</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    .outer {
+      padding: 40px 16px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      background-color: #f8fafc;
+    }
+
+    .card {
+      max-width: 520px;
+      margin: 0 auto;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.10);
+      background: #ffffff;
+    }
+
+    /* Header */
+    .logo-bar { padding: 28px 32px 20px; text-align: center; }
+    .logo-bar .brand { display: inline-flex; align-items: center; text-decoration: none; }
+    .logo-bar .brand-icon { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+    .logo-bar .brand-icon img { width: 90px; height: 90px; }
+
+    /* Hero */
+    .hero { text-align: center; }
+    .hero img { width: 100%; border-radius: 16px; margin-bottom: 24px; }
+    .hero .emoji { font-size: 44px; display: block; margin-bottom: 12px; }
+    .hero h1 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3; letter-spacing: -0.3px; margin-bottom: 12px; color: #18181b; }
+
+    /* Body */
+    .body { padding: 10px 32px 24px; }
+    .body p { margin: 0 0 18px; color: #3f3f46; font-size: 15px; line-height: 1.7; }
+    .body p:last-child { margin: 0; }
+    .body strong { color: #18181b; }
+
+    /* Sign-off */
+    .signoff { padding: 0 36px 28px; }
+    .signoff p { margin: 0 0 4px; color: #3f3f46; font-size: 15px; line-height: 1.6; }
+
+    /* Footer */
+    .footer { background: #fafafa; border-top: 1px solid #f4f4f5; padding: 20px 36px; text-align: center; }
+    .footer p { margin: 0; color: #a1a1aa; font-size: 12px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <div class="card">
+
+      <!-- Logo -->
+      <div class="logo-bar">
+        <span class="brand">
+          <span class="brand-icon">
+            <img src="{{ appUrl }}/assets/images/friendout-logo-spring.png" alt="Friendout">
+          </span>
+        </span>
+      </div>
+
+      <!-- Hero -->
+      <div class="hero">
+        <h1>Votre compte a été supprimé</h1>
+        <span class="emoji">👋</span>
+        <img src="{{ appUrl }}/assets/images/friendout-goodbye.png" alt="Compte supprimé">
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+        <p>Bonjour {{ UserName }},</p>
+        <p>Votre compte Friendout associé à <strong>{{ UserEmail }}</strong> a bien été supprimé. Toutes vos données ont été effacées de notre système.</p>
+        <p>Si vous n'êtes pas à l'origine de cette suppression, contactez immédiatement un administrateur.</p>
+      </div>
+
+      <!-- Sign-off -->
+      <div class="signoff">
+        <p>Bonne continuation,</p>
+        <p><strong>L'équipe Friendout 🌿</strong></p>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>Cet email est envoyé à titre de confirmation de la suppression de votre compte Friendout.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

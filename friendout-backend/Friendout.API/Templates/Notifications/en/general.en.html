@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notification — Friendout</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    .outer {
+      padding: 40px 16px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      background-color: #f8fafc;
+    }
+
+    .card {
+      max-width: 520px;
+      margin: 0 auto;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.10);
+      background: #ffffff;
+    }
+
+    /* Header */
+    .logo-bar { padding: 28px 32px 20px; text-align: center; }
+    .logo-bar .brand { display: inline-flex; align-items: center; text-decoration: none; }
+    .logo-bar .brand-icon { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; }
+    .logo-bar .brand-icon img { width: 90px; height: 90px; }
+
+    /* Body */
+    .body { padding: 10px 32px 24px; }
+    .body p { margin: 0 0 18px; color: #3f3f46; font-size: 15px; line-height: 1.7; }
+    .body p:last-child { margin: 0; }
+    .body strong { color: #18181b; }
+
+    /* Message box */
+    .message-box { background: #f8fafc; border-left: 4px solid rgb(21 52 62); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .message-box p { margin: 0; color: #3f3f46; font-size: 15px; line-height: 1.7; }
+
+    /* Sign-off */
+    .signoff { padding: 8px 32px 28px; }
+    .signoff p { margin: 0 0 4px; color: #3f3f46; font-size: 15px; line-height: 1.6; }
+
+    /* Footer */
+    .footer { background: #fafafa; border-top: 1px solid #f4f4f5; padding: 20px 36px; text-align: center; }
+    .footer p { margin: 0; color: #a1a1aa; font-size: 12px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <div class="card">
+
+      <!-- Logo -->
+      <div class="logo-bar">
+        <span class="brand">
+          <span class="brand-icon">
+            <img src="{{ appUrl }}/assets/images/friendout-logo-spring.png" alt="Friendout">
+          </span>
+        </span>
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+        <p>Hi {{ UserName }},</p>
+        <div class="message-box">
+          <p>{{ Message }}</p>
+        </div>
+      </div>
+
+      <!-- Sign-off -->
+      <div class="signoff">
+        <p>See you soon,</p>
+        <p><strong>The Friendout Team 🌿</strong></p>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>This email was sent to you by Friendout.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
