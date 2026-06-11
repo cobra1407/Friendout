@@ -30,7 +30,12 @@ public class AdminService : IAdminService
     /// <summary>Returns the (id, name) of the currently authenticated admin.</summary>
     private async Task<(string id, string name)> GetActorAsync()
     {
-        var actorId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+        var ctx = _httpContextAccessor.HttpContext;
+
+        var actorId = ctx?.Items["UserId"] as string
+                      ?? ctx?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                      ?? "unknown";
+
         if (actorId == "unknown") return (actorId, "unknown");
         var actor = await _db.Users.FindAsync(actorId);
         return (actorId, actor?.Name ?? actorId);
