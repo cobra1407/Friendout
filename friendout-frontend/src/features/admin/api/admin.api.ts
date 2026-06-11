@@ -56,8 +56,8 @@ export interface AppLogDto {
 export const adminApi = {
 
     // ------ Logs management ------
-    getLogs: (level?: string, limit = 200) =>
-        api.get<AppLogDto[]>("/admin/logs", { params: { level, limit } }).then(r => r.data),
+    getLogs: (level?: string, limit = 50, skip = 0) =>
+        api.get<AppLogDto[]>("/admin/logs", { params: { level, limit, skip } }).then(r => r.data),
     clearLogs: () => api.delete("/admin/logs"),
     exportLogs: () => api.get("/admin/logs/export", { responseType: "blob" }).then(r => r.data as Blob),
 
@@ -73,9 +73,10 @@ export const adminApi = {
     deleteEmail: (id: number) => api.delete(`/admin/allowed-emails/${id}`),
 
     // ------ Users management ------
-    getUsers: () => api.get<UserAdminDto[]>("/admin/users").then(r => r.data),
+    getUsers: (skip = 0, take = 30) => api.get<UserAdminDto[]>("/admin/users", { params: { skip, take } }).then(r => r.data),
     updateUserRole: (id: string, role: UserRole) =>
         api.put<UserAdminDto>(`/admin/users/${id}/role`, { role }).then(r => r.data),
+    deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
 
     // ------ Access settings ------
     getAccessSettings: () => api.get<AccessSettingsDto>("/admin/access-settings").then(r => r.data),

@@ -330,9 +330,13 @@
       "description": "Manage roles",
       "set_user": "Set as User",
       "set_admin": "Set as Admin",
+      "delete_user": "Delete user",
       "demote_confirm_title": "Demote {{name}}?",
       "demote_confirm_description": "This will remove admin rights from {{name}}. You can restore them at any time.",
       "demote_confirm": "Demote",
+      "delete_confirm_title": "Delete {{name}}?",
+      "delete_confirm_description": "This will permanently delete {{name}}'s account and all associated data. This action cannot be undone.",
+      "delete_confirm": "Delete",
       "cancel": "Cancel"
     },
     "guilds": {
@@ -369,6 +373,9 @@
       "role_updated": "Role updated",
       "role_error": "Error updating role",
       "role_last_admin": "Cannot demote the last administrator",
+      "user_deleted": "User deleted",
+      "user_delete_error": "Error deleting user",
+      "cannot_delete_self": "You cannot delete your own account",
       "request_approved": "Request approved",
       "request_denied": "Request denied",
       "request_error": "Error processing request"

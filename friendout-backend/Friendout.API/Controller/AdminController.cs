@@ -65,9 +65,8 @@ public class AdminController : ControllerBase
     // -------------------------
 
     [HttpGet("admin/logs")]
-    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 50,
-        [FromQuery] int skip = 0)
-        => Ok(await _adminService.GetLogsAsync(level, Math.Clamp(limit, 1, 1000)));
+    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 50, [FromQuery] int skip = 0)
+        => Ok(await _adminService.GetLogsAsync(level, Math.Clamp(limit, 1, 1000), skip));
 
     [HttpDelete("admin/logs")]
     public async Task<IActionResult> ClearLogs()
@@ -167,8 +166,8 @@ public class AdminController : ControllerBase
     // -------------------------
 
     [HttpGet("admin/users")]
-    public async Task<IActionResult> GetUsers()
-        => Ok(await _adminService.GetUsersAsync());
+    public async Task<IActionResult> GetUsers([FromQuery] int skip = 0, [FromQuery] int take = 30)
+        => Ok(await _adminService.GetUsersAsync(skip, Math.Clamp(take, 1, 100)));
 
     [HttpPut("admin/users/{id}/role")]
     public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UpdateUserRoleDto dto)
