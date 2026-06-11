@@ -19,7 +19,7 @@ interface PendingDemotion {
 }
 
 export const AdminUsersSection = () => {
-    const { users, isLoading, updateRoleMutation } = useAdminUsers();
+    const { users, isLoading, isFetchingNextPage, hasNextPage, usersLoaderRef, updateRoleMutation } = useAdminUsers();
     const [search, setSearch] = useState("");
     const [pendingDemotion, setPendingDemotion] = useState<PendingDemotion | null>(null);
 
@@ -72,59 +72,66 @@ export const AdminUsersSection = () => {
                     ) : filteredUsers.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-8 italic">{getTranslation('admin.no_results')}</p>
                     ) : (
-                        <ul className="divide-y">
-                            {filteredUsers.map((u) => (
-                                <li key={u.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <Avatar className="h-8 w-8 shrink-0">
-                                            <AvatarImage src={u.avatarUrl ?? undefined} />
-                                            <AvatarFallback className="text-xs font-semibold">
-                                                {u.name.slice(0, 2).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium truncate">{u.name}</p>
-                                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                        <>
+                            <ul className="divide-y">
+                                {filteredUsers.map((u) => (
+                                    <li key={u.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <Avatar className="h-8 w-8 shrink-0">
+                                                <AvatarImage src={u.avatarUrl ?? undefined} />
+                                                <AvatarFallback className="text-xs font-semibold">
+                                                    {u.name.slice(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">{u.name}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <Badge
-                                            variant="secondary"
-                                            className={cn(
-                                                "text-xs",
-                                                u.role === UserRole.Admin
-                                                    ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                                                    : "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-                                            )}
-                                        >
-                                            {getTranslation(`admin.roles.${u.role.toLowerCase()}`)}
-                                        </Badge>
-                                        <DropdownMenu modal={false}>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7">
-                                                    <MoreHorizontal className="w-4 h-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem
-                                                    disabled={u.role === UserRole.User || updateRoleMutation.isPending}
-                                                    onClick={() => handleDemoteClick(u.id, u.name)}
-                                                >
-                                                    {getTranslation('admin.users.set_user')}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    disabled={u.role === UserRole.Admin || updateRoleMutation.isPending}
-                                                    className="text-destructive"
-                                                    onClick={() => updateRoleMutation.mutate({ id: u.id, role: UserRole.Admin })}
-                                                >
-                                                    {getTranslation('admin.users.set_admin')}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <Badge
+                                                variant="secondary"
+                                                className={cn(
+                                                    "text-xs",
+                                                    u.role === UserRole.Admin
+                                                        ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                                                        : "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+                                                )}
+                                            >
+                                                {getTranslation(`admin.roles.${u.role.toLowerCase()}`)}
+                                            </Badge>
+                                            <DropdownMenu modal={false}>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                        <MoreHorizontal className="w-4 h-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48">
+                                                    <DropdownMenuItem
+                                                        disabled={u.role === UserRole.User || updateRoleMutation.isPending}
+                                                        onClick={() => handleDemoteClick(u.id, u.name)}
+                                                    >
+                                                        {getTranslation('admin.users.set_user')}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        disabled={u.role === UserRole.Admin || updateRoleMutation.isPending}
+                                                        className="text-destructive"
+                                                        onClick={() => updateRoleMutation.mutate({ id: u.id, role: UserRole.Admin })}
+                                                    >
+                                                        {getTranslation('admin.users.set_admin')}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            {/* Infinite scroll sentinel */}
+                            <div ref={usersLoaderRef} className="h-1" />
+                            {isFetchingNextPage && (
+                                <div className="flex justify-center py-2"><Spinner /></div>
+                            )}
+                        </>
                     )}
                 </CardContent>
             </Card>

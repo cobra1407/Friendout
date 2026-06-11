@@ -51,7 +51,7 @@ public class AdminService : IAdminService
     // Logs
     // -------------------------
 
-    public async Task<List<AppLogDto>> GetLogsAsync(string? level, int limit)
+    public async Task<List<AppLogDto>> GetLogsAsync(string? level, int limit, int skip = 0)
     {
         var query = _db.AppLogs.AsQueryable();
 
@@ -60,6 +60,7 @@ public class AdminService : IAdminService
 
         return await query
             .OrderByDescending(l => l.CreatedAt)
+            .Skip(skip)
             .Take(limit)
             .Select(l => new AppLogDto(l.Id, l.Level.ToString(), l.Category, l.Message, l.Exception, l.CreatedAt))
             .ToListAsync();
@@ -268,11 +269,13 @@ public class AdminService : IAdminService
     // Users
     // -------------------------
 
-    public async Task<List<UserAdminDto>> GetUsersAsync()
+    public async Task<List<UserAdminDto>> GetUsersAsync(int skip = 0, int take = 30)
     {
         return await _db.Users
             .OrderBy(u => u.Role == UserRole.Admin ? 0 : 1)
             .ThenBy(u => u.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .Select(u => new UserAdminDto(u.Id, u.Name, u.Email, u.AvatarUrl, u.Role, u.CreatedAt))
             .ToListAsync();
     }
