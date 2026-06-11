@@ -1,4 +1,4 @@
-import { Users, Search, MoreHorizontal, ShieldOff } from "lucide-react";
+import { Users, Search, MoreHorizontal, ShieldOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +19,10 @@ interface PendingDemotion {
 }
 
 export const AdminUsersSection = () => {
-    const { users, isLoading, updateRoleMutation } = useAdminUsers();
+    const { users, isLoading, updateRoleMutation, deleteUserMutation } = useAdminUsers();
     const [search, setSearch] = useState("");
     const [pendingDemotion, setPendingDemotion] = useState<PendingDemotion | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<PendingDemotion | null>(null);
 
     const filteredUsers = users.filter(
         (u) =>
@@ -119,6 +120,13 @@ export const AdminUsersSection = () => {
                                                 >
                                                     {getTranslation('admin.users.set_admin')}
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    disabled={deleteUserMutation.isPending}
+                                                    className="text-destructive"
+                                                    onClick={() => setPendingDelete({ id: u.id, name: u.name })}
+                                                >
+                                                    {getTranslation('admin.users.delete_user')}
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
@@ -163,6 +171,50 @@ export const AdminUsersSection = () => {
                         {updateRoleMutation.isPending
                             ? <Spinner className="w-4 h-4" />
                             : getTranslation('admin.users.demote_confirm')
+                        }
+                    </Button>
+                </div>
+            </Modal>
+
+            <Modal
+                open={!!pendingDelete}
+                onClose={() => setPendingDelete(null)}
+                className="max-w-sm"
+            >
+                <ModalHeader>
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-full bg-red-50 dark:bg-red-950/40">
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                        </div>
+                        <ModalTitle>
+                            {getTranslation('admin.users.delete_confirm_title', { name: pendingDelete?.name ?? '' })}
+                        </ModalTitle>
+                    </div>
+                    <ModalDescription>
+                        {getTranslation('admin.users.delete_confirm_description', { name: pendingDelete?.name ?? '' })}
+                    </ModalDescription>
+                </ModalHeader>
+                <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => setPendingDelete(null)}
+                        disabled={deleteUserMutation.isPending}
+                    >
+                        {getTranslation('admin.users.cancel')}
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={() => {
+                            if (!pendingDelete) return;
+                            deleteUserMutation.mutate(pendingDelete.id, {
+                                onSettled: () => setPendingDelete(null)
+                            });
+                        }}
+                        disabled={deleteUserMutation.isPending}
+                    >
+                        {deleteUserMutation.isPending
+                            ? <Spinner className="w-4 h-4" />
+                            : getTranslation('admin.users.delete_confirm')
                         }
                     </Button>
                 </div>

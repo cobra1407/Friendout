@@ -76,6 +76,7 @@ export const adminApi = {
     getUsers: () => api.get<UserAdminDto[]>("/admin/users").then(r => r.data),
     updateUserRole: (id: string, role: UserRole) =>
         api.put<UserAdminDto>(`/admin/users/${id}/role`, { role }).then(r => r.data),
+    deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
 
     // ------ Access settings ------
     getAccessSettings: () => api.get<AccessSettingsDto>("/admin/access-settings").then(r => r.data),

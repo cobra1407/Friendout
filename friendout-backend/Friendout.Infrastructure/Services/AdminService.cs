@@ -53,7 +53,7 @@ public class AdminService : IAdminService
     // Logs
     // -------------------------
 
-    public async Task<List<AppLogDto>> GetLogsAsync(string? level, int limit)
+    public async Task<List<AppLogDto>> GetLogsAsync(string? level, int limit, int skip = 0)
     {
         var query = _db.AppLogs.AsQueryable();
 
@@ -62,6 +62,7 @@ public class AdminService : IAdminService
 
         return await query
             .OrderByDescending(l => l.CreatedAt)
+            .Skip(skip)
             .Take(limit)
             .Select(l => new AppLogDto(l.Id, l.Level.ToString(), l.Category, l.Message, l.Exception, l.CreatedAt))
             .ToListAsync();
@@ -225,12 +226,15 @@ public class AdminService : IAdminService
             );
 
             if (dto.Status == AccessRequestStatus.Approved)
-                await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) approved access request for {request.Email}");
+                await _appLog.LogInfoAsync("Admin",
+                    $"{actorName} ({actorId}) approved access request for {request.Email}");
             else
-                await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) rejected access request for {request.Email}");
+                await _appLog.LogWarningAsync("Admin",
+                    $"{actorName} ({actorId}) rejected access request for {request.Email}");
 
             return ServiceResult<AccessRequestDto>.Success(
-                new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt, request.ResolvedAt));
+                new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt,
+                    request.ResolvedAt));
         }
         catch (Exception ex)
         {
@@ -264,9 +268,9 @@ public class AdminService : IAdminService
 
         _db.AccessRequests.Add(new AccessRequest
         {
-            Email   = email,
+            Email = email,
             Message = dto.Message?.Trim(),
-            Status  = AccessRequestStatus.Pending
+            Status = AccessRequestStatus.Pending
         });
 
         try
@@ -316,7 +320,8 @@ public class AdminService : IAdminService
         {
             await _db.SaveChangesAsync();
             var (actorId, actorName) = await GetActorAsync();
-            await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) changed {user.Name} ({id}) role to {dto.Role}");
+            await _appLog.LogInfoAsync("Admin",
+                $"{actorName} ({actorId}) changed {user.Name} ({id}) role to {dto.Role}");
             return ServiceResult<UserAdminDto>.Success(
                 new UserAdminDto(user.Id, user.Name, user.Email, user.AvatarUrl, user.Role, user.CreatedAt));
         }
@@ -324,6 +329,41 @@ public class AdminService : IAdminService
         {
             await _appLog.LogErrorAsync("Admin", $"Failed to update role for user {id}", ex);
             return ServiceResult<UserAdminDto>.Failure("unexpected_error");
+        }
+    }
+
+    public async Task<ServiceResult<bool>> DeleteUserAsync(string id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null)
+            return ServiceResult<bool>.Failure("not_found");
+
+        // Prevent deleting the last admin.
+        if (user.Role == UserRole.Admin)
+        {
+            var adminCount = await _db.Users.CountAsync(u => u.Role == UserRole.Admin);
+            if (adminCount <= 1)
+                return ServiceResult<bool>.Failure("last_admin");
+        }
+
+        var (actorId, actorName) = await GetActorAsync();
+
+        // Prevent an admin from deleting themselves.
+        if (actorId == id)
+            return ServiceResult<bool>.Failure("cannot_delete_self");
+
+        _db.Users.Remove(user);
+
+        try
+        {
+            await _db.SaveChangesAsync();
+            await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) deleted user {user.Name} ({id})");
+            return ServiceResult<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            await _appLog.LogErrorAsync("Admin", $"Failed to delete user {id}", ex);
+            return ServiceResult<bool>.Failure("unexpected_error");
         }
     }
 }

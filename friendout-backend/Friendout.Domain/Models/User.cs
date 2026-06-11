@@ -36,7 +36,7 @@ namespace Friendout.Domain.Models
 
         [Column("avatar_url")]
         [MaxLength(255)]
-        public String? AvatarUrl { get; set; } = null;
+        public string? AvatarUrl { get; set; } = null;
 
         // Relations
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
@@ -46,5 +46,7 @@ namespace Friendout.Domain.Models
         public ICollection<ActivityComment> Comments { get; set; } = new List<ActivityComment>();
         public ICollection<UserEquipment> UserEquipments { get; set; } = new List<UserEquipment>();
         public ICollection<UserAchievement> UserAchievements { get; set; } = new List<UserAchievement>();
+        public UserPreferences? Preferences { get; set; }
+        public UserNotificationPreferences? NotificationPreferences { get; set; }
     }
 }

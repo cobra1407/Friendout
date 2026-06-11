@@ -11,7 +11,7 @@ public interface IAdminService
     Task<AccessModeDto> GetAccessModeAsync();
 
     // Logs
-    Task<List<AppLogDto>> GetLogsAsync(string? level, int limit);
+    Task<List<AppLogDto>> GetLogsAsync(string? level, int limit, int skip = 0);
     Task ClearLogsAsync();
 
     // Guilds
@@ -32,4 +32,5 @@ public interface IAdminService
     // Users
     Task<List<UserAdminDto>> GetUsersAsync();
     Task<ServiceResult<UserAdminDto>> UpdateUserRoleAsync(string id, UpdateUserRoleDto dto);
+    Task<ServiceResult<bool>> DeleteUserAsync(string id);
 }

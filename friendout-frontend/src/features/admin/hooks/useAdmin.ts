@@ -143,7 +143,25 @@ export const useAdminUsers = () => {
         },
     });
 
-    return { users, isLoading, updateRoleMutation };
+    const deleteUserMutation = useMutation({
+        mutationFn: (id: string) => adminApi.deleteUser(id),
+        onSuccess: () => {
+            toast.success(getTranslation('admin.toast.user_deleted'));
+            qc.invalidateQueries({ queryKey: ["admin", "users"] });
+        },
+        onError: (error: any) => {
+            const errorCode = error?.response?.data?.error;
+            if (errorCode === 'last_admin') {
+                toast.error(getTranslation('admin.toast.role_last_admin'));
+            } else if (errorCode === 'cannot_delete_self') {
+                toast.error(getTranslation('admin.toast.cannot_delete_self'));
+            } else {
+                toast.error(getTranslation('admin.toast.user_delete_error'));
+            }
+        },
+    });
+
+    return { users, isLoading, updateRoleMutation, deleteUserMutation };
 };
 
 export const useAdminAccessRequests = () => {

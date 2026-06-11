@@ -332,9 +332,13 @@
       "description": "Gérez les rôles",
       "set_user": "Passer en Utilisateur",
       "set_admin": "Définir comme Administrateur",
+      "delete_user": "Supprimer l'utilisateur",
       "demote_confirm_title": "Rétrograder {{name}} ?",
       "demote_confirm_description": "Cette action retirera les droits administrateur de {{name}}. Vous pouvez les restaurer à tout moment.",
       "demote_confirm": "Rétrograder",
+      "delete_confirm_title": "Supprimer {{name}} ?",
+      "delete_confirm_description": "Cette action supprimera définitivement le compte de {{name}} et toutes les données associées. Cette action est irréversible.",
+      "delete_confirm": "Supprimer",
       "cancel": "Annuler"
     },
     "guilds": {
@@ -371,6 +375,9 @@
       "role_updated": "Rôle mis à jour",
       "role_error": "Erreur lors de la mise à jour du rôle",
       "role_last_admin": "Impossible de rétrograder le dernier administrateur",
+      "user_deleted": "Utilisateur supprimé",
+      "user_delete_error": "Erreur lors de la suppression de l'utilisateur",
+      "cannot_delete_self": "Vous ne pouvez pas supprimer votre propre compte",
       "request_approved": "Demande approuvée",
       "request_denied": "Demande refusée",
       "request_error": "Erreur lors du traitement de la demande"
