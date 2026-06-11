@@ -32,4 +32,5 @@ public interface IAdminService
     // Users
     Task<List<UserAdminDto>> GetUsersAsync();
     Task<ServiceResult<UserAdminDto>> UpdateUserRoleAsync(string id, UpdateUserRoleDto dto);
+    Task<ServiceResult<bool>> DeleteUserAsync(string id);
 }
