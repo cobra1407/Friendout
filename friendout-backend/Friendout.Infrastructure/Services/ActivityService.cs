@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,13 +26,18 @@ public class ActivityService : IActivityService
     private readonly FriendoutDbContext _friendoutDbContext;
     private readonly ILogger<ActivityService> _logger;
     private readonly IFileService _fileService;
+    private readonly INotificationDispatcher _notificationDispatcher;
 
-    public ActivityService(FriendoutDbContext friendoutDbContext, ILogger<ActivityService> logger,
-        IFileService fileService)
+    public ActivityService(
+        FriendoutDbContext friendoutDbContext,
+        ILogger<ActivityService> logger,
+        IFileService fileService,
+        INotificationDispatcher notificationDispatcher)
     {
         _friendoutDbContext = friendoutDbContext;
         _logger = logger;
         _fileService = fileService;
+        _notificationDispatcher = notificationDispatcher;
     }
 
     private static string BuildLocalisationDisplayName(LocalisationType type, string? address, string? mapLink, string? virtualUrl)
@@ -49,43 +54,29 @@ public class ActivityService : IActivityService
     private static string? ExtractLocalisationNameFromMapLink(string? mapLink)
     {
         if (string.IsNullOrWhiteSpace(mapLink))
-        {
             return null;
-        }
 
         try
         {
             var uri = new Uri(mapLink);
             var placeMatch = Regex.Match(uri.AbsolutePath, @"/maps/place/([^/]+)");
             if (placeMatch.Success)
-            {
                 return Uri.UnescapeDataString(placeMatch.Groups[1].Value.Replace("+", " "));
-            }
 
             string? q = null;
             var rawQuery = uri.Query.TrimStart('?');
             foreach (var pair in rawQuery.Split('&', StringSplitOptions.RemoveEmptyEntries))
             {
                 var parts = pair.Split('=', 2);
-                if (parts.Length != 2)
-                {
-                    continue;
-                }
-
+                if (parts.Length != 2) continue;
                 var key = parts[0];
-                if (key != "q" && key != "query" && key != "destination")
-                {
-                    continue;
-                }
-
+                if (key != "q" && key != "query" && key != "destination") continue;
                 q = parts[1];
                 break;
             }
 
             if (!string.IsNullOrWhiteSpace(q))
-            {
                 return Uri.UnescapeDataString(q.Replace("+", " "));
-            }
         }
         catch
         {
@@ -95,21 +86,17 @@ public class ActivityService : IActivityService
         return null;
     }
 
-
     public async Task<ServiceResult<List<ActivityDto>>> GetActivitiesAsync(string userId, ActivityFilterDto filter)
     {
         try
         {
-            // Base query
             var query = _friendoutDbContext.Activities
                 .AsNoTracking()
                 .AsQueryable();
 
-            // 1ï¸âƒ£ Filtrer par utilisateur si OnlyMine = true
             if (filter.OnlyOwnActivity)
                 query = query.Where(a => a.CreatedBy == userId);
 
-            // 2ï¸âƒ£ Filtrer passée / Ã  venir
             var now = DateTime.UtcNow;
             query = filter.TimeFilter switch
             {
@@ -118,31 +105,19 @@ public class ActivityService : IActivityService
                 _ => query
             };
 
-            // Tri : Ã  venir en premier (asc), passÃ© ensuite (desc)
             query = query
                 .OrderBy(a => a.StartAt < now)
-                .ThenBy(a => a.StartAt < now
-                    ? DateTime.MaxValue
-                    : a.StartAt)
-                .ThenByDescending(a => a.StartAt < now
-                    ? a.StartAt
-                    : DateTime.MinValue);
+                .ThenBy(a => a.StartAt < now ? DateTime.MaxValue : a.StartAt)
+                .ThenByDescending(a => a.StartAt < now ? a.StartAt : DateTime.MinValue);
 
-
-            // 3ï¸âƒ£ Filtrer par mot-clÃ© dans le titre ou la description
             if (!string.IsNullOrEmpty(filter.Search))
             {
                 var search = filter.Search.ToLower();
-                query = query.Where(a => a.Title.ToLower().Contains(search)
-                                      || a.Description.ToLower().Contains(search));
+                query = query.Where(a => a.Title.ToLower().Contains(search) || a.Description.ToLower().Contains(search));
             }
 
-            // 4ï¸âƒ£ Pagination scroll infini
-            query = query
-                .Skip(filter.Skip)
-                .Take(filter.Take);
+            query = query.Skip(filter.Skip).Take(filter.Take);
 
-            // 5ï¸âƒ£ Projection vers DTO
             var activities = await query
                 .Select(a => new ActivityDto
                 {
@@ -160,16 +135,14 @@ public class ActivityService : IActivityService
                         Price = sa.Price,
                         StartTime = sa.StartTime,
                         EndTime = sa.EndTime,
-                        Localisation = sa.Localisation == null
-                            ? null
-                            : new LocalisationDto
-                            {
-                                Type = sa.Localisation.Type,
-                                Address = sa.Localisation.Address,
-                                MapLink = sa.Localisation.MapLink,
-                                VirtualUrl = sa.Localisation.VirtualUrl,
-                                DisplayName = sa.Localisation.DisplayName
-                            }
+                        Localisation = sa.Localisation == null ? null : new LocalisationDto
+                        {
+                            Type = sa.Localisation.Type,
+                            Address = sa.Localisation.Address,
+                            MapLink = sa.Localisation.MapLink,
+                            VirtualUrl = sa.Localisation.VirtualUrl,
+                            DisplayName = sa.Localisation.DisplayName
+                        }
                     }).ToList(),
                     NbParticipants = a.UserParticipations.Select(u => u.UserId).Distinct().Count(),
                     Localisation = new LocalisationDto
@@ -180,14 +153,7 @@ public class ActivityService : IActivityService
                         VirtualUrl = a.Localisation.VirtualUrl,
                         DisplayName = a.Localisation.DisplayName
                     },
-                    Image = a.Image != null
-                        ? new ImageDto
-                        {
-                            Id = a.Image.Id,
-                            Url = a.Image.Url,
-                            AltText = a.Image.AltText
-                        }
-                        : null,
+                    Image = a.Image != null ? new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.AltText } : null,
                     CreatedBy = a.Creator.Name,
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt
@@ -199,16 +165,11 @@ public class ActivityService : IActivityService
         catch (Exception ex)
         {
             _logger.LogError($"Failed to retrieve activities\nError: {ex.Message}");
-            return ServiceResult<List<ActivityDto>>.Failure(
-                "Une erreur s'est produite lors de la rÃ©cupÃ©ration des activitÃ©s"
-            );
+            return ServiceResult<List<ActivityDto>>.Failure("An error occurred while retrieving activities");
         }
     }
 
-
-    public async Task<ServiceResult<ActivityDetailsDto>> GetActivityByIdAsync(
-        string activityId,
-        string userId)
+    public async Task<ServiceResult<ActivityDetailsDto>> GetActivityByIdAsync(string activityId, string userId)
     {
         try
         {
@@ -228,68 +189,29 @@ public class ActivityService : IActivityService
                 .Where(a => a.Id == activityId)
                 .Select(a => new ActivityDetailsDto
                 {
-                    // =========================
-                    // Activity core
-                    // =========================
                     Id = a.Id,
                     Title = a.Title,
                     Description = a.Description,
                     StartAt = a.StartAt,
                     EndAt = a.EndAt,
                     EstimatedPrice = a.EstimatedPrice,
-                    TotalPrice =
-                        (a.EstimatedPrice ?? 0) +
-                        (a.SubActivities.Any()
-                            ? a.SubActivities.Sum(sa => sa.Price ?? 0)
-                            : 0),
-
+                    TotalPrice = (a.EstimatedPrice ?? 0) + (a.SubActivities.Any() ? a.SubActivities.Sum(sa => sa.Price ?? 0) : 0),
                     CreatedBy = a.Creator.Name,
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt,
-
-                    // =========================
-                    // Image
-                    // =========================
-                    Image = a.Image == null
-                        ? null
-                        : new ImageDto
-                        {
-                            Id = a.Image.Id,
-                            Url = a.Image.Url,
-                            AltText = a.Image.AltText
-                        },
-
-                    // =========================
-                    // Localisation
-                    // =========================
-                    Localisation = a.Localisation == null
-                        ? null
-                        : new LocalisationDto
-                        {
-                            Type = a.Localisation.Type,
-                            Address = a.Localisation.Address,
-                            MapLink = a.Localisation.MapLink,
-                            VirtualUrl = a.Localisation.VirtualUrl,
-                            DisplayName = a.Localisation.DisplayName
-                        },
-
-                    // =========================
-                    // User main activity participation
-                    // =========================
+                    Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.AltText },
+                    Localisation = a.Localisation == null ? null : new LocalisationDto
+                    {
+                        Type = a.Localisation.Type,
+                        Address = a.Localisation.Address,
+                        MapLink = a.Localisation.MapLink,
+                        VirtualUrl = a.Localisation.VirtualUrl,
+                        DisplayName = a.Localisation.DisplayName
+                    },
                     UserMainParticipation = a.UserParticipations
-                        .Where(up =>
-                            up.UserId == userId &&
-                            up.SubActivityId == null)
-                        .Select(up => new UserParticipationDto
-                        {
-                            ActivityId = up.ActivityId,
-                            Status = up.Status
-                        })
+                        .Where(up => up.UserId == userId && up.SubActivityId == null)
+                        .Select(up => new UserParticipationDto { ActivityId = up.ActivityId, Status = up.Status })
                         .FirstOrDefault(),
-
-                    // =========================
-                    // Participants (main activity)
-                    // =========================
                     Participants = a.UserParticipations
                         .Where(up => up.SubActivityId == null)
                         .Select(up => new ParticipantDto
@@ -300,10 +222,6 @@ public class ActivityService : IActivityService
                             AvatarUrl = up.User.AvatarUrl
                         })
                         .ToList(),
-
-                    // =========================
-                    // Equipments
-                    // =========================
                     RequiredEquipments = a.ActivityEquipments
                         .Select(ae => new EquipmentDto
                         {
@@ -313,15 +231,7 @@ public class ActivityService : IActivityService
                             Quantity = ae.Quantity
                         })
                         .ToList(),
-
-                    // =========================
-                    // User equipments
-                    // =========================
                     UserEquipments = userEquipments,
-
-                    // =========================
-                    // Sub activities
-                    // =========================
                     SubActivities = a.SubActivities
                         .Select(sa => new SubActivityDetailsDto
                         {
@@ -331,18 +241,14 @@ public class ActivityService : IActivityService
                             EndTime = sa.EndTime,
                             Price = sa.Price,
                             Description = sa.Description,
-                            Localisation = sa.Localisation == null
-                                ? null
-                                : new LocalisationDto
-                                {
-                                    Type = sa.Localisation.Type,
-                                    Address = sa.Localisation.Address,
-                                    MapLink = sa.Localisation.MapLink,
-                                    VirtualUrl = sa.Localisation.VirtualUrl,
-                                    DisplayName = sa.Localisation.DisplayName
-                                },
-
-                            // Participants of sub activity
+                            Localisation = sa.Localisation == null ? null : new LocalisationDto
+                            {
+                                Type = sa.Localisation.Type,
+                                Address = sa.Localisation.Address,
+                                MapLink = sa.Localisation.MapLink,
+                                VirtualUrl = sa.Localisation.VirtualUrl,
+                                DisplayName = sa.Localisation.DisplayName
+                            },
                             Participants = sa.UserParticipations
                                 .OrderBy(up => up.UpdatedAt)
                                 .Select(up => new ParticipantDto
@@ -355,7 +261,6 @@ public class ActivityService : IActivityService
                                 .ToList(),
                         })
                         .ToList(),
-                    // User participation for THIS sub activity
                     UserSubActivitiesParticipations = a.UserParticipations
                         .Where(up => up.UserId == userId && up.SubActivityId != null)
                         .Select(up => new UserParticipationDto
@@ -365,9 +270,6 @@ public class ActivityService : IActivityService
                             Status = up.Status
                         })
                         .ToList(),
-                    // =========================
-                    // Comments
-                    // =========================
                     Comments = a.Comments
                         .OrderByDescending(c => c.CreatedAt)
                         .Select(c => new CommentDto
@@ -384,20 +286,14 @@ public class ActivityService : IActivityService
                 .FirstOrDefaultAsync();
 
             if (activity == null)
-                return ServiceResult<ActivityDetailsDto>
-                    .Failure("Activity not found");
+                return ServiceResult<ActivityDetailsDto>.Failure("Activity not found");
 
-            return ServiceResult<ActivityDetailsDto>
-                .Success(activity);
+            return ServiceResult<ActivityDetailsDto>.Success(activity);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                $"Failed to retrieve activity with ID {activityId}");
-
-            return ServiceResult<ActivityDetailsDto>
-                .Failure("An error occurred while retrieving the activity");
+            _logger.LogError(ex, $"Failed to retrieve activity with ID {activityId}");
+            return ServiceResult<ActivityDetailsDto>.Failure("An error occurred while retrieving the activity");
         }
     }
 
@@ -406,29 +302,15 @@ public class ActivityService : IActivityService
         try
         {
             if (createActivityDto.StartAt == default)
-            {
                 return ServiceResult<ActivityDto>.Failure("La date de debut est invalide.");
-            }
-
             if (createActivityDto.EndAt < createActivityDto.StartAt)
-            {
                 return ServiceResult<ActivityDto>.Failure("La date de fin doit etre superieure ou egale a la date de debut.");
-            }
-
             if (createActivityDto.EstimatedPrice.HasValue && createActivityDto.EstimatedPrice.Value < 0)
-            {
                 return ServiceResult<ActivityDto>.Failure("Le prix estime ne peut pas etre negatif.");
-            }
-
             if (createActivityDto.SubActivities.Any(sa => sa.Price.HasValue && sa.Price.Value < 0))
-            {
                 return ServiceResult<ActivityDto>.Failure("Le prix d'une sous-activite ne peut pas etre negatif.");
-            }
-
             if (createActivityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime))
-            {
                 return ServiceResult<ActivityDto>.Failure("L'heure de fin d'une sous-activite doit etre strictement apres l'heure de debut.");
-            }
 
             var requiredEquipmentNames = createActivityDto.RequiredEquipmentNames
                 .Where(name => !string.IsNullOrWhiteSpace(name))
@@ -438,43 +320,17 @@ public class ActivityService : IActivityService
 
             var normalizedSubActivities = createActivityDto.SubActivities
                 .Where(sa => !string.IsNullOrWhiteSpace(sa.Name))
-                .Select(sa =>
-                {
-                    return new
-                    {
-                        Name = sa.Name.Trim(),
-                        StartTime = sa.StartTime,
-                        EndTime = sa.EndTime,
-                        sa.Description,
-                        sa.Price,
-                        sa.Address,
-                        sa.MapLink,
-                        sa.VirtualUrl
-                    };
-                })
+                .Select(sa => new { Name = sa.Name.Trim(), sa.StartTime, sa.EndTime, sa.Description, sa.Price, sa.Address, sa.MapLink, sa.VirtualUrl })
                 .ToList();
 
             string? imageId = null;
-
-            // Image
             if (createActivityDto.ActivityImage != null)
             {
                 string fileName;
-                try
-                {
-                    fileName = await _fileService.SaveFileAsync(
-                        createActivityDto.ActivityImage,
-                        FileCategory.ActivityImage);
-                }
-                catch (ArgumentException ex)
-                {
-                    return ServiceResult<ActivityDto>.Failure($"Image invalide : {ex.Message}");
-                }
+                try { fileName = await _fileService.SaveFileAsync(createActivityDto.ActivityImage, FileCategory.ActivityImage); }
+                catch (ArgumentException ex) { return ServiceResult<ActivityDto>.Failure($"Image invalide : {ex.Message}"); }
 
-                var fileUrl = _fileService.GetFileUrl(
-                    fileName,
-                    FileCategory.ActivityImage);
-
+                var fileUrl = _fileService.GetFileUrl(fileName, FileCategory.ActivityImage);
                 var image = new Image
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -484,53 +340,30 @@ public class ActivityService : IActivityService
                     Size = createActivityDto.ActivityImage.Length,
                     CreatedBy = userId
                 };
-
                 _friendoutDbContext.Images.Add(image);
                 imageId = image.Id;
             }
 
-            // Localisation
             Localisation localisation;
-
-            if (!string.IsNullOrEmpty(createActivityDto.Address) ||
-                !string.IsNullOrEmpty(createActivityDto.MapLink) ||
-                !string.IsNullOrEmpty(createActivityDto.VirtualUrl))
+            if (!string.IsNullOrEmpty(createActivityDto.Address) || !string.IsNullOrEmpty(createActivityDto.MapLink) || !string.IsNullOrEmpty(createActivityDto.VirtualUrl))
             {
-                var type =
-                    !string.IsNullOrEmpty(createActivityDto.Address)
-                        ? LocalisationType.Address
-                        : !string.IsNullOrEmpty(createActivityDto.MapLink)
-                            ? LocalisationType.MapLink
-                            : LocalisationType.Virtual;
-
+                var type = !string.IsNullOrEmpty(createActivityDto.Address) ? LocalisationType.Address
+                    : !string.IsNullOrEmpty(createActivityDto.MapLink) ? LocalisationType.MapLink
+                    : LocalisationType.Virtual;
                 localisation = new Localisation
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    Type = type,
-                    Address = createActivityDto.Address,
-                    MapLink = createActivityDto.MapLink,
-                    VirtualUrl = createActivityDto.VirtualUrl,
-                    DisplayName = BuildLocalisationDisplayName(
-                        type,
-                        createActivityDto.Address,
-                        createActivityDto.MapLink,
-                        createActivityDto.VirtualUrl)
+                    Id = Guid.NewGuid().ToString(), Type = type,
+                    Address = createActivityDto.Address, MapLink = createActivityDto.MapLink, VirtualUrl = createActivityDto.VirtualUrl,
+                    DisplayName = BuildLocalisationDisplayName(type, createActivityDto.Address, createActivityDto.MapLink, createActivityDto.VirtualUrl)
                 };
-
                 _friendoutDbContext.Localisations.Add(localisation);
             }
             else
             {
-                localisation = new Localisation
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Type = LocalisationType.Address,
-                    DisplayName = "Lieu non specifie"
-                };
+                localisation = new Localisation { Id = Guid.NewGuid().ToString(), Type = LocalisationType.Address, DisplayName = "Lieu non specifie" };
                 _friendoutDbContext.Localisations.Add(localisation);
             }
 
-            // 3ï¸âƒ£ Activity
             var activity = new Activity
             {
                 Id = Guid.NewGuid().ToString(),
@@ -545,7 +378,6 @@ public class ActivityService : IActivityService
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
-
             _friendoutDbContext.Activities.Add(activity);
 
             if (normalizedSubActivities.Count > 0)
@@ -553,162 +385,81 @@ public class ActivityService : IActivityService
                 var subActivities = normalizedSubActivities.Select(sa =>
                 {
                     var subLocalisation = localisation;
-                    if (!string.IsNullOrWhiteSpace(sa.Address) ||
-                        !string.IsNullOrWhiteSpace(sa.MapLink) ||
-                        !string.IsNullOrWhiteSpace(sa.VirtualUrl))
+                    if (!string.IsNullOrWhiteSpace(sa.Address) || !string.IsNullOrWhiteSpace(sa.MapLink) || !string.IsNullOrWhiteSpace(sa.VirtualUrl))
                     {
-                        var subType =
-                            !string.IsNullOrWhiteSpace(sa.Address)
-                                ? LocalisationType.Address
-                                : !string.IsNullOrWhiteSpace(sa.MapLink)
-                                    ? LocalisationType.MapLink
-                                    : LocalisationType.Virtual;
-
+                        var subType = !string.IsNullOrWhiteSpace(sa.Address) ? LocalisationType.Address
+                            : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
                         subLocalisation = new Localisation
                         {
-                            Id = Guid.NewGuid().ToString(),
-                            Type = subType,
-                            Address = sa.Address,
-                            MapLink = sa.MapLink,
-                            VirtualUrl = sa.VirtualUrl,
+                            Id = Guid.NewGuid().ToString(), Type = subType,
+                            Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl,
                             DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl)
                         };
-
                         _friendoutDbContext.Localisations.Add(subLocalisation);
                     }
-
                     return new SubActivity
                     {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = sa.Name,
-                        StartTime = sa.StartTime,
-                        EndTime = sa.EndTime,
-                        Description = sa.Description,
-                        Price = sa.Price,
-                        ActivityId = activity.Id,
-                        Localisation = subLocalisation,
+                        Id = Guid.NewGuid().ToString(), Name = sa.Name,
+                        StartTime = sa.StartTime, EndTime = sa.EndTime,
+                        Description = sa.Description, Price = sa.Price,
+                        ActivityId = activity.Id, Localisation = subLocalisation,
                         LocalisationId = subLocalisation.Id,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
                     };
                 }).ToList();
-
                 _friendoutDbContext.SubActivities.AddRange(subActivities);
             }
 
             if (requiredEquipmentNames.Count > 0)
             {
-                var normalizedRequiredNames = requiredEquipmentNames
-                    .Select(name => name.ToLowerInvariant())
-                    .ToHashSet();
-
-                var existingEquipments = await _friendoutDbContext.Equipment
-                    .Where(e => normalizedRequiredNames.Contains(e.Name.ToLower()))
-                    .ToListAsync();
-
-                var existingNormalizedNames = existingEquipments
-                    .Select(e => e.Name.ToLowerInvariant())
-                    .ToHashSet();
-
-                var newEquipments = requiredEquipmentNames
-                    .Where(name => !existingNormalizedNames.Contains(name.ToLowerInvariant()))
-                    .Select(name => new Equipment
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = name
-                    })
-                    .ToList();
-
-                if (newEquipments.Count > 0)
+                var normalizedRequiredNames = requiredEquipmentNames.Select(name => name.ToLowerInvariant()).ToHashSet();
+                var existingEquipments = await _friendoutDbContext.Equipment.Where(e => normalizedRequiredNames.Contains(e.Name.ToLower())).ToListAsync();
+                var existingNormalizedNames = existingEquipments.Select(e => e.Name.ToLowerInvariant()).ToHashSet();
+                var newEquipments = requiredEquipmentNames.Where(name => !existingNormalizedNames.Contains(name.ToLowerInvariant()))
+                    .Select(name => new Equipment { Id = Guid.NewGuid().ToString(), Name = name }).ToList();
+                if (newEquipments.Count > 0) _friendoutDbContext.Equipment.AddRange(newEquipments);
+                var allEquipments = existingEquipments.Concat(newEquipments).GroupBy(e => e.Id).Select(g => g.First()).ToList();
+                _friendoutDbContext.ActivityEquipment.AddRange(allEquipments.Select(e => new ActivityEquipment
                 {
-                    _friendoutDbContext.Equipment.AddRange(newEquipments);
-                }
-
-                var allEquipments = existingEquipments
-                    .Concat(newEquipments)
-                    .GroupBy(e => e.Id)
-                    .Select(group => group.First())
-                    .ToList();
-                var activityEquipments = allEquipments.Select(equipment => new ActivityEquipment
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    ActivityId = activity.Id,
-                    EquipmentId = equipment.Id,
-                    Required = true,
-                    Quantity = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
-
-                _friendoutDbContext.ActivityEquipment.AddRange(activityEquipments);
+                    Id = Guid.NewGuid().ToString(), ActivityId = activity.Id, EquipmentId = e.Id,
+                    Required = true, Quantity = 1, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+                }));
             }
 
             await _friendoutDbContext.SaveChangesAsync();
 
-            // Convert to Dto
-            var updatedActivityDto = await _friendoutDbContext.Activities
-                .AsNoTracking()
-                .Where(a => a.Id == activity.Id)
+            var updatedActivityDto = await _friendoutDbContext.Activities.AsNoTracking().Where(a => a.Id == activity.Id)
                 .Select(a => new ActivityDto
                 {
-                    Id = a.Id,
-                    Title = a.Title,
-                    Description = a.Description,
-                    StartAt = a.StartAt,
-                    EndAt = a.EndAt,
-                    EstimatedPrice = a.EstimatedPrice,
-                    CreatedAt = a.CreatedAt,
-                    UpdatedAt = a.UpdatedAt,
-                    CreatedBy = a.Creator.Name,
-
+                    Id = a.Id, Title = a.Title, Description = a.Description,
+                    StartAt = a.StartAt, EndAt = a.EndAt, EstimatedPrice = a.EstimatedPrice,
+                    CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator.Name,
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
-                        Id = sa.Id,
-                        Name = sa.Name,
-                        StartTime = sa.StartTime,
-                        EndTime = sa.EndTime,
-                        Price = sa.Price,
-                        Localisation = sa.Localisation == null
-                            ? null
-                            : new LocalisationDto
-                            {
-                                Type = sa.Localisation.Type,
-                                Address = sa.Localisation.Address,
-                                MapLink = sa.Localisation.MapLink,
-                                VirtualUrl = sa.Localisation.VirtualUrl,
-                                DisplayName = sa.Localisation.DisplayName
-                            }
+                        Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Price = sa.Price,
+                        Localisation = sa.Localisation == null ? null : new LocalisationDto
+                        {
+                            Type = sa.Localisation.Type, Address = sa.Localisation.Address,
+                            MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl,
+                            DisplayName = sa.Localisation.DisplayName
+                        }
                     }).ToList(),
-
                     HasEquipment = a.ActivityEquipments != null && a.ActivityEquipments.Any(),
-
                     Localisation = new LocalisationDto
                     {
-                        Type = a.Localisation.Type,
-                        Address = a.Localisation.Address,
-                        MapLink = a.Localisation.MapLink,
-                        VirtualUrl = a.Localisation.VirtualUrl,
+                        Type = a.Localisation.Type, Address = a.Localisation.Address,
+                        MapLink = a.Localisation.MapLink, VirtualUrl = a.Localisation.VirtualUrl,
                         DisplayName = a.Localisation.DisplayName
                     },
-
-                    Image = a.Image == null
-                        ? null
-                        : new ImageDto
-                        {
-                            Id = a.Image.Id,
-                            Url = a.Image.Url,
-                            AltText = a.Image.Name
-                        }
-                })
-                .FirstAsync();
+                    Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.Name }
+                }).FirstAsync();
 
             return ServiceResult<ActivityDto>.Success(updatedActivityDto);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create activity");
-            return ServiceResult<ActivityDto>.Failure(
-                "Une erreur s'est produite lors de la création de l'activité");
+            return ServiceResult<ActivityDto>.Failure("An error occurred while creating the activity");
         }
     }
 
@@ -716,82 +467,38 @@ public class ActivityService : IActivityService
     {
         try
         {
-            if (activityDto.StartAt == default)
-            {
-                return ServiceResult<ActivityDto>.Failure("La date de debut est invalide.");
-            }
-
-            if (activityDto.EndAt < activityDto.StartAt)
-            {
-                return ServiceResult<ActivityDto>.Failure("La date de fin doit etre superieure ou egale a la date de debut.");
-            }
-
-            if (activityDto.EstimatedPrice.HasValue && activityDto.EstimatedPrice.Value < 0)
-            {
-                return ServiceResult<ActivityDto>.Failure("Le prix estime ne peut pas etre negatif.");
-            }
-
-            if (activityDto.SubActivities.Any(sa => sa.Price.HasValue && sa.Price.Value < 0))
-            {
-                return ServiceResult<ActivityDto>.Failure("Le prix d'une sous-activite ne peut pas etre negatif.");
-            }
-
-            if (activityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime))
-            {
-                return ServiceResult<ActivityDto>.Failure("L'heure de fin d'une sous-activite doit etre strictement apres l'heure de debut.");
-            }
+            if (activityDto.StartAt == default) return ServiceResult<ActivityDto>.Failure("La date de debut est invalide.");
+            if (activityDto.EndAt < activityDto.StartAt) return ServiceResult<ActivityDto>.Failure("La date de fin doit etre superieure ou egale a la date de debut.");
+            if (activityDto.EstimatedPrice.HasValue && activityDto.EstimatedPrice.Value < 0) return ServiceResult<ActivityDto>.Failure("Le prix estime ne peut pas etre negatif.");
+            if (activityDto.SubActivities.Any(sa => sa.Price.HasValue && sa.Price.Value < 0)) return ServiceResult<ActivityDto>.Failure("Le prix d'une sous-activite ne peut pas etre negatif.");
+            if (activityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime)) return ServiceResult<ActivityDto>.Failure("L'heure de fin d'une sous-activite doit etre strictement apres l'heure de debut.");
 
             var activity = await _friendoutDbContext.Activities
-                .Include(a => a.Localisation)
-                .Include(a => a.Image)
-                .Include(a => a.SubActivities)
-                .Include(a => a.ActivityEquipments)
+                .Include(a => a.Localisation).Include(a => a.Image)
+                .Include(a => a.SubActivities).Include(a => a.ActivityEquipments)
                 .FirstOrDefaultAsync(a => a.Id == activityDto.Id);
 
-            if (activity is null)
-            {
-                return ServiceResult<ActivityDto>.Failure("Activity not found.");
-            }
-
-            if (!string.Equals(activity.CreatedBy, userId, StringComparison.Ordinal))
-            {
-                return ServiceResult<ActivityDto>.Failure("You are not allowed to update this activity.");
-            }
+            if (activity is null) return ServiceResult<ActivityDto>.Failure("Activity not found.");
+            if (!string.Equals(activity.CreatedBy, userId, StringComparison.Ordinal)) return ServiceResult<ActivityDto>.Failure("You are not allowed to update this activity.");
 
             var requiredEquipmentNames = activityDto.RequiredEquipmentNames
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Select(name => name.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+                .Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
             var normalizedSubActivities = activityDto.SubActivities
                 .Where(sa => !string.IsNullOrWhiteSpace(sa.Name))
                 .Select(sa => new
                 {
                     Id = string.IsNullOrWhiteSpace(sa.Id) ? null : sa.Id.Trim(),
-                    Name = sa.Name.Trim(),
-                    StartTime = sa.StartTime,
-                    EndTime = sa.EndTime,
-                    sa.Description,
-                    sa.Price,
-                    sa.Address,
-                    sa.MapLink,
-                    sa.VirtualUrl
-                })
-                .ToList();
+                    Name = sa.Name.Trim(), sa.StartTime, sa.EndTime, sa.Description, sa.Price, sa.Address, sa.MapLink, sa.VirtualUrl
+                }).ToList();
 
             if (activityDto.RemoveImage && activity.Image != null)
             {
-                // Supprimer le fichier physique
                 var removeParts = activity.Image.Url.Split('/', StringSplitOptions.RemoveEmptyEntries);
                 var removeFileName = removeParts.Length > 0 ? removeParts[^1] : null;
                 if (!string.IsNullOrWhiteSpace(removeFileName))
-                {
-                    try { await _fileService.DeleteFileAsync(removeFileName, FileCategory.ActivityImage); }
-                    catch { /* ignore */ }
-                }
-
-                // Supprimer le record Image en base et détacher l'activité
+                    try { await _fileService.DeleteFileAsync(removeFileName, FileCategory.ActivityImage); } catch { }
                 _friendoutDbContext.Images.Remove(activity.Image);
                 activity.ImageId = null;
                 activity.Image = null;
@@ -804,36 +511,15 @@ public class ActivityService : IActivityService
                     var parts = previousUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
                     previousFileName = parts.Length > 0 ? parts[^1] : null;
                 }
-
                 string newFileName;
-                try
-                {
-                    newFileName = await _fileService.SaveFileAsync(activityDto.ActivityImage, FileCategory.ActivityImage);
-                }
-                catch (ArgumentException ex)
-                {
-                    return ServiceResult<ActivityDto>.Failure($"Image invalide : {ex.Message}");
-                }
-
+                try { newFileName = await _fileService.SaveFileAsync(activityDto.ActivityImage, FileCategory.ActivityImage); }
+                catch (ArgumentException ex) { return ServiceResult<ActivityDto>.Failure($"Image invalide : {ex.Message}"); }
                 var fileUrl = _fileService.GetFileUrl(newFileName, FileCategory.ActivityImage);
-
                 if (!string.IsNullOrWhiteSpace(previousFileName))
-                {
-                    try { await _fileService.DeleteFileAsync(previousFileName, FileCategory.ActivityImage); }
-                    catch { /* ignore */ }
-                }
-
+                    try { await _fileService.DeleteFileAsync(previousFileName, FileCategory.ActivityImage); } catch { }
                 if (activity.Image is null)
                 {
-                    var image = new Image
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Url = fileUrl,
-                        Name = activityDto.ActivityImage.FileName,
-                        MimeType = activityDto.ActivityImage.ContentType,
-                        Size = activityDto.ActivityImage.Length,
-                        CreatedBy = userId
-                    };
+                    var image = new Image { Id = Guid.NewGuid().ToString(), Url = fileUrl, Name = activityDto.ActivityImage.FileName, MimeType = activityDto.ActivityImage.ContentType, Size = activityDto.ActivityImage.Length, CreatedBy = userId };
                     _friendoutDbContext.Images.Add(image);
                     activity.ImageId = image.Id;
                 }
@@ -847,17 +533,10 @@ public class ActivityService : IActivityService
             }
 
             Localisation localisation;
-            if (!string.IsNullOrWhiteSpace(activityDto.Address) ||
-                !string.IsNullOrWhiteSpace(activityDto.MapLink) ||
-                !string.IsNullOrWhiteSpace(activityDto.VirtualUrl))
+            if (!string.IsNullOrWhiteSpace(activityDto.Address) || !string.IsNullOrWhiteSpace(activityDto.MapLink) || !string.IsNullOrWhiteSpace(activityDto.VirtualUrl))
             {
-                var type =
-                    !string.IsNullOrWhiteSpace(activityDto.Address)
-                        ? LocalisationType.Address
-                        : !string.IsNullOrWhiteSpace(activityDto.MapLink)
-                            ? LocalisationType.MapLink
-                            : LocalisationType.Virtual;
-
+                var type = !string.IsNullOrWhiteSpace(activityDto.Address) ? LocalisationType.Address
+                    : !string.IsNullOrWhiteSpace(activityDto.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
                 localisation = activity.Localisation;
                 localisation.Type = type;
                 localisation.Address = activityDto.Address;
@@ -869,14 +548,9 @@ public class ActivityService : IActivityService
             {
                 localisation = activity.Localisation ?? new Localisation { Id = Guid.NewGuid().ToString() };
                 localisation.Type = LocalisationType.Address;
-                localisation.Address = null;
-                localisation.MapLink = null;
-                localisation.VirtualUrl = null;
+                localisation.Address = null; localisation.MapLink = null; localisation.VirtualUrl = null;
                 localisation.DisplayName = "Lieu non specifie";
-                if (activity.Localisation is null)
-                {
-                    _friendoutDbContext.Localisations.Add(localisation);
-                }
+                if (activity.Localisation is null) _friendoutDbContext.Localisations.Add(localisation);
             }
 
             activity.Title = activityDto.Title;
@@ -887,58 +561,30 @@ public class ActivityService : IActivityService
             activity.Localisation = localisation;
             activity.UpdatedAt = DateTime.UtcNow;
 
-            var existingSubActivities = await _friendoutDbContext.SubActivities
-                .Include(sa => sa.Localisation)
-                .Where(sa => sa.ActivityId == activity.Id)
-                .ToListAsync();
-            var existingSubActivitiesById = existingSubActivities
-                .ToDictionary(sa => sa.Id, sa => sa);
+            var existingSubActivities = await _friendoutDbContext.SubActivities.Include(sa => sa.Localisation).Where(sa => sa.ActivityId == activity.Id).ToListAsync();
+            var existingSubActivitiesById = existingSubActivities.ToDictionary(sa => sa.Id, sa => sa);
             var keptSubActivityIds = new HashSet<string>(StringComparer.Ordinal);
 
             if (normalizedSubActivities.Count > 0)
             {
                 var newSubActivities = normalizedSubActivities.Select(sa =>
                 {
-                    var hasOwnLocalisation =
-                        !string.IsNullOrWhiteSpace(sa.Address) ||
-                        !string.IsNullOrWhiteSpace(sa.MapLink) ||
-                        !string.IsNullOrWhiteSpace(sa.VirtualUrl);
-
-                    if (!string.IsNullOrWhiteSpace(sa.Id) &&
-                        existingSubActivitiesById.TryGetValue(sa.Id, out var existingSubActivity))
+                    var hasOwnLocalisation = !string.IsNullOrWhiteSpace(sa.Address) || !string.IsNullOrWhiteSpace(sa.MapLink) || !string.IsNullOrWhiteSpace(sa.VirtualUrl);
+                    if (!string.IsNullOrWhiteSpace(sa.Id) && existingSubActivitiesById.TryGetValue(sa.Id, out var existingSubActivity))
                     {
-                        existingSubActivity.Name = sa.Name;
-                        existingSubActivity.StartTime = sa.StartTime;
-                        existingSubActivity.EndTime = sa.EndTime;
-                        existingSubActivity.Description = sa.Description;
-                        existingSubActivity.Price = sa.Price;
-                        existingSubActivity.UpdatedAt = DateTime.UtcNow;
-
+                        existingSubActivity.Name = sa.Name; existingSubActivity.StartTime = sa.StartTime;
+                        existingSubActivity.EndTime = sa.EndTime; existingSubActivity.Description = sa.Description;
+                        existingSubActivity.Price = sa.Price; existingSubActivity.UpdatedAt = DateTime.UtcNow;
                         if (hasOwnLocalisation)
                         {
-                            var subType =
-                                !string.IsNullOrWhiteSpace(sa.Address)
-                                    ? LocalisationType.Address
-                                    : !string.IsNullOrWhiteSpace(sa.MapLink)
-                                        ? LocalisationType.MapLink
-                                        : LocalisationType.Virtual;
-
-                            if (existingSubActivity.Localisation is null ||
-                                existingSubActivity.LocalisationId == localisation.Id)
+                            var subType = !string.IsNullOrWhiteSpace(sa.Address) ? LocalisationType.Address
+                                : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
+                            if (existingSubActivity.Localisation is null || existingSubActivity.LocalisationId == localisation.Id)
                             {
-                                var ownLocalisation = new Localisation
-                                {
-                                    Id = Guid.NewGuid().ToString(),
-                                    Type = subType,
-                                    Address = sa.Address,
-                                    MapLink = sa.MapLink,
-                                    VirtualUrl = sa.VirtualUrl,
-                                    DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl)
-                                };
-
-                                _friendoutDbContext.Localisations.Add(ownLocalisation);
-                                existingSubActivity.Localisation = ownLocalisation;
-                                existingSubActivity.LocalisationId = ownLocalisation.Id;
+                                var ownLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
+                                _friendoutDbContext.Localisations.Add(ownLoc);
+                                existingSubActivity.Localisation = ownLoc;
+                                existingSubActivity.LocalisationId = ownLoc.Id;
                             }
                             else
                             {
@@ -949,254 +595,171 @@ public class ActivityService : IActivityService
                                 existingSubActivity.Localisation.DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl);
                             }
                         }
-                        else
-                        {
-                            existingSubActivity.Localisation = localisation;
-                            existingSubActivity.LocalisationId = localisation.Id;
-                        }
-
+                        else { existingSubActivity.Localisation = localisation; existingSubActivity.LocalisationId = localisation.Id; }
                         keptSubActivityIds.Add(existingSubActivity.Id);
                         return null;
                     }
-
-                    var subLocalisation = localisation;
+                    var subLoc = localisation;
                     if (hasOwnLocalisation)
                     {
-                        var subType =
-                            !string.IsNullOrWhiteSpace(sa.Address)
-                                ? LocalisationType.Address
-                                : !string.IsNullOrWhiteSpace(sa.MapLink)
-                                    ? LocalisationType.MapLink
-                                    : LocalisationType.Virtual;
-
-                        subLocalisation = new Localisation
-                        {
-                            Id = Guid.NewGuid().ToString(),
-                            Type = subType,
-                            Address = sa.Address,
-                            MapLink = sa.MapLink,
-                            VirtualUrl = sa.VirtualUrl,
-                            DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl)
-                        };
-
-                        _friendoutDbContext.Localisations.Add(subLocalisation);
+                        var subType = !string.IsNullOrWhiteSpace(sa.Address) ? LocalisationType.Address
+                            : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
+                        subLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
+                        _friendoutDbContext.Localisations.Add(subLoc);
                     }
-
-                    var newSubActivity = new SubActivity
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = sa.Name,
-                        StartTime = sa.StartTime,
-                        EndTime = sa.EndTime,
-                        Description = sa.Description,
-                        Price = sa.Price,
-                        ActivityId = activity.Id,
-                        Localisation = subLocalisation,
-                        LocalisationId = subLocalisation.Id,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-
-                    keptSubActivityIds.Add(newSubActivity.Id);
-                    return newSubActivity;
+                    var newSub = new SubActivity { Id = Guid.NewGuid().ToString(), Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Description = sa.Description, Price = sa.Price, ActivityId = activity.Id, Localisation = subLoc, LocalisationId = subLoc.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+                    keptSubActivityIds.Add(newSub.Id);
+                    return newSub;
                 }).Where(sa => sa is not null).ToList();
-
-                if (newSubActivities.Count > 0)
-                {
-                    _friendoutDbContext.SubActivities.AddRange(newSubActivities!);
-                }
+                if (newSubActivities.Count > 0) _friendoutDbContext.SubActivities.AddRange(newSubActivities!);
             }
 
-            var deletedSubActivities = existingSubActivities
-                .Where(sa => !keptSubActivityIds.Contains(sa.Id))
-                .ToList();
-
+            var deletedSubActivities = existingSubActivities.Where(sa => !keptSubActivityIds.Contains(sa.Id)).ToList();
             if (deletedSubActivities.Count > 0)
             {
-                // Prevent sub-activity participations from being converted to main participations
-                // when SubActivityId is set to null (OnDelete SetNull).
-                var deletedSubActivityIds = deletedSubActivities
-                    .Select(sa => sa.Id)
-                    .ToList();
-
-                var orphanableParticipations = await _friendoutDbContext.UserParticipation
-                    .Where(up => up.ActivityId == activity.Id
-                                 && up.SubActivityId != null
-                                 && deletedSubActivityIds.Contains(up.SubActivityId))
+                var deletedIds = deletedSubActivities.Select(sa => sa.Id).ToList();
+                var orphans = await _friendoutDbContext.UserParticipation
+                    .Where(up => up.ActivityId == activity.Id && up.SubActivityId != null && deletedIds.Contains(up.SubActivityId))
                     .ToListAsync();
-
-                if (orphanableParticipations.Count > 0)
-                {
-                    _friendoutDbContext.UserParticipation.RemoveRange(orphanableParticipations);
-                }
-
+                if (orphans.Count > 0) _friendoutDbContext.UserParticipation.RemoveRange(orphans);
                 _friendoutDbContext.SubActivities.RemoveRange(deletedSubActivities);
             }
 
-            var existingActivityEquipments = await _friendoutDbContext.ActivityEquipment
-                .Where(ae => ae.ActivityId == activity.Id)
-                .ToListAsync();
-            if (existingActivityEquipments.Count > 0)
-            {
-                _friendoutDbContext.ActivityEquipment.RemoveRange(existingActivityEquipments);
-            }
+            var existingActivityEquipments = await _friendoutDbContext.ActivityEquipment.Where(ae => ae.ActivityId == activity.Id).ToListAsync();
+            if (existingActivityEquipments.Count > 0) _friendoutDbContext.ActivityEquipment.RemoveRange(existingActivityEquipments);
 
             if (requiredEquipmentNames.Count > 0)
             {
-                var normalizedRequiredNames = requiredEquipmentNames
-                    .Select(name => name.ToLowerInvariant())
-                    .ToHashSet();
-
-                var existingEquipments = await _friendoutDbContext.Equipment
-                    .Where(e => normalizedRequiredNames.Contains(e.Name.ToLower()))
-                    .ToListAsync();
-
-                var existingNormalizedNames = existingEquipments
-                    .Select(e => e.Name.ToLowerInvariant())
-                    .ToHashSet();
-
-                var newEquipments = requiredEquipmentNames
-                    .Where(name => !existingNormalizedNames.Contains(name.ToLowerInvariant()))
-                    .Select(name => new Equipment
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = name
-                    })
-                    .ToList();
-
-                if (newEquipments.Count > 0)
-                {
-                    _friendoutDbContext.Equipment.AddRange(newEquipments);
-                }
-
-                var allEquipments = existingEquipments
-                    .Concat(newEquipments)
-                    .GroupBy(e => e.Id)
-                    .Select(group => group.First())
-                    .ToList();
-
-                var activityEquipments = allEquipments.Select(equipment => new ActivityEquipment
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    ActivityId = activity.Id,
-                    EquipmentId = equipment.Id,
-                    Required = true,
-                    Quantity = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
-
-                _friendoutDbContext.ActivityEquipment.AddRange(activityEquipments);
+                var normalizedRequiredNames = requiredEquipmentNames.Select(name => name.ToLowerInvariant()).ToHashSet();
+                var existingEquipments = await _friendoutDbContext.Equipment.Where(e => normalizedRequiredNames.Contains(e.Name.ToLower())).ToListAsync();
+                var existingNormalizedNames = existingEquipments.Select(e => e.Name.ToLowerInvariant()).ToHashSet();
+                var newEquipments = requiredEquipmentNames.Where(name => !existingNormalizedNames.Contains(name.ToLowerInvariant())).Select(name => new Equipment { Id = Guid.NewGuid().ToString(), Name = name }).ToList();
+                if (newEquipments.Count > 0) _friendoutDbContext.Equipment.AddRange(newEquipments);
+                var allEquipments = existingEquipments.Concat(newEquipments).GroupBy(e => e.Id).Select(g => g.First()).ToList();
+                _friendoutDbContext.ActivityEquipment.AddRange(allEquipments.Select(e => new ActivityEquipment { Id = Guid.NewGuid().ToString(), ActivityId = activity.Id, EquipmentId = e.Id, Required = true, Quantity = 1, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }));
             }
 
             await _friendoutDbContext.SaveChangesAsync();
 
-            var updatedActivityDto = await _friendoutDbContext.Activities
-                .AsNoTracking()
-                .Where(a => a.Id == activity.Id)
+            // Notify all participating users that the activity has been modified.
+            // Fire-and-forget — notification failure must never block the update response.
+            _ = NotifyParticipantsAsync(
+                activityId: activity.Id,
+                excludeUserId: userId,
+                type: NotificationType.ActivityModified,
+                buildData: (participantId, participantName) => new Dictionary<string, string>
+                {
+                    { "UserName",      participantName },
+                    { "ActivityName",  activity.Title },
+                    { "Date",          activity.StartAt.ToString("f") },
+                    { "Location",      activity.Localisation?.DisplayName ?? "" },
+                    { "OrganizerName", activity.Creator?.Name ?? "" },
+                    { "AppUrl",        "https://friendout.app" } // TODO: move to configuration
+                }
+            );
+
+            var updatedActivityDto = await _friendoutDbContext.Activities.AsNoTracking().Where(a => a.Id == activity.Id)
                 .Select(a => new ActivityDto
                 {
-                    Id = a.Id,
-                    Title = a.Title,
-                    Description = a.Description,
-                    StartAt = a.StartAt,
-                    EndAt = a.EndAt,
-                    EstimatedPrice = a.EstimatedPrice,
-                    CreatedAt = a.CreatedAt,
-                    UpdatedAt = a.UpdatedAt,
-                    CreatedBy = a.Creator.Name,
+                    Id = a.Id, Title = a.Title, Description = a.Description,
+                    StartAt = a.StartAt, EndAt = a.EndAt, EstimatedPrice = a.EstimatedPrice,
+                    CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator.Name,
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
-                        Id = sa.Id,
-                        Name = sa.Name,
-                        StartTime = sa.StartTime,
-                        EndTime = sa.EndTime,
-                        Price = sa.Price,
-                        Localisation = sa.Localisation == null
-                            ? null
-                            : new LocalisationDto
-                            {
-                                Type = sa.Localisation.Type,
-                                Address = sa.Localisation.Address,
-                                MapLink = sa.Localisation.MapLink,
-                                VirtualUrl = sa.Localisation.VirtualUrl,
-                                DisplayName = sa.Localisation.DisplayName
-                            }
+                        Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Price = sa.Price,
+                        Localisation = sa.Localisation == null ? null : new LocalisationDto { Type = sa.Localisation.Type, Address = sa.Localisation.Address, MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl, DisplayName = sa.Localisation.DisplayName }
                     }).ToList(),
                     HasEquipment = a.ActivityEquipments != null && a.ActivityEquipments.Any(),
-                    Localisation = new LocalisationDto
-                    {
-                        Type = a.Localisation.Type,
-                        Address = a.Localisation.Address,
-                        MapLink = a.Localisation.MapLink,
-                        VirtualUrl = a.Localisation.VirtualUrl,
-                        DisplayName = a.Localisation.DisplayName
-                    },
-                    Image = a.Image == null
-                        ? null
-                        : new ImageDto
-                        {
-                            Id = a.Image.Id,
-                            Url = a.Image.Url,
-                            AltText = a.Image.Name
-                        }
-                })
-                .FirstAsync();
+                    Localisation = new LocalisationDto { Type = a.Localisation.Type, Address = a.Localisation.Address, MapLink = a.Localisation.MapLink, VirtualUrl = a.Localisation.VirtualUrl, DisplayName = a.Localisation.DisplayName },
+                    Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.Name }
+                }).FirstAsync();
 
             return ServiceResult<ActivityDto>.Success(updatedActivityDto);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update activity");
-            return ServiceResult<ActivityDto>.Failure(
-                "An error occurred while updating the activity");
+            return ServiceResult<ActivityDto>.Failure("An error occurred while updating the activity");
         }
     }
 
-    public async Task<ServiceResult<ActivityDto>> DeleteActivityAsync(
-        string activityId,
-        string userId)
+    public async Task<ServiceResult<ActivityDto>> DeleteActivityAsync(string activityId, string userId)
     {
-        // On rÃ©cupÃ¨re uniquement l'activitÃ© si elle appartient à l'utilisateur
         var activity = await _friendoutDbContext.Activities
-            .Include(a => a.SubActivities)
-            .Include(a => a.Creator)
-            .FirstOrDefaultAsync(a =>
-                a.Id == activityId &&
-                a.Creator.Id == userId);
+            .Include(a => a.SubActivities).Include(a => a.Creator).Include(a => a.Localisation)
+            .FirstOrDefaultAsync(a => a.Id == activityId && a.Creator.Id == userId);
 
-        // SÃ©curitÃ© : on ne rÃ©vÃ¨le pas si elle existe ou non
         if (activity == null)
-        {
-            return ServiceResult<ActivityDto>
-                .Failure("Activity not found");
-        }
+            return ServiceResult<ActivityDto>.Failure("Activity not found");
 
-        // On prÃ©pare le DTO AVANT suppression
         var activityDto = new ActivityDto
         {
-            Id = activity.Id,
-            Title = activity.Title,
-            Description = activity.Description,
-            StartAt = activity.StartAt,
-            EndAt = activity.EndAt,
-            CreatedBy = activity.Creator.Id,
-            CreatedAt = activity.CreatedAt,
-            UpdatedAt = activity.UpdatedAt,
-            SubActivities = activity.SubActivities?
-                .Select(sa => new SubActivityDto
-                {
-                    Id = sa.Id,
-                    Name = sa.Name,
-                    StartTime = sa.StartTime,
-                    EndTime = sa.EndTime
-                })
-                .ToList()
+            Id = activity.Id, Title = activity.Title, Description = activity.Description,
+            StartAt = activity.StartAt, EndAt = activity.EndAt,
+            CreatedBy = activity.Creator.Id, CreatedAt = activity.CreatedAt, UpdatedAt = activity.UpdatedAt,
+            SubActivities = activity.SubActivities?.Select(sa => new SubActivityDto { Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime }).ToList()
         };
+
+        // Notify participants before deletion — participants will be cascade-deleted with the activity.
+        // Fire-and-forget — notification failure must never block the deletion.
+        _ = NotifyParticipantsAsync(
+            activityId: activity.Id,
+            excludeUserId: userId,
+            type: NotificationType.ActivityCanceled,
+            buildData: (participantId, participantName) => new Dictionary<string, string>
+            {
+                { "UserName",      participantName },
+                { "ActivityName",  activity.Title },
+                { "Date",          activity.StartAt.ToString("f") },
+                { "Location",      activity.Localisation?.DisplayName ?? "" },
+                { "OrganizerName", activity.Creator.Name },
+                { "CancelReason",  "" },
+                { "AppUrl",        "https://friendout.app" } // TODO: move to configuration
+            }
+        );
 
         _friendoutDbContext.Activities.Remove(activity);
         await _friendoutDbContext.SaveChangesAsync();
 
         return ServiceResult<ActivityDto>.Success(activityDto);
+    }
+
+    /// <summary>
+    /// Fetches all participating users of an activity (excluding the actor)
+    /// and dispatches a notification to each of them.
+    /// </summary>
+    private async Task NotifyParticipantsAsync(
+        string activityId,
+        string excludeUserId,
+        NotificationType type,
+        Func<string, string, Dictionary<string, string>> buildData)
+    {
+        try
+        {
+            var participants = await _friendoutDbContext.UserParticipation
+                .AsNoTracking()
+                .Where(up =>
+                    up.ActivityId == activityId &&
+                    up.UserId != excludeUserId &&
+                    up.SubActivityId == null &&
+                    up.Status == ParticipationStatus.Participating)
+                .Select(up => new { up.UserId, up.User.Name })
+                .Distinct()
+                .ToListAsync();
+
+            var tasks = participants.Select(p =>
+                _notificationDispatcher.DispatchNotificationAsync(
+                    Guid.Parse(p.UserId),
+                    type,
+                    buildData(p.UserId, p.Name)
+                )
+            );
+
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to notify participants for activity {ActivityId}", activityId);
+        }
     }
 }
