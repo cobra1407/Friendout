@@ -7,6 +7,7 @@ using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Friendout.Test;
 
@@ -623,13 +624,30 @@ public class ActivityServiceTests
             context,
             TestLogger<ActivityService>.Instance,
             new NoopFileService(),
-            new NoopNotificationDispatcher());
+            new NoopNotificationDispatcher(),
+            new NoopScopeFactory());
     }
 
     private sealed class NoopNotificationDispatcher : INotificationDispatcher
     {
         public Task DispatchNotificationAsync(Guid userId, Friendout.Domain.Enums.NotificationType type, Dictionary<string, string> data)
             => Task.CompletedTask;
+    }
+
+    private sealed class NoopScopeFactory : IServiceScopeFactory
+    {
+        public IServiceScope CreateScope() => new NoopScope();
+
+        private sealed class NoopScope : IServiceScope
+        {
+            public IServiceProvider ServiceProvider => new NoopServiceProvider();
+            public void Dispose() { }
+        }
+
+        private sealed class NoopServiceProvider : IServiceProvider
+        {
+            public object? GetService(Type serviceType) => null;
+        }
     }
 
     private sealed class NoopFileService : IFileService

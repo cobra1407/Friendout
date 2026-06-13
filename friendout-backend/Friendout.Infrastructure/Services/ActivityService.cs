@@ -16,6 +16,7 @@ using Friendout.Domain.Models;
 using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 
@@ -27,17 +28,20 @@ public class ActivityService : IActivityService
     private readonly ILogger<ActivityService> _logger;
     private readonly IFileService _fileService;
     private readonly INotificationDispatcher _notificationDispatcher;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public ActivityService(
         FriendoutDbContext friendoutDbContext,
         ILogger<ActivityService> logger,
         IFileService fileService,
-        INotificationDispatcher notificationDispatcher)
+        INotificationDispatcher notificationDispatcher,
+        IServiceScopeFactory scopeFactory)
     {
         _friendoutDbContext = friendoutDbContext;
         _logger = logger;
         _fileService = fileService;
         _notificationDispatcher = notificationDispatcher;
+        _scopeFactory = scopeFactory;
     }
 
     private static string BuildLocalisationDisplayName(LocalisationType type, string? address, string? mapLink, string? virtualUrl)
@@ -727,6 +731,8 @@ public class ActivityService : IActivityService
     /// <summary>
     /// Fetches all participating users of an activity (excluding the actor)
     /// and dispatches a notification to each of them.
+    /// Uses a fresh DI scope to avoid ObjectDisposedException when running
+    /// fire-and-forget after the HTTP request ends.
     /// </summary>
     private async Task NotifyParticipantsAsync(
         string activityId,
@@ -736,7 +742,10 @@ public class ActivityService : IActivityService
     {
         try
         {
-            var participants = await _friendoutDbContext.UserParticipation
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
+
+            var participants = await db.UserParticipation
                 .AsNoTracking()
                 .Where(up =>
                     up.ActivityId == activityId &&

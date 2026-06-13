@@ -7,6 +7,7 @@ using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Friendout.Infrastructure.Services;
@@ -17,6 +18,9 @@ namespace Friendout.Infrastructure.Services;
 /// Receives events from the NotificationDispatcher, resolves user preferences,
 /// then delegates to the appropriate INotificationStrategy implementations (email, push...).
 ///
+/// Uses IServiceScopeFactory to create a fresh DI scope per notification, avoiding
+/// ObjectDisposedException when running fire-and-forget after the HTTP request ends.
+///
 /// Strategy pattern — strategies are injected as IEnumerable&lt;INotificationStrategy&gt;.
 /// Adding a new channel = implement INotificationStrategy + register in DI.
 /// This class never needs to change.
@@ -24,22 +28,28 @@ namespace Friendout.Infrastructure.Services;
 public class NotificationService : INotificationService
 {
     private readonly IEnumerable<INotificationStrategy> _strategies;
-    private readonly FriendoutDbContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         IEnumerable<INotificationStrategy> strategies,
-        FriendoutDbContext db,
+        IServiceScopeFactory scopeFactory,
         ILogger<NotificationService> logger)
     {
-        _strategies = strategies;
-        _db         = db;
-        _logger     = logger;
+        _strategies   = strategies;
+        _scopeFactory = scopeFactory;
+        _logger       = logger;
     }
 
     public async Task NotifyUserAsync(Guid userId, NotificationType type, Dictionary<string, string> data)
     {
-        var (notifPrefs, userPrefs) = await GetUserPreferencesAsync(userId.ToString());
+        // Create a fresh scope so the DbContext is never disposed under us,
+        // even when this runs fire-and-forget after the HTTP request ends.
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var db         = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
+        var appLog     = scope.ServiceProvider.GetRequiredService<IAppLogService>();
+
+        var (notifPrefs, userPrefs) = await GetUserPreferencesAsync(db, userId.ToString());
 
         // Inject Locale into data so strategies never need to resolve it themselves.
         // Caller-supplied Locale is never overwritten — explicit always wins.
@@ -63,6 +73,13 @@ public class NotificationService : INotificationService
                 _logger.LogError(ex,
                     "Failed to send {Type} notification via {Strategy} for user {UserId}",
                     type, strategy.StrategyName, userId);
+
+                // Also log to the admin panel so admins can diagnose delivery issues
+                // (e.g. misconfigured SMTP, missing credentials).
+                await appLog.LogErrorAsync(
+                    "Notifications",
+                    $"Failed to send {type} notification via {strategy.StrategyName} for user {userId}: {ex.Message}",
+                    ex);
             }
         });
 
@@ -73,9 +90,10 @@ public class NotificationService : INotificationService
     /// Fetches both the notification and general preferences for a user from the DB.
     /// Falls back to sensible defaults if no records exist yet.
     /// </summary>
-    private async Task<(UserNotificationPreferences notif, UserPreferences prefs)> GetUserPreferencesAsync(string userId)
+    private static async Task<(UserNotificationPreferences notif, UserPreferences prefs)> GetUserPreferencesAsync(
+        FriendoutDbContext db, string userId)
     {
-        var notifPrefs = await _db.UserNotificationPreferences
+        var notifPrefs = await db.UserNotificationPreferences
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.UserId == userId)
             ?? new UserNotificationPreferences
@@ -85,7 +103,7 @@ public class NotificationService : INotificationService
                 PushEnabled  = false
             };
 
-        var userPrefs = await _db.UserPreferences
+        var userPrefs = await db.UserPreferences
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == userId)
             ?? new UserPreferences
