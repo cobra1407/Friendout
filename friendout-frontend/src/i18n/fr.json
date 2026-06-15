@@ -38,6 +38,12 @@
     "button_creating": "Création...",
     "button_saving": "Enregistrement...",
     "equipment_label": "Équipements requis (optionnel)",
+    "confirm_update_modal": {
+      "title": "Modifier l'activité ?",
+      "description": "Les participants seront notifiés par email de cette modification.",
+      "button_confirm": "Confirmer",
+      "button_cancel": "Annuler"
+    },
     "toast": {
         "image_too_large": "L'image doit faire moins de {{size}}MB",
         "image_invalid_type": "Le fichier doit être une image",
@@ -114,7 +120,7 @@
     "email_placeholder": "votre@email.com",
     "email_hint": "Utilisez l'adresse email liée à votre compte Google.",
     "message_label": "Un mot pour se présenter ? (optionnel)",
-    "message_placeholder": "Dites-nous en deux mots qui vous êtes ou comment vous nous avez trouvé 😊",
+    "message_placeholder": "Dites-nous en deux mots qui vous êtes ou comment vous nous avez trouvé 😊",
     "submit_button": "Envoyer ma demande",
     "submitting": "Envoi en cours...",
     "success_title": "Demande envoyée !",

@@ -1,10 +1,13 @@
 using FluentAssertions;
+using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Admin;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace Friendout.Test;
 
@@ -31,8 +34,15 @@ public class AdminServiceTests
             => Task.CompletedTask;
     }
 
-    private static AdminService CreateService(Friendout.Domain.Context.FriendoutDbContext db)
-        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance);
+    /// <summary>No-op IAppSettings for tests — returns a placeholder URL.</summary>
+    private sealed class NullAppSettings 
+    {
+        public static readonly NullAppSettings Instance = new();
+        public string AppUrl => "https://localhost";
+    }
+
+    private static AdminService CreateService(FriendoutDbContext db)
+        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
     // -------------------------
     // GetLogsAsync

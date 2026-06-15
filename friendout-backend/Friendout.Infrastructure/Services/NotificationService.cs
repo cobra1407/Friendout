@@ -43,13 +43,24 @@ public class NotificationService : INotificationService
 
     public async Task NotifyUserAsync(Guid userId, NotificationType type, Dictionary<string, string> data)
     {
-        // Create a fresh scope so the DbContext is never disposed under us,
-        // even when this runs fire-and-forget after the HTTP request ends.
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var db         = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
-        var appLog     = scope.ServiceProvider.GetRequiredService<IAppLogService>();
+        var db     = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
+        var appLog = scope.ServiceProvider.GetRequiredService<IAppLogService>();
 
-        var (notifPrefs, userPrefs) = await GetUserPreferencesAsync(db, userId.ToString());
+        // Guid.Empty means the recipient has no account yet (e.g. access request emails).
+        // Skip DB preference lookup and force email delivery via RecipientEmail in data.
+        UserNotificationPreferences notifPrefs;
+        UserPreferences userPrefs;
+
+        if (userId == Guid.Empty)
+        {
+            notifPrefs = new UserNotificationPreferences { EmailEnabled = true, PushEnabled = false };
+            userPrefs  = new UserPreferences { Locale = data.GetValueOrDefault("Locale", "en") };
+        }
+        else
+        {
+            (notifPrefs, userPrefs) = await GetUserPreferencesAsync(db, userId.ToString());
+        }
 
         // Inject Locale into data so strategies never need to resolve it themselves.
         // Caller-supplied Locale is never overwritten — explicit always wins.
@@ -74,8 +85,6 @@ public class NotificationService : INotificationService
                     "Failed to send {Type} notification via {Strategy} for user {UserId}",
                     type, strategy.StrategyName, userId);
 
-                // Also log to the admin panel so admins can diagnose delivery issues
-                // (e.g. misconfigured SMTP, missing credentials).
                 await appLog.LogErrorAsync(
                     "Notifications",
                     $"Failed to send {type} notification via {strategy.StrategyName} for user {userId}: {ex.Message}",

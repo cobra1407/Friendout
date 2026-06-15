@@ -39,6 +39,12 @@
     "button_creating": "Creating...",
     "button_saving": "Saving...",
     "equipment_label": "Required equipment (optional)",
+    "confirm_update_modal": {
+      "title": "Update this activity?",
+      "description": "Participants will be notified by email of this update.",
+      "button_confirm": "Confirm",
+      "button_cancel": "Cancel"
+    },
     "toast": {
         "image_too_large": "Image must be less than {{size}}MB",
         "image_invalid_type": "The file must be an image",
