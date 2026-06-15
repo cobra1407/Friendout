@@ -657,7 +657,8 @@ public class ActivityService : IActivityService
                     { "Date",          activity.StartAt.ToString("f") },
                     { "Location",      activity.Localisation?.DisplayName ?? "" },
                     { "OrganizerName", activity.Creator?.Name ?? "" },
-                    { "AppUrl",        _appOptions.Url }
+                    { "AppUrl",        _appOptions.Url },
+                    { "ActivityId", activity.Id }
                 }
             );
 
@@ -670,7 +671,7 @@ public class ActivityService : IActivityService
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
                         Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Price = sa.Price,
-                        Localisation = sa.Localisation == null ? null : new LocalisationDto { Type = sa.Localisation.Type, Address = sa.Localisation.Address, MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl, DisplayName = sa.Localisation.DisplayName }
+                        Localisation = new LocalisationDto { Type = sa.Localisation.Type, Address = sa.Localisation.Address, MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl, DisplayName = sa.Localisation.DisplayName }
                     }).ToList(),
                     HasEquipment = a.ActivityEquipments != null && a.ActivityEquipments.Any(),
                     Localisation = new LocalisationDto { Type = a.Localisation.Type, Address = a.Localisation.Address, MapLink = a.Localisation.MapLink, VirtualUrl = a.Localisation.VirtualUrl, DisplayName = a.Localisation.DisplayName },
@@ -714,7 +715,7 @@ public class ActivityService : IActivityService
                 { "Date",          activity.StartAt.ToString("f") },
                 { "Location",      activity.Localisation?.DisplayName ?? "" },
                 { "OrganizerName", activity.Creator.Name },
-                { "CancelReason",  "" },
+                { "CancelReason",  "N/A" },
                 { "AppUrl",        _appOptions.Url }
             }
         );
