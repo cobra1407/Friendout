@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Friendout.Domain.Enums;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,15 +16,14 @@ namespace Friendout.Infrastructure.Services;
 /// <summary>
 /// Strategy pattern — concrete email delivery strategy using MailKit.
 ///
-/// Fetches the user's email via a fresh IUserService scope to avoid ObjectDisposedException
-/// when running fire-and-forget after the HTTP request ends.
+/// Smtp configuration is validated at startup via SmtpOptions + ValidateOnStart,
+/// so no runtime config checks are needed here.
 ///
-/// SMTP errors are logged both to stdout and to the admin panel via IAppLogService
-/// so admins can diagnose delivery issues without digging through server logs.
+/// Uses IServiceScopeFactory to resolve scoped services safely in fire-and-forget contexts.
 /// </summary>
 public class EmailNotificationStrategy : INotificationStrategy
 {
-    private readonly SmtpSettings _smtp;
+    private readonly SmtpOptions _smtp;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly INotificationTemplateProvider _templateProvider;
     private readonly ITemplateEngine _templateEngine;
@@ -32,13 +32,13 @@ public class EmailNotificationStrategy : INotificationStrategy
     public string StrategyName => "Email";
 
     public EmailNotificationStrategy(
-        IOptions<SmtpSettings> smtpSettings,
+        IOptions<SmtpOptions> smtpOptions,
         IServiceScopeFactory scopeFactory,
         INotificationTemplateProvider templateProvider,
         ITemplateEngine templateEngine,
         ILogger<EmailNotificationStrategy> logger)
     {
-        _smtp             = smtpSettings.Value;
+        _smtp             = smtpOptions.Value;
         _scopeFactory     = scopeFactory;
         _templateProvider = templateProvider;
         _templateEngine   = templateEngine;
@@ -49,15 +49,6 @@ public class EmailNotificationStrategy : INotificationStrategy
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var appLog            = scope.ServiceProvider.GetRequiredService<IAppLogService>();
-
-        // Validate SMTP configuration before attempting delivery.
-        if (string.IsNullOrWhiteSpace(_smtp.Server))
-        {
-            const string configError = "Email notification skipped: SMTP server is not configured. Set Smtp:Server in your environment variables.";
-            _logger.LogWarning(configError);
-            await appLog.LogWarningAsync("Notifications", configError);
-            return;
-        }
 
         // Resolve recipient email.
         // Allow overriding recipient directly in data (e.g. access request emails
@@ -112,15 +103,14 @@ public class EmailNotificationStrategy : INotificationStrategy
             _logger.LogError(ex, errorMessage);
             await appLog.LogErrorAsync("Notifications", errorMessage, ex);
             // Do not re-throw — SMTP errors must never surface to the caller.
-            // The error is already logged to the admin panel above.
         }
     }
 
     private static string GetSubject(NotificationType type, string? locale = "en")
     {
-        var currentLocale = locale?.ToLower() ?? "en";
+        var isFr = locale?.ToLower() == "fr";
 
-        if (currentLocale == "fr")
+        if (isFr)
         {
             return type switch
             {

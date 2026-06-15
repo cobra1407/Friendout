@@ -15,9 +15,11 @@ using Friendout.Domain.Enums.FilterEnums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.RegularExpressions;
 
 namespace Friendout.Infrastructure.Services;
@@ -29,19 +31,22 @@ public class ActivityService : IActivityService
     private readonly IFileService _fileService;
     private readonly INotificationDispatcher _notificationDispatcher;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly AppOptions _appOptions;
 
     public ActivityService(
         FriendoutDbContext friendoutDbContext,
         ILogger<ActivityService> logger,
         IFileService fileService,
         INotificationDispatcher notificationDispatcher,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IOptions<AppOptions> appOptions)
     {
         _friendoutDbContext = friendoutDbContext;
         _logger = logger;
         _fileService = fileService;
         _notificationDispatcher = notificationDispatcher;
         _scopeFactory = scopeFactory;
+        _appOptions = appOptions.Value;
     }
 
     private static string BuildLocalisationDisplayName(LocalisationType type, string? address, string? mapLink, string? virtualUrl)
@@ -337,8 +342,7 @@ public class ActivityService : IActivityService
                 var fileUrl = _fileService.GetFileUrl(fileName, FileCategory.ActivityImage);
                 var image = new Image
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    Url = fileUrl,
+                    Id = Guid.NewGuid().ToString(), Url = fileUrl,
                     Name = createActivityDto.ActivityImage.FileName,
                     MimeType = createActivityDto.ActivityImage.ContentType,
                     Size = createActivityDto.ActivityImage.Length,
@@ -352,8 +356,7 @@ public class ActivityService : IActivityService
             if (!string.IsNullOrEmpty(createActivityDto.Address) || !string.IsNullOrEmpty(createActivityDto.MapLink) || !string.IsNullOrEmpty(createActivityDto.VirtualUrl))
             {
                 var type = !string.IsNullOrEmpty(createActivityDto.Address) ? LocalisationType.Address
-                    : !string.IsNullOrEmpty(createActivityDto.MapLink) ? LocalisationType.MapLink
-                    : LocalisationType.Virtual;
+                    : !string.IsNullOrEmpty(createActivityDto.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
                 localisation = new Localisation
                 {
                     Id = Guid.NewGuid().ToString(), Type = type,
@@ -371,16 +374,11 @@ public class ActivityService : IActivityService
             var activity = new Activity
             {
                 Id = Guid.NewGuid().ToString(),
-                Title = createActivityDto.Title,
-                Description = createActivityDto.Description,
-                StartAt = createActivityDto.StartAt,
-                EndAt = createActivityDto.EndAt,
-                EstimatedPrice = createActivityDto.EstimatedPrice,
-                ImageId = imageId,
-                Localisation = localisation,
-                CreatedBy = userId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Title = createActivityDto.Title, Description = createActivityDto.Description,
+                StartAt = createActivityDto.StartAt, EndAt = createActivityDto.EndAt,
+                EstimatedPrice = createActivityDto.EstimatedPrice, ImageId = imageId,
+                Localisation = localisation, CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             };
             _friendoutDbContext.Activities.Add(activity);
 
@@ -480,6 +478,7 @@ public class ActivityService : IActivityService
             var activity = await _friendoutDbContext.Activities
                 .Include(a => a.Localisation).Include(a => a.Image)
                 .Include(a => a.SubActivities).Include(a => a.ActivityEquipments)
+                .Include(a => a.Creator)
                 .FirstOrDefaultAsync(a => a.Id == activityDto.Id);
 
             if (activity is null) return ServiceResult<ActivityDto>.Failure("Activity not found.");
@@ -658,7 +657,7 @@ public class ActivityService : IActivityService
                     { "Date",          activity.StartAt.ToString("f") },
                     { "Location",      activity.Localisation?.DisplayName ?? "" },
                     { "OrganizerName", activity.Creator?.Name ?? "" },
-                    { "AppUrl",        "https://friendout.app" } // TODO: move to configuration
+                    { "AppUrl",        _appOptions.Url }
                 }
             );
 
@@ -704,8 +703,6 @@ public class ActivityService : IActivityService
             SubActivities = activity.SubActivities?.Select(sa => new SubActivityDto { Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime }).ToList()
         };
 
-        // Notify participants before deletion — participants will be cascade-deleted with the activity.
-        // Fire-and-forget — notification failure must never block the deletion.
         _ = NotifyParticipantsAsync(
             activityId: activity.Id,
             excludeUserId: userId,
@@ -718,7 +715,7 @@ public class ActivityService : IActivityService
                 { "Location",      activity.Localisation?.DisplayName ?? "" },
                 { "OrganizerName", activity.Creator.Name },
                 { "CancelReason",  "" },
-                { "AppUrl",        "https://friendout.app" } // TODO: move to configuration
+                { "AppUrl",        _appOptions.Url }
             }
         );
 
@@ -728,12 +725,6 @@ public class ActivityService : IActivityService
         return ServiceResult<ActivityDto>.Success(activityDto);
     }
 
-    /// <summary>
-    /// Fetches all participating users of an activity (excluding the actor)
-    /// and dispatches a notification to each of them.
-    /// Uses a fresh DI scope to avoid ObjectDisposedException when running
-    /// fire-and-forget after the HTTP request ends.
-    /// </summary>
     private async Task NotifyParticipantsAsync(
         string activityId,
         string excludeUserId,

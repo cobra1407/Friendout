@@ -1,13 +1,17 @@
 using FluentAssertions;
+using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Activity;
 using Friendout.Domain.DTOs.SubActivity;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Enums.FilterEnums;
 using Friendout.Domain.Models;
+using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Friendout.Test;
 
@@ -618,19 +622,20 @@ public class ActivityServiceTests
         RequiredEquipmentNames = [], SubActivities = []
     };
 
-    private static ActivityService CreateService(Friendout.Domain.Context.FriendoutDbContext context)
+    private static ActivityService CreateService(FriendoutDbContext context)
     {
         return new ActivityService(
             context,
             TestLogger<ActivityService>.Instance,
             new NoopFileService(),
             new NoopNotificationDispatcher(),
-            new NoopScopeFactory());
+            new NoopScopeFactory(),
+            Options.Create(new AppOptions { Url = "http://localhost" }));
     }
 
     private sealed class NoopNotificationDispatcher : INotificationDispatcher
     {
-        public Task DispatchNotificationAsync(Guid userId, Friendout.Domain.Enums.NotificationType type, Dictionary<string, string> data)
+        public Task DispatchNotificationAsync(Guid userId, NotificationType type, Dictionary<string, string> data)
             => Task.CompletedTask;
     }
 
@@ -652,9 +657,9 @@ public class ActivityServiceTests
 
     private sealed class NoopFileService : IFileService
     {
-        public Task<string> SaveFileAsync(FileUpload file, Friendout.Infrastructure.Enums.FileCategory category) => Task.FromResult("file.png");
-        public Task DeleteFileAsync(string fileName, Friendout.Infrastructure.Enums.FileCategory category) => Task.CompletedTask;
-        public string GetFilePath(string fileName, Friendout.Infrastructure.Enums.FileCategory category) => fileName;
-        public string GetFileUrl(string fileName, Friendout.Infrastructure.Enums.FileCategory category) => $"/uploads/{fileName}";
+        public Task<string> SaveFileAsync(FileUpload file, FileCategory category) => Task.FromResult("file.png");
+        public Task DeleteFileAsync(string fileName, FileCategory category) => Task.CompletedTask;
+        public string GetFilePath(string fileName, FileCategory category) => fileName;
+        public string GetFileUrl(string fileName, FileCategory category) => $"/uploads/{fileName}";
     }
 }
