@@ -114,6 +114,7 @@ namespace Friendout.Domain.Context
             {
                 entity.HasIndex(e => e.CreatedBy);
                 entity.HasIndex(e => e.StartAt);
+                entity.HasIndex(e => new { e.StartAt, e.ReminderSentAt });
 
                 entity.HasOne(e => e.Image)
                     .WithMany()

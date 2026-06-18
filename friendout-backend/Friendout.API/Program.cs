@@ -1,4 +1,5 @@
 using friendout_backend;
+using friendout_backend.Jobs;
 using Friendout.Domain.Context;
 using Friendout.Infrastructure;
 using friendout_backend.Controller;
@@ -7,6 +8,7 @@ using friendout_backend.Helpers;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 // -------------------------------------------------------
 // Environment variables (.env / .env.local)
@@ -55,6 +57,7 @@ builder.Services.AddSingleton<Friendout.Infrastructure.Interfaces.ITokenBlacklis
 builder.Services.AddScoped<Friendout.Infrastructure.Interfaces.IRefreshTokenService,
                            Friendout.Infrastructure.Services.RefreshTokenService>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
+builder.Services.AddAppQuartz();
 
 builder.WebHost.ConfigureKestrel(opt => opt.Limits.MaxRequestBodySize = 30 * 1024 * 1024);
 builder.Services.AddRateLimiter(options =>
