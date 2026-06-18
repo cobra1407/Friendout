@@ -19,7 +19,7 @@ interface PendingDemotion {
 }
 
 export const AdminUsersSection = () => {
-    const { users, isLoading, isFetchingNextPage, hasNextPage, usersLoaderRef, updateRoleMutation, deleteUserMutation } = useAdminUsers();
+    const { users, isLoading, isFetchingNextPage, usersLoaderRef, updateRoleMutation, deleteUserMutation } = useAdminUsers();
     const [search, setSearch] = useState("");
     const [pendingDemotion, setPendingDemotion] = useState<PendingDemotion | null>(null);
     const [pendingDelete, setPendingDelete] = useState<PendingDemotion | null>(null);
@@ -108,27 +108,27 @@ export const AdminUsersSection = () => {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem
-                                                disabled={u.role === UserRole.User || updateRoleMutation.isPending}
-                                                onClick={() => handleDemoteClick(u.id, u.name)}
-                                                >
-                                                {getTranslation('admin.users.set_user')}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                disabled={u.role === UserRole.Admin || updateRoleMutation.isPending}
-                                                className="text-destructive"
-                                                onClick={() => updateRoleMutation.mutate({ id: u.id, role: UserRole.Admin })}
-                                                >
-                                                {getTranslation('admin.users.set_admin')}
-                                                </DropdownMenuItem>
                                                     <DropdownMenuItem
-                                                    disabled={deleteUserMutation.isPending}
-                                                    className="text-destructive"
-                                                    onClick={() => setPendingDelete({ id: u.id, name: u.name })}
-                                                >
-                                                    {getTranslation('admin.users.delete_user')}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
+                                                        disabled={u.role === UserRole.User || updateRoleMutation.isPending}
+                                                        onClick={() => handleDemoteClick(u.id, u.name)}
+                                                    >
+                                                        {getTranslation('admin.users.set_user')}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        disabled={u.role === UserRole.Admin || updateRoleMutation.isPending}
+                                                        className="text-destructive"
+                                                        onClick={() => updateRoleMutation.mutate({ id: u.id, role: UserRole.Admin })}
+                                                    >
+                                                        {getTranslation('admin.users.set_admin')}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        disabled={deleteUserMutation.isPending}
+                                                        className="text-destructive"
+                                                        onClick={() => setPendingDelete({ id: u.id, name: u.name })}
+                                                    >
+                                                        {getTranslation('admin.users.delete_user')}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>
                                     </li>
