@@ -25,12 +25,13 @@ public class AdminController : ControllerBase
 
     private IActionResult MapError(string errorMessage) => errorMessage switch
     {
-        "not_found"                => NotFound(),
-        "guild_already_exists"     => Conflict(new { error = errorMessage }),
-        "email_already_exists"     => Conflict(new { error = errorMessage }),
+        "not_found" => NotFound(),
+        "guild_already_exists" => Conflict(new { error = errorMessage }),
+        "email_already_exists" => Conflict(new { error = errorMessage }),
         "request_already_resolved" => BadRequest(new { error = errorMessage }),
-        "last_admin"               => BadRequest(new { error = errorMessage }),
-        _                          => StatusCode(500, new { error = errorMessage })
+        "last_admin" => BadRequest(new { error = errorMessage }),
+        "cannot_delete_self" => BadRequest(new { error = errorMessage }),
+        _ => StatusCode(500, new { error = errorMessage })
     };
 
     // -------------------------
@@ -64,8 +65,8 @@ public class AdminController : ControllerBase
     // -------------------------
 
     [HttpGet("admin/logs")]
-    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 200)
-        => Ok(await _adminService.GetLogsAsync(level, Math.Clamp(limit, 1, 1000)));
+    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 50, [FromQuery] int skip = 0)
+        => Ok(await _adminService.GetLogsAsync(level, Math.Clamp(limit, 1, 1000), skip));
 
     [HttpDelete("admin/logs")]
     public async Task<IActionResult> ClearLogs()
@@ -165,8 +166,8 @@ public class AdminController : ControllerBase
     // -------------------------
 
     [HttpGet("admin/users")]
-    public async Task<IActionResult> GetUsers()
-        => Ok(await _adminService.GetUsersAsync());
+    public async Task<IActionResult> GetUsers([FromQuery] int skip = 0, [FromQuery] int take = 30)
+        => Ok(await _adminService.GetUsersAsync(skip, Math.Clamp(take, 1, 100)));
 
     [HttpPut("admin/users/{id}/role")]
     public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UpdateUserRoleDto dto)
@@ -174,5 +175,13 @@ public class AdminController : ControllerBase
         var result = await _adminService.UpdateUserRoleAsync(id, dto);
         if (!result.IsSuccess) return MapError(result.ErrorMessage);
         return Ok(result.Data);
+    }
+
+    [HttpDelete("admin/users/{id}")]
+    public async Task<IActionResult> DeleteUser(string id)
+    {
+        var result = await _adminService.DeleteUserAsync(id);
+        if (!result.IsSuccess) return MapError(result.ErrorMessage);
+        return NoContent();
     }
 }
