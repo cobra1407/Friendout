@@ -49,12 +49,13 @@ public class NotificationService : INotificationService
 
         // Guid.Empty means the recipient has no account yet (e.g. access request emails).
         // Skip DB preference lookup and force email delivery via RecipientEmail in data.
+        // In-app is disabled for anonymous recipients — no account = no notification to persist.
         UserNotificationPreferences notifPrefs;
         UserPreferences userPrefs;
 
         if (userId == Guid.Empty)
         {
-            notifPrefs = new UserNotificationPreferences { EmailEnabled = true, PushEnabled = false };
+            notifPrefs = new UserNotificationPreferences { EmailEnabled = true, InAppEnabled = false };
             userPrefs  = new UserPreferences { Locale = data.GetValueOrDefault("Locale", "en") };
         }
         else
@@ -69,7 +70,7 @@ public class NotificationService : INotificationService
         // Filter strategies based on user preferences.
         var activeStrategies = _strategies.Where(s =>
             (s.StrategyName == "Email" && notifPrefs.EmailEnabled) ||
-            (s.StrategyName == "InApp"  && notifPrefs.PushEnabled)
+            (s.StrategyName == "InApp"  && notifPrefs.InAppEnabled)
         );
 
         // Execute each active strategy independently — one failure doesn't block the others.
@@ -109,7 +110,7 @@ public class NotificationService : INotificationService
             {
                 UserId       = userId,
                 EmailEnabled = true,
-                PushEnabled  = false
+                InAppEnabled = true
             };
 
         var userPrefs = await db.UserPreferences

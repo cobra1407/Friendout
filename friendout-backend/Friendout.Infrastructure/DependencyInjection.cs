@@ -16,7 +16,7 @@ public static class DependencyInjection
     /// <param name="configuration">The application configuration.</param>
     public static void AddInfrastructure(this IServiceCollection services, string webRootPath, IConfiguration configuration)
     {
-        // ── Options (validated at startup — app fails fast if any required key is missing) ──
+        // ---- Options (validated at startup — app fails fast if any required key is missing) ----
         services.AddOptions<AppOptions>()
             .Bind(configuration.GetSection(AppOptions.Section))
             .ValidateDataAnnotations()
@@ -27,7 +27,7 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // ── Services ──
+        // ---- Services ----
         services.AddHttpContextAccessor();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ISettingsService, SettingsService>();
@@ -38,14 +38,16 @@ public static class DependencyInjection
         services.AddScoped<IParticipantService, ParticipantService>();
         services.AddScoped<ICommentService, CommentService>();
 
-        // ── Notification system ──
+        // ---- Notification system ----
         services.AddScoped<INotificationTemplateProvider, NotificationTemplateProvider>();
         services.AddScoped<ITemplateEngine, SimpleTemplateEngine>();
-        services.AddScoped<INotificationStrategy, EmailNotificationStrategy>();
+        services.AddScoped<INotificationStrategy, EmailNotificationStrategy>();  // ← email channel
+        services.AddScoped<INotificationStrategy, InAppNotificationStrategy>();  // ← in-app channel
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
+        services.AddScoped<IInAppNotificationService, InAppNotificationService>();
 
-        // ── File services ──
+        // ---- File services ----
         services.AddScoped<IFileValidationService, FileValidationService>();
         services.AddScoped<IFileService>(provider =>
         {
