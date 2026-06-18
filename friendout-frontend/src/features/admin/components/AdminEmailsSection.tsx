@@ -1,15 +1,20 @@
 import { Mail, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Modal, ModalHeader, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { getTranslation } from "@/i18n";
 import { useAdminEmails } from "../hooks/useAdmin";
 
 export const AdminEmailsSection = () => {
     const { emails, isLoading, email, setEmail, addMutation, deleteMutation } = useAdminEmails();
+    const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+    const pendingEmail = emails.find(e => e.id === pendingDeleteId);
 
     return (
+        <>
         <Card className="border shadow-sm">
             <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -55,7 +60,7 @@ export const AdminEmailsSection = () => {
                                     size="icon"
                                     className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
                                     disabled={deleteMutation.isPending}
-                                    onClick={() => deleteMutation.mutate(e.id)}
+                                    onClick={() => setPendingDeleteId(e.id)}
                                 >
                                     <Trash2 className="w-3 h-3" />
                                 </Button>
@@ -65,5 +70,53 @@ export const AdminEmailsSection = () => {
                 )}
             </CardContent>
         </Card>
+
+        <Modal
+            open={pendingDeleteId !== null}
+            onClose={() => setPendingDeleteId(null)}
+            className="max-w-sm"
+        >
+            <ModalHeader>
+                <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-full bg-red-50 dark:bg-red-950/40">
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                    </div>
+                    <ModalTitle>
+                        {getTranslation('admin.emails.delete_confirm_title')}
+                    </ModalTitle>
+                </div>
+                <ModalDescription>
+                    {getTranslation('admin.emails.delete_confirm_description', {
+                        email: pendingEmail?.email ?? ''
+                    })}
+                </ModalDescription>
+            </ModalHeader>
+            <div className="flex justify-end gap-2 mt-4">
+                <Button
+                    variant="outline"
+                    onClick={() => setPendingDeleteId(null)}
+                    disabled={deleteMutation.isPending}
+                >
+                    {getTranslation('admin.users.cancel')}
+                </Button>
+                <Button
+                    variant="destructive"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => {
+                        if (pendingDeleteId !== null) {
+                            deleteMutation.mutate(pendingDeleteId, {
+                                onSettled: () => setPendingDeleteId(null)
+                            });
+                        }
+                    }}
+                >
+                    {deleteMutation.isPending
+                        ? <Spinner className="w-4 h-4" />
+                        : getTranslation('admin.emails.delete_confirm')
+                    }
+                </Button>
+            </div>
+        </Modal>
+        </>
     );
 };
