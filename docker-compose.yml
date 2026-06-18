@@ -42,9 +42,17 @@
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID}
       Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET}
       Authentication__Google__CallbackPath: /api/auth/callback/google
+      App__Url: ${APP_URL}
       Frontend__LoginUrl: ${APP_URL}/login
       Frontend__ActivitiesUrl: ${APP_URL}/activities
       Cors__AllowedOrigins: ${APP_URL}
+      Smtp__Server: ${SMTP_SERVER}
+      Smtp__Port: ${SMTP_PORT}
+      Smtp__UserName: ${SMTP_USERNAME}
+      Smtp__Password: ${SMTP_PASSWORD}
+      Smtp__EnableSsl: ${SMTP_ENABLE_SSL}
+      Smtp__FromAddress: ${SMTP_FROM_ADDRESS}
+      Smtp__FromName: ${SMTP_FROM_NAME}
       Seed__Enabled: ${SEED_ENABLED:-false}
     volumes:
       - uploads_data:/app/uploads
