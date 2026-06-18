@@ -395,5 +395,45 @@
       "description": "Tu as effectué trop de requêtes. Attends quelques secondes puis rafraîchis la page.",
       "retry": "Rafraîchir"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification pour le moment",
+    "mark_all_read": "Tout marquer comme lu",
+    "delete": "Supprimer",
+    "types": {
+      "ActivityModified": {
+        "title": "Activité modifiée",
+        "message": "L'activité \"{{ActivityName}}\" a été mise à jour par {{OrganizerName}}."
+      },
+      "ActivityCanceled": {
+        "title": "Activité annulée",
+        "message": "L'activité \"{{ActivityName}}\" organisée par {{OrganizerName}} a été annulée."
+      },
+      "ActivityReminder": {
+        "title": "Rappel d'activité",
+        "message": "L'activité \"{{ActivityName}}\" commence bientôt."
+      },
+      "InvitationReceived": {
+        "title": "Nouvelle invitation",
+        "message": "{{OrganizerName}} vous invite à rejoindre \"{{ActivityName}}\"."
+      },
+      "AccessRequestApproved": {
+        "title": "Accès approuvé",
+        "message": "Votre demande d'accès à Friendout a été approuvée."
+      },
+      "AccessRequestDenied": {
+        "title": "Demande refusée",
+        "message": "Votre demande d'accès à Friendout a été refusée."
+      },
+      "AccountDeleted": {
+        "title": "Compte supprimé",
+        "message": "Votre compte Friendout a été supprimé."
+      },
+      "default": {
+        "title": "Notification",
+        "message": "Vous avez une nouvelle notification."
+      }
+    }
   }
 }
