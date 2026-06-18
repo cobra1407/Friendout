@@ -15,17 +15,13 @@ public class UserNotificationPreferences
     [MaxLength(191)]
     public string UserId { get; set; } = null!;
 
-    /// <summary>
-    /// Whether the user wants to receive email notifications.
-    /// </summary>
+    /// <summary>Whether the user wants to receive email notifications.</summary>
     [Column("email_enabled")]
     public bool EmailEnabled { get; set; } = true;
 
-    /// <summary>
-    /// Whether the user wants to receive push/in-app notifications.
-    /// </summary>
-    [Column("push_enabled")]
-    public bool PushEnabled { get; set; } = false;
+    /// <summary>Whether the user wants to receive in-app notifications.</summary>
+    [Column("in_app_enabled")]
+    public bool InAppEnabled { get; set; } = true;
 
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

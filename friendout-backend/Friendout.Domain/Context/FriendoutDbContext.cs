@@ -29,6 +29,7 @@ namespace Friendout.Domain.Context
         public DbSet<AppSetting> AppSettings { get; set; }
         public DbSet<UserPreferences> UserPreferences { get; set; }
         public DbSet<UserNotificationPreferences> UserNotificationPreferences { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,6 +83,19 @@ namespace Friendout.Domain.Context
                     .WithOne(e => e.User)
                     .HasForeignKey<UserNotificationPreferences>(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Notifications)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserNotification>(entity =>
+            {
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.UserId, e.IsRead });
+                entity.HasIndex(e => e.CreatedAt);
+                entity.Property(e => e.Type).HasConversion<string>();
             });
 
             modelBuilder.Entity<Account>(entity =>
