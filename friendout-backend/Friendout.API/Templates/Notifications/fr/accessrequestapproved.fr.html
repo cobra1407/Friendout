@@ -4,105 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Votre accès a été approuvé — Friendout</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    }
-
-    .outer {
-      padding: 40px 16px;
-      min-height: 100vh;
-      box-sizing: border-box;
-      background-color: #f8fafc;
-    }
-
-    .card {
-      max-width: 520px;
-      margin: 0 auto;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,.10);
-      background: #ffffff;
-    }
-
-    /* Header */
-    .logo-bar { padding: 28px 32px 20px; text-align: center; }
-    .logo-bar .brand { display: inline-flex; align-items: center; text-decoration: none; }
-    .logo-bar .brand-icon { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
-    .logo-bar .brand-icon img { width: 90px; height: 90px; }
-
-    /* Hero */
-    .hero { text-align: center; }
-    .hero img { width: 100%; border-radius: 16px; margin-bottom: 24px; }
-    .hero .emoji { font-size: 44px; display: block; margin-bottom: 12px; }
-    .hero h1 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3; letter-spacing: -0.3px; margin-bottom: 12px; color: #18181b; }
-
-    /* Body */
-    .body { padding: 10px 32px 24px; }
-    .body p { margin: 0 0 18px; color: #3f3f46; font-size: 15px; line-height: 1.7; }
-    .body p:last-child { margin: 0; }
-    .body strong { color: #18181b; }
-
-    /* CTA */
-    .cta-wrap { text-align: center; margin: 28px 0; }
-    .cta { display: inline-block; padding: 15px 36px; background: rgb(21 52 62); color: #fff !important; text-decoration: none; border-radius: 100px; font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
-
-    /* Sign-off */
-    .signoff { padding: 0 36px 28px; }
-    .signoff p { margin: 0 0 4px; color: #3f3f46; font-size: 15px; line-height: 1.6; }
-
-    /* Footer */
-    .footer { background: #fafafa; border-top: 1px solid #f4f4f5; padding: 20px 36px; text-align: center; }
-    .footer p { margin: 0; color: #a1a1aa; font-size: 12px; line-height: 1.6; }
-  </style>
 </head>
-<body>
-  <div class="outer">
-    <div class="card">
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
 
-      <!-- Logo -->
-      <div class="logo-bar">
-        <span class="brand">
-          <span class="brand-icon">
-            <img src="{{ appUrl }}/assets/images/friendout-logo-spring.png" alt="Friendout">
-          </span>
-        </span>
-      </div>
+        <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;background-color:#ffffff;border-radius:24px;overflow:hidden;">
 
-      <!-- Hero -->
-      <div class="hero">
-        <h1>Bonne nouvelle ! Votre accès<br/>à Friendout a été validé</h1>
-        <span class="emoji">🎉</span>
-        <img src="{{ appUrl }}/assets/images/default-activity-card.png" alt="Bienvenue sur Friendout">
-      </div>
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding:28px 32px 20px;">
+              <img src="{{ AppUrl }}/assets/images/friendout-logo-spring.png" alt="Friendout" width="90" height="90" style="display:inline-block;">
+            </td>
+          </tr>
 
-      <!-- Body -->
-      <div class="body">
-        <p>Bonjour et bienvenu.e sur Friendout👋,</p>
-        <p>C'est un plaisir de vous compter parmi nous ! Votre demande d'accès à <strong>Friendout</strong> vient d'être acceptée. Avec Friendout, vos plans entre amis deviennent simples.</p>
-        <p>Vous pouvez vous connecter dès maintenant avec votre compte Google associé à <strong>{{ UserEmail }}</strong>.</p>
-      </div>
+          <!-- Hero -->
+          <tr>
+            <td align="center" style="padding:0 32px 16px;">
+              <p style="margin:0 0 12px;font-size:22px;font-weight:800;color:#18181b;line-height:1.3;">Bonne nouvelle ! Votre accès<br/>à Friendout a été validé</p>
+              <p style="margin:0 0 16px;font-size:44px;line-height:1;">🎉</p>
+              <img src="{{ AppUrl }}/assets/images/default-activity-card.png" alt="Bienvenue sur Friendout" width="100%" style="display:block;width:100%;height:auto;border-radius:16px;">
+            </td>
+          </tr>
 
-      <!-- CTA -->
-      <div class="cta-wrap">
-        <a href="{{ appUrl }}" class="cta">👉 Rendez vous sur Friendout</a>
-      </div>
+          <!-- Body -->
+          <tr>
+            <td style="padding:16px 32px 0;">
+              <p style="margin:0 0 18px;color:#3f3f46;font-size:15px;line-height:1.7;">Bonjour et bienvenu.e sur Friendout 👋,</p>
+              <p style="margin:0 0 18px;color:#3f3f46;font-size:15px;line-height:1.7;">C'est un plaisir de vous compter parmi nous ! Votre demande d'accès à <strong style="color:#18181b;">Friendout</strong> vient d'être acceptée. Avec Friendout, vos plans entre amis deviennent simples.</p>
+              <p style="margin:0 0 18px;color:#3f3f46;font-size:15px;line-height:1.7;">Vous pouvez vous connecter dès maintenant avec votre compte Google associé à <strong style="color:#18181b;">{{ UserEmail }}</strong>.</p>
+            </td>
+          </tr>
 
-      <!-- Sign-off -->
-      <div class="signoff">
-        <p>À très vite pour de nouvelles aventures,</p>
-        <p><strong>L'équipe Friendout 🌿</strong></p>
-      </div>
+          <!-- CTA -->
+          <tr>
+            <td align="center" style="padding:20px 32px 28px;">
+              <a href="{{ AppUrl }}" style="display:inline-block;padding:15px 36px;background-color:#15343e;color:#ffffff;text-decoration:none;border-radius:100px;font-size:16px;font-weight:700;">👉 Rendez vous sur Friendout</a>
+            </td>
+          </tr>
 
-      <!-- Footer -->
-      <div class="footer">
-        <p>Vous recevez cet email car vous avez soumis une demande d'accès à Friendout.<br/>Si ce n'est pas vous, ignorez simplement ce message.</p>
-      </div>
+          <!-- Sign-off -->
+          <tr>
+            <td style="padding:0 36px 28px;">
+              <p style="margin:0 0 4px;color:#3f3f46;font-size:15px;line-height:1.6;">À très vite pour de nouvelles aventures,</p>
+              <p style="margin:0;color:#3f3f46;font-size:15px;line-height:1.6;"><strong style="color:#18181b;">L'équipe Friendout 🌿</strong></p>
+            </td>
+          </tr>
 
-    </div>
-  </div>
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="background-color:#fafafa;border-top:1px solid #f4f4f5;padding:20px 36px;">
+              <p style="margin:0;color:#a1a1aa;font-size:12px;line-height:1.6;">Vous recevez cet email car vous avez soumis une demande d'accès à Friendout.<br/>Si ce n'est pas vous, ignorez simplement ce message.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
