@@ -3,6 +3,7 @@ using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Friendout.Infrastructure;
 
@@ -52,7 +53,8 @@ public static class DependencyInjection
         services.AddScoped<IFileService>(provider =>
         {
             var validationService = provider.GetRequiredService<IFileValidationService>();
-            return new FileService(webRootPath, validationService);
+            var appOptions = provider.GetRequiredService<IOptions<AppOptions>>();
+            return new FileService(webRootPath, validationService, appOptions);
         });
 
         services.AddScoped<JwtService>();

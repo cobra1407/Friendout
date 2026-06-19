@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
+using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using FluentAssertions;
 
@@ -13,6 +15,7 @@ public class FileServiceTests
 {
     private string _baseFolder = null!;
     private IFileValidationService _validationService = null!;
+    private IOptions<AppOptions> _appOptions = null!;
 
     [SetUp]
     public void Setup()
@@ -24,6 +27,7 @@ public class FileServiceTests
         }
 
         _validationService = new AlwaysValidFileValidationService();
+        _appOptions = Microsoft.Extensions.Options.Options.Create(new AppOptions { Url = "https://localhost" });
     }
 
     [TearDown]
@@ -39,7 +43,7 @@ public class FileServiceTests
     public async Task SaveFileAsync_WithValidFile_CreatesFileOnDisk()
     {
         // Arrange
-        var service = new FileService(_baseFolder, _validationService);
+        var service = new FileService(_baseFolder, _validationService, _appOptions);
         var content = new byte[] { 1, 2, 3, 4 };
         var file = new FileUpload
         {
@@ -63,7 +67,7 @@ public class FileServiceTests
     public async Task DeleteFileAsync_RemovesExistingFile()
     {
         // Arrange
-        var service = new FileService(_baseFolder, _validationService);
+        var service = new FileService(_baseFolder, _validationService, _appOptions);
         var content = new byte[] { 1, 2, 3, 4 };
         var file = new FileUpload
         {

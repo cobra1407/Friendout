@@ -36,6 +36,18 @@ public class ActivityReminderJob : IJob
         _appUrl       = appOptions.Value.Url.TrimEnd('/');
     }
 
+    private string ToAbsoluteUrl(string? relativeOrAbsolute, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(relativeOrAbsolute))
+            return fallback;
+
+        if (relativeOrAbsolute.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            relativeOrAbsolute.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return relativeOrAbsolute;
+
+        return $"{_appUrl}{relativeOrAbsolute}";
+    }
+
     public async Task Execute(IJobExecutionContext context)
     {
         try
@@ -92,7 +104,7 @@ public class ActivityReminderJob : IJob
                                 ["Date"]             = activity.StartAt.ToString("dddd d MMMM yyyy à HH:mm"),
                                 ["Location"]         = activity.Localisation?.Address ?? "",
                                 ["OrganizerName"]    = activity.Creator?.Name ?? "",
-                                ["ActivityImageUrl"] = activity.Image?.Url ?? $"{_appUrl}/email-assets/default-activity-card.png",
+                                ["ActivityImageUrl"] = ToAbsoluteUrl(activity.Image?.Url, $"{_appUrl}/email-assets/default-activity-card.png"),
                             });
                     }
                     catch (Exception ex)
