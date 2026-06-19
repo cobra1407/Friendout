@@ -30,7 +30,7 @@ public interface IAdminService
     Task<ServiceResult<bool>> SubmitAccessRequestAsync(SubmitAccessRequestDto dto);
 
     // Users
-    Task<List<UserAdminDto>> GetUsersAsync();
+    Task<List<UserAdminDto>> GetUsersAsync(int skip = 0, int take = 30);
     Task<ServiceResult<UserAdminDto>> UpdateUserRoleAsync(string id, UpdateUserRoleDto dto);
     Task<ServiceResult<bool>> DeleteUserAsync(string id);
 }

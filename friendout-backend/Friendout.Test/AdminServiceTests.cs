@@ -14,10 +14,9 @@ namespace Friendout.Test;
 public class AdminServiceTests
 {
     // -------------------------
-    // Helper
+    // Helpers
     // -------------------------
 
-    /// <summary>No-op IAppLogService for tests — logs nothing, throws nothing.</summary>
     private sealed class NullAppLogService : IAppLogService
     {
         public static readonly NullAppLogService Instance = new();
@@ -34,8 +33,16 @@ public class AdminServiceTests
             => Task.CompletedTask;
     }
 
+    private sealed class LogSpy : IAppLogService
+    {
+        public List<string> Warnings { get; } = new();
+        public Task LogInfoAsync(string category, string message) => Task.CompletedTask;
+        public Task LogWarningAsync(string category, string message) { Warnings.Add(message); return Task.CompletedTask; }
+        public Task LogErrorAsync(string category, string message, Exception? ex = null) => Task.CompletedTask;
+    }
+
     /// <summary>No-op IAppSettings for tests — returns a placeholder URL.</summary>
-    private sealed class NullAppSettings 
+    private sealed class NullAppSettings
     {
         public static readonly NullAppSettings Instance = new();
         public string AppUrl => "https://localhost";
@@ -102,6 +109,22 @@ public class AdminServiceTests
         var result = await CreateService(db).GetLogsAsync(null, 3);
 
         result.Should().HaveCount(3);
+    }
+
+    [Test]
+    public async Task GetLogs_RespectsSkip()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetLogs_RespectsSkip));
+        for (var i = 0; i < 6; i++)
+            db.AppLogs.Add(new AppLog { Level = AppLogLevel.Info, Category = "Test", Message = $"log {i}", CreatedAt = DateTime.UtcNow.AddMinutes(i) });
+        await db.SaveChangesAsync();
+
+        var page1 = await CreateService(db).GetLogsAsync(null, 3, 0);
+        var page2 = await CreateService(db).GetLogsAsync(null, 3, 3);
+
+        page1.Should().HaveCount(3);
+        page2.Should().HaveCount(3);
+        page1.Select(l => l.Id).Should().NotIntersectWith(page2.Select(l => l.Id));
     }
 
     // -------------------------
@@ -431,7 +454,7 @@ public class AdminServiceTests
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetUsers_ReturnsEmpty_WhenNoUsersExist));
 
-        var result = await CreateService(db).GetUsersAsync();
+        var result = await CreateService(db).GetUsersAsync(0, 30);
 
         result.Should().BeEmpty();
     }
@@ -446,11 +469,45 @@ public class AdminServiceTests
         );
         await db.SaveChangesAsync();
 
-        var result = await CreateService(db).GetUsersAsync();
+        var result = await CreateService(db).GetUsersAsync(0, 30);
 
         result.Should().HaveCount(2);
         result[0].Name.Should().Be("Alice");
         result[1].Name.Should().Be("Bob");
+    }
+
+    [Test]
+    public async Task GetUsers_AdminsFirst_ThenByCreatedAt()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetUsers_AdminsFirst_ThenByCreatedAt));
+        db.Users.AddRange(
+            new User { Name = "UserA",  Role = UserRole.User,  CreatedAt = DateTime.UtcNow.AddDays(-3) },
+            new User { Name = "AdminB", Role = UserRole.Admin, CreatedAt = DateTime.UtcNow.AddDays(-1) },
+            new User { Name = "UserC",  Role = UserRole.User,  CreatedAt = DateTime.UtcNow }
+        );
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).GetUsersAsync(0, 30);
+
+        result[0].Name.Should().Be("AdminB");
+        result[1].Name.Should().Be("UserA");
+        result[2].Name.Should().Be("UserC");
+    }
+
+    [Test]
+    public async Task GetUsers_RespectsSkipAndTake()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetUsers_RespectsSkipAndTake));
+        for (var i = 0; i < 10; i++)
+            db.Users.Add(new User { Name = $"User{i}", Role = UserRole.User, CreatedAt = DateTime.UtcNow.AddMinutes(i) });
+        await db.SaveChangesAsync();
+
+        var page1 = await CreateService(db).GetUsersAsync(0, 4);
+        var page2 = await CreateService(db).GetUsersAsync(4, 4);
+
+        page1.Should().HaveCount(4);
+        page2.Should().HaveCount(4);
+        page1.Select(u => u.Id).Should().NotIntersectWith(page2.Select(u => u.Id));
     }
 
     // -------------------------
@@ -510,5 +567,115 @@ public class AdminServiceTests
 
         result.IsSuccess.Should().BeTrue();
         db.Users.First().Role.Should().Be(UserRole.Admin);
+    }
+
+    // -------------------------
+    // DeleteUserAsync
+    // -------------------------
+
+    [Test]
+    public async Task DeleteUser_ReturnsFailure_WhenUserNotFound()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_ReturnsFailure_WhenUserNotFound));
+
+        var result = await CreateService(db).DeleteUserAsync("non-existent-id");
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("not_found");
+    }
+
+    [Test]
+    public async Task DeleteUser_ReturnsFailure_WhenDeletingLastAdmin()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_ReturnsFailure_WhenDeletingLastAdmin));
+        var admin = new User { Name = "Solo Admin", Role = UserRole.Admin };
+        db.Users.Add(admin);
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).DeleteUserAsync(admin.Id);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("last_admin");
+        db.Users.Should().HaveCount(1);
+    }
+
+    [Test]
+    public async Task DeleteUser_ReturnsFailure_WhenDeletingSelf()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_ReturnsFailure_WhenDeletingSelf));
+        var self  = new User { Name = "Me",    Role = UserRole.Admin };
+        var other = new User { Name = "Other", Role = UserRole.Admin };
+        db.Users.AddRange(self, other);
+        await db.SaveChangesAsync();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items["UserId"] = self.Id;
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.DeleteUserAsync(self.Id);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("cannot_delete_self");
+        db.Users.Should().HaveCount(2);
+    }
+
+    [Test]
+    public async Task DeleteUser_ReturnsSuccess_WhenDeletingRegularUser()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_ReturnsSuccess_WhenDeletingRegularUser));
+        var admin = new User { Name = "Admin",    Role = UserRole.Admin };
+        var user  = new User { Name = "ToDelete", Role = UserRole.User };
+        db.Users.AddRange(admin, user);
+        await db.SaveChangesAsync();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items["UserId"] = admin.Id;
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.DeleteUserAsync(user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        db.Users.Should().HaveCount(1);
+        db.Users.First().Id.Should().Be(admin.Id);
+    }
+
+    [Test]
+    public async Task DeleteUser_ReturnsSuccess_WhenDeletingAdminIfOtherAdminExists()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_ReturnsSuccess_WhenDeletingAdminIfOtherAdminExists));
+        var actor  = new User { Name = "Actor",  Role = UserRole.Admin };
+        var target = new User { Name = "Target", Role = UserRole.Admin };
+        db.Users.AddRange(actor, target);
+        await db.SaveChangesAsync();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items["UserId"] = actor.Id;
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.DeleteUserAsync(target.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        db.Users.Should().HaveCount(1);
+        db.Users.First().Id.Should().Be(actor.Id);
+    }
+
+    [Test]
+    public async Task DeleteUser_LogsWarning_OnSuccess()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_LogsWarning_OnSuccess));
+        var admin = new User { Name = "Admin",  Role = UserRole.Admin };
+        var user  = new User { Name = "Victim", Role = UserRole.User };
+        db.Users.AddRange(admin, user);
+        await db.SaveChangesAsync();
+
+        var logSpy = new LogSpy();
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items["UserId"] = admin.Id;
+        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        await service.DeleteUserAsync(user.Id);
+
+        logSpy.Warnings.Should().ContainSingle()
+            .Which.Should().Contain(user.Id);
     }
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useRef, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { adminApi } from "../api/admin.api";
 import { toast } from "sonner";
 import { getTranslation } from "@/i18n";
@@ -36,11 +36,42 @@ export const useAdminSettings = () => {
 export const useAdminLogs = () => {
     const qc = useQueryClient();
     const [levelFilter, setLevelFilter] = useState<string | undefined>(undefined);
+    const TAKE = 50;
 
-    const { data: logs = [], isLoading } = useQuery({
+    const {
+        data,
+        isLoading,
+        isFetchingNextPage,
+        fetchNextPage,
+        hasNextPage,
+    } = useInfiniteQuery({
         queryKey: ["admin", "logs", levelFilter],
-        queryFn: () => adminApi.getLogs(levelFilter),
+        queryFn: ({ pageParam = 0 }) => adminApi.getLogs(levelFilter, TAKE, pageParam as number),
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length === TAKE ? allPages.flat().length : undefined,
     });
+
+    const logs = data?.pages.flat() ?? [];
+
+    const observerRef = useRef<IntersectionObserver | null>(null);
+
+    const logsLoaderRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            if (observerRef.current) observerRef.current.disconnect();
+            if (!node) return;
+            observerRef.current = new IntersectionObserver(
+                (entries) => {
+                    if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                        fetchNextPage();
+                    }
+                },
+                { threshold: 0.1 }
+            );
+            observerRef.current.observe(node);
+        },
+        [hasNextPage, isFetchingNextPage, fetchNextPage]
+    );
 
     const clearMutation = useMutation({
         mutationFn: adminApi.clearLogs,
@@ -51,7 +82,7 @@ export const useAdminLogs = () => {
         onError: () => toast.error(getTranslation('admin.logs.toast_clear_error')),
     });
 
-    return { logs, isLoading, levelFilter, setLevelFilter, clearMutation };
+    return { logs, isLoading, isFetchingNextPage, hasNextPage, logsLoaderRef, levelFilter, setLevelFilter, clearMutation };
 };
 
 export const useAdminGuilds = () => {
@@ -120,11 +151,42 @@ export const useAdminEmails = () => {
 
 export const useAdminUsers = () => {
     const qc = useQueryClient();
+    const TAKE = 30;
 
-    const { data: users = [], isLoading } = useQuery({
+    const {
+        data,
+        isLoading,
+        isFetchingNextPage,
+        fetchNextPage,
+        hasNextPage,
+    } = useInfiniteQuery({
         queryKey: ["admin", "users"],
-        queryFn: adminApi.getUsers,
+        queryFn: ({ pageParam = 0 }) => adminApi.getUsers(pageParam as number, TAKE),
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length === TAKE ? allPages.flat().length : undefined,
     });
+
+    const users = data?.pages.flat() ?? [];
+
+    const observerRef = useRef<IntersectionObserver | null>(null);
+
+    const usersLoaderRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            if (observerRef.current) observerRef.current.disconnect();
+            if (!node) return;
+            observerRef.current = new IntersectionObserver(
+                (entries) => {
+                    if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                        fetchNextPage();
+                    }
+                },
+                { threshold: 0.1 }
+            );
+            observerRef.current.observe(node);
+        },
+        [hasNextPage, isFetchingNextPage, fetchNextPage]
+    );
 
     const updateRoleMutation = useMutation({
         mutationFn: ({ id, role }: { id: string; role: UserRole }) =>
@@ -161,7 +223,7 @@ export const useAdminUsers = () => {
         },
     });
 
-    return { users, isLoading, updateRoleMutation, deleteUserMutation };
+    return { users, isLoading, isFetchingNextPage, hasNextPage, usersLoaderRef, updateRoleMutation, deleteUserMutation };
 };
 
 export const useAdminAccessRequests = () => {

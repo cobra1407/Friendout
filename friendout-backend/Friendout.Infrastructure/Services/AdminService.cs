@@ -39,7 +39,12 @@ public class AdminService : IAdminService
 
     private async Task<(string id, string name)> GetActorAsync()
     {
-        var actorId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+        var ctx = _httpContextAccessor.HttpContext;
+
+        var actorId = ctx?.Items["UserId"] as string
+                      ?? ctx?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                      ?? "unknown";
+
         if (actorId == "unknown") return (actorId, "unknown");
         var actor = await _db.Users.FindAsync(actorId);
         return (actorId, actor?.Name ?? actorId);
@@ -231,12 +236,15 @@ public class AdminService : IAdminService
             );
 
             if (dto.Status == AccessRequestStatus.Approved)
-                await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) approved access request for {request.Email}");
+                await _appLog.LogInfoAsync("Admin",
+                    $"{actorName} ({actorId}) approved access request for {request.Email}");
             else
-                await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) rejected access request for {request.Email}");
+                await _appLog.LogWarningAsync("Admin",
+                    $"{actorName} ({actorId}) rejected access request for {request.Email}");
 
             return ServiceResult<AccessRequestDto>.Success(
-                new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt, request.ResolvedAt));
+                new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt,
+                    request.ResolvedAt));
         }
         catch (Exception ex)
         {
@@ -260,7 +268,7 @@ public class AdminService : IAdminService
             return ServiceResult<bool>.Failure("already_approved");
 
         const int maxPendingRequests = 50;
-        
+
         if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= maxPendingRequests)
             return ServiceResult<bool>.Failure("too_many_pending");
 
@@ -288,11 +296,13 @@ public class AdminService : IAdminService
     // Users
     // -------------------------
 
-    public async Task<List<UserAdminDto>> GetUsersAsync()
+    public async Task<List<UserAdminDto>> GetUsersAsync(int skip = 0, int take = 30)
     {
         return await _db.Users
             .OrderBy(u => u.Role == UserRole.Admin ? 0 : 1)
             .ThenBy(u => u.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .Select(u => new UserAdminDto(u.Id, u.Name, u.Email, u.AvatarUrl, u.Role, u.CreatedAt))
             .ToListAsync();
     }
@@ -317,7 +327,8 @@ public class AdminService : IAdminService
         {
             await _db.SaveChangesAsync();
             var (actorId, actorName) = await GetActorAsync();
-            await _appLog.LogInfoAsync("Admin", $"{actorName} ({actorId}) changed {user.Name} ({id}) role to {dto.Role}");
+            await _appLog.LogInfoAsync("Admin",
+                $"{actorName} ({actorId}) changed {user.Name} ({id}) role to {dto.Role}");
             return ServiceResult<UserAdminDto>.Success(
                 new UserAdminDto(user.Id, user.Name, user.Email, user.AvatarUrl, user.Role, user.CreatedAt));
         }
@@ -334,6 +345,7 @@ public class AdminService : IAdminService
         if (user is null)
             return ServiceResult<bool>.Failure("not_found");
 
+        // Prevent deleting the last admin.
         if (user.Role == UserRole.Admin)
         {
             var adminCount = await _db.Users.CountAsync(u => u.Role == UserRole.Admin);
@@ -361,6 +373,10 @@ public class AdminService : IAdminService
                 }
             );
         }
+
+        // Prevent an admin from deleting themselves.
+        if (actorId == id)
+            return ServiceResult<bool>.Failure("cannot_delete_self");
 
         _db.Users.Remove(user);
 

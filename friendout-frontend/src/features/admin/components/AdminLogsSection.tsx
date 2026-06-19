@@ -39,7 +39,7 @@ const LEVEL_BADGE: Record<AppLogDto["level"], string> = {
 const LEVELS: AppLogDto["level"][] = ["Info", "Warning", "Error"];
 
 export const AdminLogsSection = () => {
-    const { logs, isLoading, levelFilter, setLevelFilter, clearMutation } = useAdminLogs();
+    const { logs, isLoading, isFetchingNextPage, logsLoaderRef, levelFilter, setLevelFilter, clearMutation } = useAdminLogs();
     const [filterOpen, setFilterOpen] = useState(false);
 
     const handleExport = async () => {
@@ -188,6 +188,11 @@ export const AdminLogsSection = () => {
                                 </div>
                             </li>
                         ))}
+                        {/* Infinite scroll sentinel */}
+                        <div ref={logsLoaderRef} className="h-1" />
+                        {isFetchingNextPage && (
+                            <div className="flex justify-center py-2"><Spinner /></div>
+                        )}
                     </ul>
                 )}
             </CardContent>

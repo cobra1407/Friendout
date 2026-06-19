@@ -352,12 +352,18 @@
       "label_placeholder": "Name (optional)",
       "empty": "No server configured",
       "no_name": "No name",
-      "open_mode_warning": "No Discord server configured — access is currently open to everyone. Add at least one server to restrict connections."
+      "open_mode_warning": "No Discord server configured — access is currently open to everyone. Add at least one server to restrict connections.",
+      "delete_confirm_title": "Remove this server?",
+      "delete_confirm_description": "You are about to remove \"{{name}}\" from authorized servers. Users in this server will no longer be able to log in.",
+      "delete_confirm": "Remove"
     },
     "emails": {
       "title": "Allowed emails",
       "description": "Gmail OAuth whitelist",
-      "empty": "No email configured"
+      "empty": "No email configured",
+      "delete_confirm_title": "Remove this email?",
+      "delete_confirm_description": "You are about to remove \"{{email}}\" from the whitelist. This user will no longer be able to log in.",
+      "delete_confirm": "Remove"
     },
     "logs": {
       "title": "Activity logs",

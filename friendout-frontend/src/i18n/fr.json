@@ -354,12 +354,18 @@
       "label_placeholder": "Nom (optionnel)",
       "empty": "Aucun serveur configuré",
       "no_name": "Sans nom",
-      "open_mode_warning": "Aucun serveur Discord configuré — l'accès est actuellement ouvert à tous. Ajoutez au moins un serveur pour restreindre les connexions."
+      "open_mode_warning": "Aucun serveur Discord configuré — l'accès est actuellement ouvert à tous. Ajoutez au moins un serveur pour restreindre les connexions.",
+      "delete_confirm_title": "Retirer ce serveur ?",
+      "delete_confirm_description": "Vous allez retirer \"{{name}}\" des serveurs autorisés. Les membres de ce serveur ne pourront plus se connecter.",
+      "delete_confirm": "Retirer"
     },
     "emails": {
       "title": "Emails autorisés",
       "description": "Whitelist Gmail OAuth",
-      "empty": "Aucun email configuré"
+      "empty": "Aucun email configuré",
+      "delete_confirm_title": "Retirer cet email ?",
+      "delete_confirm_description": "Vous allez retirer \"{{email}}\" de la liste blanche. Cet utilisateur ne pourra plus se connecter.",
+      "delete_confirm": "Retirer"
     },
     "logs": {
       "title": "Journaux d'activité",

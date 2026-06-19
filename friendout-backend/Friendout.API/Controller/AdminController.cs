@@ -167,8 +167,8 @@ public class AdminController : ControllerBase
     // -------------------------
 
     [HttpGet("admin/users")]
-    public async Task<IActionResult> GetUsers()
-        => Ok(await _adminService.GetUsersAsync());
+    public async Task<IActionResult> GetUsers([FromQuery] int skip = 0, [FromQuery] int take = 30)
+        => Ok(await _adminService.GetUsersAsync(skip, Math.Clamp(take, 1, 100)));
 
     [HttpPut("admin/users/{id}/role")]
     public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UpdateUserRoleDto dto)
