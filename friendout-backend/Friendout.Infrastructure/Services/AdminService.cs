@@ -249,8 +249,8 @@ public class AdminService : IAdminService
     {
         var email = dto.Email.Trim().ToLowerInvariant();
 
-        const int MaxMessageLength = 500;
-        if (dto.Message != null && dto.Message.Trim().Length > MaxMessageLength)
+        const int maxMessageLength = 500;
+        if (dto.Message != null && dto.Message.Trim().Length > maxMessageLength)
             return ServiceResult<bool>.Failure("message_too_long");
 
         if (await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending))
@@ -259,8 +259,9 @@ public class AdminService : IAdminService
         if (await _db.AllowedEmails.AnyAsync(e => e.Email == email))
             return ServiceResult<bool>.Failure("already_approved");
 
-        const int MaxPendingRequests = 50;
-        if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= MaxPendingRequests)
+        const int maxPendingRequests = 50;
+        
+        if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= maxPendingRequests)
             return ServiceResult<bool>.Failure("too_many_pending");
 
         _db.AccessRequests.Add(new AccessRequest
