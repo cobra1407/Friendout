@@ -8,6 +8,7 @@ import autumnLogo from "@/assets/images/friendout-logo-autumn.png";
 import springLogo from "@/assets/images/friendout-logo-spring.png";
 import CreateActivityButton from "@/features/activity/components/CreateActivityButton";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 interface HeaderProps {
     onCreateActivity: () => void;
@@ -54,6 +55,7 @@ export const Header = ({ onCreateActivity, onLogout }: HeaderProps) => {
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                         <CreateActivityButton onCreateActivity={onCreateActivity} />
+                        <NotificationBell />
                         <UserMenu onLogout={onLogout} />
                     </div>
 

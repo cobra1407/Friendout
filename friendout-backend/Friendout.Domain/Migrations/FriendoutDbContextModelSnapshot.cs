@@ -202,6 +202,10 @@ namespace Friendout.Domain.Migrations
                         .HasColumnType("varchar(191)")
                         .HasColumnName("localisation_id");
 
+                    b.Property<DateTime?>("ReminderSentAt")
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("reminder_sent_at");
+
                     b.Property<DateTime>("StartAt")
                         .HasColumnType("datetime(3)")
                         .HasColumnName("start_at");
@@ -224,6 +228,8 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("LocalisationId");
 
                     b.HasIndex("StartAt");
+
+                    b.HasIndex("StartAt", "ReminderSentAt");
 
                     b.ToTable("activities");
                 });
@@ -785,6 +791,74 @@ namespace Friendout.Domain.Migrations
                     b.ToTable("user_equipment");
                 });
 
+            modelBuilder.Entity("Friendout.Domain.Models.UserNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("payload");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("type");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("varchar(191)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "IsRead");
+
+                    b.ToTable("user_notifications");
+                });
+
+            modelBuilder.Entity("Friendout.Domain.Models.UserNotificationPreferences", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(191)
+                        .HasColumnType("varchar(191)")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("EmailEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("email_enabled");
+
+                    b.Property<bool>("InAppEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("in_app_enabled");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("user_notification_preferences");
+                });
+
             modelBuilder.Entity("Friendout.Domain.Models.UserParticipation", b =>
                 {
                     b.Property<string>("Id")
@@ -836,6 +910,28 @@ namespace Friendout.Domain.Migrations
                         .IsUnique();
 
                     b.ToTable("user_participations");
+                });
+
+            modelBuilder.Entity("Friendout.Domain.Models.UserPreferences", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(191)
+                        .HasColumnType("varchar(191)")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("locale");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("user_preferences");
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.VerificationToken", b =>
@@ -1022,6 +1118,28 @@ namespace Friendout.Domain.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Friendout.Domain.Models.UserNotification", b =>
+                {
+                    b.HasOne("Friendout.Domain.Models.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Friendout.Domain.Models.UserNotificationPreferences", b =>
+                {
+                    b.HasOne("Friendout.Domain.Models.User", "User")
+                        .WithOne("NotificationPreferences")
+                        .HasForeignKey("Friendout.Domain.Models.UserNotificationPreferences", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Friendout.Domain.Models.UserParticipation", b =>
                 {
                     b.HasOne("Friendout.Domain.Models.Activity", "Activity")
@@ -1044,6 +1162,17 @@ namespace Friendout.Domain.Migrations
                     b.Navigation("Activity");
 
                     b.Navigation("SubActivity");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Friendout.Domain.Models.UserPreferences", b =>
+                {
+                    b.HasOne("Friendout.Domain.Models.User", "User")
+                        .WithOne("Preferences")
+                        .HasForeignKey("Friendout.Domain.Models.UserPreferences", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1090,6 +1219,12 @@ namespace Friendout.Domain.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("CreatedActivities");
+
+                    b.Navigation("NotificationPreferences");
+
+                    b.Navigation("Notifications");
+
+                    b.Navigation("Preferences");
 
                     b.Navigation("Sessions");
 

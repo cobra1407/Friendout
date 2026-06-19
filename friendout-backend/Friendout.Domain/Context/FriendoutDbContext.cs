@@ -27,7 +27,9 @@ namespace Friendout.Domain.Context
         public DbSet<AccessRequest> AccessRequests { get; set; }
         public DbSet<AppLog> AppLogs { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
-
+        public DbSet<UserPreferences> UserPreferences { get; set; }
+        public DbSet<UserNotificationPreferences> UserNotificationPreferences { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +73,29 @@ namespace Friendout.Domain.Context
                     .WithOne(e => e.User)
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Preferences)
+                    .WithOne(e => e.User)
+                    .HasForeignKey<UserPreferences>(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.NotificationPreferences)
+                    .WithOne(e => e.User)
+                    .HasForeignKey<UserNotificationPreferences>(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Notifications)
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserNotification>(entity =>
+            {
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.UserId, e.IsRead });
+                entity.HasIndex(e => e.CreatedAt);
+                entity.Property(e => e.Type).HasConversion<string>();
             });
 
             modelBuilder.Entity<Account>(entity =>
@@ -85,30 +110,27 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.UserId);
             });
 
-
             modelBuilder.Entity<Activity>(entity =>
             {
                 entity.HasIndex(e => e.CreatedBy);
                 entity.HasIndex(e => e.StartAt);
+                entity.HasIndex(e => new { e.StartAt, e.ReminderSentAt });
 
                 entity.HasOne(e => e.Image)
                     .WithMany()
                     .HasForeignKey(e => e.ImageId)
                     .OnDelete(DeleteBehavior.SetNull);
 
-                // SubActivities
                 entity.HasMany(e => e.SubActivities)
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                // RSVPs
                 entity.HasMany(e => e.UserParticipations)
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Comments
                 entity.HasMany(e => e.Comments)
                     .WithOne(e => e.Activity)
                     .HasForeignKey(e => e.ActivityId)
@@ -135,7 +157,6 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.ActivityId);
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => new { e.Id }).IsUnique();
-                // Prevent duplicate participations (race condition protection)
                 entity.HasIndex(e => new { e.UserId, e.ActivityId, e.SubActivityId }).IsUnique();
 
                 entity.HasOne(e => e.Activity)
@@ -153,7 +174,6 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
 
             modelBuilder.Entity<ActivityComment>(entity =>
             {
@@ -202,9 +222,7 @@ namespace Friendout.Domain.Context
 
             modelBuilder.Entity<UserAchievement>(entity =>
             {
-                entity.HasIndex(e => new { e.UserId, e.AchievementId })
-                    .IsUnique();
-
+                entity.HasIndex(e => new { e.UserId, e.AchievementId }).IsUnique();
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.AchievementId);
 
@@ -222,7 +240,6 @@ namespace Friendout.Domain.Context
             modelBuilder.Entity<VerificationToken>(entity =>
             {
                 entity.HasKey(e => e.Token);
-
                 entity.HasIndex(e => e.Identifier);
                 entity.HasIndex(e => e.Expires);
             });
@@ -230,7 +247,6 @@ namespace Friendout.Domain.Context
             modelBuilder.Entity<RefreshToken>(entity =>
             {
                 entity.HasKey(e => e.Token);
-
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.ExpiresAt);
 

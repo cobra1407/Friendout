@@ -4,13 +4,16 @@ using System.Threading.Tasks;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Utils;
+using Microsoft.Extensions.Options;
 
 namespace Friendout.Infrastructure.Services
 {
     public class FileService : IFileService
     {
         private readonly string _baseFolder;
+        private readonly string _appUrl;
         private readonly IFileValidationService _validationService;
 
         /// <summary>
@@ -18,12 +21,14 @@ namespace Friendout.Infrastructure.Services
         /// </summary>
         /// <param name="baseFolder">Base path where files will be stored (ex: "C:\app\uploads")</param>
         /// <param name="validationService">File validation service</param>
-        public FileService(string baseFolder, IFileValidationService validationService)
+        /// <param name="appOptions">Application options containing the public URL</param>
+        public FileService(string baseFolder, IFileValidationService validationService, IOptions<AppOptions> appOptions)
         {
             if (string.IsNullOrWhiteSpace(baseFolder))
                 throw new ArgumentException("Base folder cannot be empty.", nameof(baseFolder));
 
             _baseFolder = Path.Combine(baseFolder, "uploads");
+            _appUrl = appOptions.Value.Url.TrimEnd('/');
             _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
             Directory.CreateDirectory(_baseFolder);
         }
@@ -61,7 +66,7 @@ namespace Friendout.Infrastructure.Services
         public string GetFileUrl(string fileName, FileCategory category)
         {
             var folder = FileCategoryMapper.ResolveFolder(category);
-            return $"/uploads/{folder}/{fileName}".Replace("\\", "/");
+            return $"{_appUrl}/uploads/{folder}/{fileName}".Replace("\\", "/");
         }
 
         public string GetFilePath(string fileName, FileCategory category)

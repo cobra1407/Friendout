@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Admin;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Friendout.Infrastructure.Services;
 
@@ -19,15 +20,23 @@ public class AdminService : IAdminService
     private readonly FriendoutDbContext _db;
     private readonly IAppLogService _appLog;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly INotificationDispatcher _notificationDispatcher;
+    private readonly AppOptions _appOptions;
 
-    public AdminService(FriendoutDbContext db, IAppLogService appLog, IHttpContextAccessor httpContextAccessor)
+    public AdminService(
+        FriendoutDbContext db,
+        IAppLogService appLog,
+        IHttpContextAccessor httpContextAccessor,
+        INotificationDispatcher notificationDispatcher,
+        IOptions<AppOptions> appOptions)
     {
         _db = db;
         _appLog = appLog;
         _httpContextAccessor = httpContextAccessor;
+        _notificationDispatcher = notificationDispatcher;
+        _appOptions = appOptions.Value;
     }
 
-    /// <summary>Returns the (id, name) of the currently authenticated admin.</summary>
     private async Task<(string id, string name)> GetActorAsync()
     {
         var ctx = _httpContextAccessor.HttpContext;
@@ -191,7 +200,6 @@ public class AdminService : IAdminService
         if (request is null)
             return ServiceResult<AccessRequestDto>.Failure("not_found");
 
-        // Security: prevent re-processing an already resolved request.
         if (request.Status != AccessRequestStatus.Pending)
             return ServiceResult<AccessRequestDto>.Failure("request_already_resolved");
 
@@ -200,7 +208,6 @@ public class AdminService : IAdminService
 
         var (actorId, actorName) = await GetActorAsync();
 
-        // If approved, automatically add the email to the allowed list.
         if (dto.Status == AccessRequestStatus.Approved)
         {
             var email = request.Email.Trim().ToLowerInvariant();
@@ -211,6 +218,22 @@ public class AdminService : IAdminService
         try
         {
             await _db.SaveChangesAsync();
+
+            var notificationType = dto.Status == AccessRequestStatus.Approved
+                ? NotificationType.AccessRequestApproved
+                : NotificationType.AccessRequestDenied;
+
+            // Guid.Empty = no account yet, RecipientEmail is used directly by EmailNotificationStrategy.
+            await _notificationDispatcher.DispatchNotificationAsync(
+                Guid.Empty,
+                notificationType,
+                new Dictionary<string, string>
+                {
+                    { "RecipientEmail", request.Email },
+                    { "UserEmail",      request.Email },
+                    { "AppUrl",         _appOptions.Url }
+                }
+            );
 
             if (dto.Status == AccessRequestStatus.Approved)
                 await _appLog.LogInfoAsync("Admin",
@@ -234,23 +257,19 @@ public class AdminService : IAdminService
     {
         var email = dto.Email.Trim().ToLowerInvariant();
 
-        // Reject if the message exceeds the allowed length.
-        const int MaxMessageLength = 500;
-        if (dto.Message != null && dto.Message.Trim().Length > MaxMessageLength)
+        const int maxMessageLength = 500;
+        if (dto.Message != null && dto.Message.Trim().Length > maxMessageLength)
             return ServiceResult<bool>.Failure("message_too_long");
 
-        // Reject if a pending request already exists for this email.
         if (await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending))
             return ServiceResult<bool>.Failure("already_pending");
 
-        // Reject if the email is already in the allowed list.
         if (await _db.AllowedEmails.AnyAsync(e => e.Email == email))
             return ServiceResult<bool>.Failure("already_approved");
 
-        // Cap: refuse new requests when too many are already pending.
-        // Protects the database from flooding via multiple IPs or generated emails.
-        const int MaxPendingRequests = 50;
-        if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= MaxPendingRequests)
+        const int maxPendingRequests = 50;
+
+        if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= maxPendingRequests)
             return ServiceResult<bool>.Failure("too_many_pending");
 
         _db.AccessRequests.Add(new AccessRequest
@@ -294,7 +313,6 @@ public class AdminService : IAdminService
         if (user is null)
             return ServiceResult<UserAdminDto>.Failure("not_found");
 
-        // Prevent demoting the last admin — at least one admin must always exist.
         if (dto.Role == UserRole.User && user.Role == UserRole.Admin)
         {
             var adminCount = await _db.Users.CountAsync(u => u.Role == UserRole.Admin);
@@ -336,6 +354,25 @@ public class AdminService : IAdminService
         }
 
         var (actorId, actorName) = await GetActorAsync();
+
+        if (actorId == id)
+            return ServiceResult<bool>.Failure("cannot_delete_self");
+
+        // Notify the user before deletion — the account will no longer exist after.
+        // Fire-and-forget — notification failure must never block the deletion.
+        if (!string.IsNullOrEmpty(user.Email))
+        {
+            _ = _notificationDispatcher.DispatchNotificationAsync(
+                Guid.Parse(user.Id),
+                NotificationType.AccountDeleted,
+                new Dictionary<string, string>
+                {
+                    { "UserName",  user.Name },
+                    { "UserEmail", user.Email },
+                    { "AppUrl",    _appOptions.Url }
+                }
+            );
+        }
 
         // Prevent an admin from deleting themselves.
         if (actorId == id)

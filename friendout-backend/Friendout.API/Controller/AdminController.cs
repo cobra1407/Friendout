@@ -65,7 +65,8 @@ public class AdminController : ControllerBase
     // -------------------------
 
     [HttpGet("admin/logs")]
-    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 50, [FromQuery] int skip = 0)
+    public async Task<IActionResult> GetLogs([FromQuery] string? level = null, [FromQuery] int limit = 50,
+        [FromQuery] int skip = 0)
         => Ok(await _adminService.GetLogsAsync(level, Math.Clamp(limit, 1, 1000), skip));
 
     [HttpDelete("admin/logs")]

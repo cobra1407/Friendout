@@ -39,6 +39,12 @@
     "button_creating": "Creating...",
     "button_saving": "Saving...",
     "equipment_label": "Required equipment (optional)",
+    "confirm_update_modal": {
+      "title": "Update this activity?",
+      "description": "Participants will be notified by email of this update.",
+      "button_confirm": "Confirm",
+      "button_cancel": "Cancel"
+    },
     "toast": {
         "image_too_large": "Image must be less than {{size}}MB",
         "image_invalid_type": "The file must be an image",
@@ -392,6 +398,46 @@
       "title": "Too many requests",
       "description": "You have made too many requests. Wait a few seconds and refresh the page.",
       "retry": "Refresh"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "mark_all_read": "Mark all as read",
+    "delete": "Delete",
+    "types": {
+      "ActivityModified": {
+        "title": "Activity updated",
+        "message": "The activity \"{{ActivityName}}\" has been updated by {{OrganizerName}}."
+      },
+      "ActivityCanceled": {
+        "title": "Activity canceled",
+        "message": "The activity \"{{ActivityName}}\" organized by {{OrganizerName}} has been canceled."
+      },
+      "ActivityReminder": {
+        "title": "Activity reminder",
+        "message": "The activity \"{{ActivityName}}\" is coming up soon."
+      },
+      "InvitationReceived": {
+        "title": "New invitation",
+        "message": "{{OrganizerName}} invited you to join \"{{ActivityName}}\"."
+      },
+      "AccessRequestApproved": {
+        "title": "Access approved",
+        "message": "Your Friendout access request has been approved."
+      },
+      "AccessRequestDenied": {
+        "title": "Request denied",
+        "message": "Your Friendout access request has been denied."
+      },
+      "AccountDeleted": {
+        "title": "Account deleted",
+        "message": "Your Friendout account has been deleted."
+      },
+      "default": {
+        "title": "Notification",
+        "message": "You have a new notification."
+      }
     }
   }
 }

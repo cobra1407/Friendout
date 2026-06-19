@@ -1,4 +1,5 @@
 using friendout_backend;
+using friendout_backend.Jobs;
 using Friendout.Domain.Context;
 using Friendout.Infrastructure;
 using friendout_backend.Controller;
@@ -7,6 +8,7 @@ using friendout_backend.Helpers;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 // -------------------------------------------------------
 // Environment variables (.env / .env.local)
@@ -24,24 +26,6 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables(prefix: null);
 
-// Fail fast: ensure all required keys are present before starting.
-var requiredKeys = new[]
-{
-    "Jwt:Key",
-    "Authentication:Discord:ClientId",
-    "Authentication:Discord:ClientSecret",
-    "Authentication:Google:ClientId",
-    "Authentication:Google:ClientSecret"
-};
-
-foreach (var key in requiredKeys)
-{
-    if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
-        throw new InvalidOperationException(
-            $"Configuration missing: The key '{key}' is required. " +
-            "Please check your .env (or .env.local) file, appsettings.json, or environment variables.");
-}
-
 // -------------------------------------------------------
 // Services
 // -------------------------------------------------------
@@ -58,7 +42,9 @@ builder.Services.AddControllers(options => options.Conventions.Add(new RoutePref
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters
                     .Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
-builder.Services.AddInfrastructure(uploadsBasePath);
+// AddInfrastructure registers AppOptions + SmtpOptions with ValidateOnStart —
+// the app will fail to start if any required key is missing.
+builder.Services.AddInfrastructure(uploadsBasePath, builder.Configuration);
 builder.Services.AddDbContext<FriendoutDbContext>(opt =>
     opt.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
@@ -71,13 +57,13 @@ builder.Services.AddSingleton<Friendout.Infrastructure.Interfaces.ITokenBlacklis
 builder.Services.AddScoped<Friendout.Infrastructure.Interfaces.IRefreshTokenService,
                            Friendout.Infrastructure.Services.RefreshTokenService>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
+builder.Services.AddAppQuartz();
 
-builder.WebHost.ConfigureKestrel(opt => opt.Limits.MaxRequestBodySize = 30 * 1024 * 1024); // 30 MB
+builder.WebHost.ConfigureKestrel(opt => opt.Limits.MaxRequestBodySize = 30 * 1024 * 1024);
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Global rate limit — all endpoints, partitioned by IP
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -88,7 +74,6 @@ builder.Services.AddRateLimiter(options =>
                 SegmentsPerWindow = 6,
             }));
 
-    // Stricter limit for auth endpoints
     options.AddSlidingWindowLimiter("auth", policy =>
     {
         policy.PermitLimit = 10;

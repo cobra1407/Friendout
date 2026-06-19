@@ -49,6 +49,14 @@ namespace Friendout.Domain.Models
         [Column("updated_at", TypeName = "datetime(3)")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        /// <summary>
+        /// Set when the J-1 activity reminder has been dispatched to participants.
+        /// Null means the reminder has not been sent yet.
+        /// Used by ActivityReminderService to avoid sending duplicate reminders.
+        /// </summary>
+        [Column("reminder_sent_at", TypeName = "datetime(3)")]
+        public DateTime? ReminderSentAt { get; set; }
+
         // Relations
         [ForeignKey(nameof(CreatedBy))]
         public User Creator { get; set; } = null!;

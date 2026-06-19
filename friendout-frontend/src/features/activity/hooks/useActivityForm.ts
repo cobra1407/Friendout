@@ -26,6 +26,19 @@ interface UseActivityFormOptions {
     onSuccess: (activity: Activity) => void
 }
 
+interface ActivityPayload {
+    title: string
+    description: string
+    startAt: Date
+    time: string
+    estimatedPrice?: number
+    localisation: Localisation | null
+    activityImage?: File
+    removeImage: boolean
+    requiredEquipmentNames: string[]
+    subActivities: SubActivity[]
+}
+
 export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFormOptions) {
     const navigate = useNavigate()
     const timeInputRef = useRef<HTMLInputElement | null>(null)
@@ -40,15 +53,18 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         localisation: useRef<HTMLDivElement | null>(null),
     }
 
-    // ── État du formulaire ────────────────────────────────────────────────
+    // Form state
     const [isLoading, setIsLoading] = useState(false)
     const [errors, setErrors] = useState<FormErrors>({})
+
+    // confirmation modale state
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [pendingPayload, setPendingPayload] = useState<ActivityPayload | null>(null)
 
     const [title, setTitle] = useState(initialData?.title ?? "")
     const [description, setDescription] = useState(initialData?.description ?? "")
     const [date, setDate] = useState<Date | undefined>(() => {
         if (!initialData?.startAt) return undefined
-        // Same UTC normalization: append 'Z' if the backend omitted the timezone suffix.
         const raw = initialData.startAt
         const normalized = !raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-', 10)
             ? raw + 'Z'
@@ -75,9 +91,8 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         normalizeSubActivitiesForForm(initialData?.subActivities)
     )
 
-    // ── Handlers ──────────────────────────────────────────────────────────
+    // --- Handlers --------------------------------------------------
 
-    /** Efface l'erreur d'un champ dès que l'utilisateur le modifie. */
     const clearError = useCallback(
         (field: keyof FormErrors) => setErrors((prev) => ({ ...prev, [field]: undefined })),
         []
@@ -123,75 +138,13 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         setShouldRemoveImage(true)
     }
 
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault()
-        setIsLoading(true)
-        setErrors({})
-
-        // Combine date + heure en un seul objet Date
-        const startAt = date ? new Date(date) : undefined
-        if (startAt && time) {
-            const [hours, minutes] = time.split(":").map(Number)
-            if (Number.isFinite(hours) && Number.isFinite(minutes)) {
-                startAt.setHours(hours, minutes, 0, 0)
-            }
-        }
-
-        const payload = {
-            title,
-            description,
-            startAt: startAt ?? new Date(0), // new Date(0) capturé par Zod comme date invalide
-            time,
-            estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : undefined,
-            localisation: localisationData,
-            activityImage: imageFile ?? undefined,
-            removeImage: shouldRemoveImage,
-            requiredEquipmentNames: requiredEquipment,
-            subActivities,
-        }
-
-        // Validation Zod — le schéma est contextuel selon le mode
-        // En mode "create", il vérifie aussi que la date est dans le futur
-        const schema = buildActivitySchema(
-            mode,
-            initialData?.startAt ? new Date(initialData.startAt) : undefined
-        )
-        const result = schema.safeParse(payload)
-        if (!result.success) {
-            const newErrors = buildErrors(result.error.issues)
-            setErrors(newErrors)
-
-            // Scroll to the first field that has an error.
-            // The order matches the visual order in the form.
-            const errorOrder: (keyof typeof fieldRefs)[] = ['title', 'localisation', 'description', 'startAt', 'time']
-            const firstErrorKey = errorOrder.find(key => newErrors[key as keyof FormErrors])
-            if (firstErrorKey) {
-                setTimeout(() => {
-                    fieldRefs[firstErrorKey].current?.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                    })
-                }, 50)
-            }
-
-            setIsLoading(false)
+    const submitUpdate = async (payload: ActivityPayload) => {
+        if (!initialData?.id) {
+            toast.error(getTranslation("activity_form.toast.edit_impossible"))
             return
         }
-
+        setIsLoading(true)
         try {
-            if (mode === "create") {
-                const created = await createActivity(payload)
-                toast.success(getTranslation("activity_form.toast.create_success"))
-                onSuccess(created)
-                navigate(`/activities/${created.id}`)
-                return
-            }
-
-            if (!initialData?.id) {
-                toast.error(getTranslation("activity_form.toast.edit_impossible"))
-                return
-            }
-
             const updated = await updateActivity(initialData.id, payload)
             toast.success(getTranslation("activity_form.toast.edit_success"))
             onSuccess(updated)
@@ -212,6 +165,98 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         }
     }
 
+    const handleConfirmUpdate = async () => {
+        setShowConfirmModal(false)
+        if (pendingPayload) {
+            await submitUpdate(pendingPayload)
+            setPendingPayload(null)
+        }
+    }
+
+    const handleCancelUpdate = () => {
+        setShowConfirmModal(false)
+        setPendingPayload(null)
+    }
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault()
+        setErrors({})
+
+        // combine date and time into a single Date object
+        const startAt = date ? new Date(date) : undefined
+        if (startAt && time) {
+            const [hours, minutes] = time.split(":").map(Number)
+            if (Number.isFinite(hours) && Number.isFinite(minutes)) {
+                startAt.setHours(hours, minutes, 0, 0)
+            }
+        }
+
+        const payload: ActivityPayload = {
+            title,
+            description,
+            startAt: startAt ?? new Date(0),
+            time,
+            estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : undefined,
+            localisation: localisationData,
+            activityImage: imageFile ?? undefined,
+            removeImage: shouldRemoveImage,
+            requiredEquipmentNames: requiredEquipment,
+            subActivities,
+        }
+
+        // Validation Zod
+        const schema = buildActivitySchema(
+            mode,
+            initialData?.startAt ? new Date(initialData.startAt) : undefined
+        )
+        const result = schema.safeParse(payload)
+        if (!result.success) {
+            const newErrors = buildErrors(result.error.issues)
+            setErrors(newErrors)
+
+            const errorOrder: (keyof typeof fieldRefs)[] = ['title', 'localisation', 'description', 'startAt', 'time']
+            const firstErrorKey = errorOrder.find(key => newErrors[key as keyof FormErrors])
+            if (firstErrorKey) {
+                setTimeout(() => {
+                    fieldRefs[firstErrorKey].current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                    })
+                }, 50)
+            }
+            return
+        }
+
+        // creation mode — call API directly
+        if (mode === "create") {
+            setIsLoading(true)
+            try {
+                const created = await createActivity(payload)
+                toast.success(getTranslation("activity_form.toast.create_success"))
+                onSuccess(created)
+                navigate(`/activities/${created.id}`)
+            } catch (error: unknown) {
+                console.error(error)
+                if (axios.isAxiosError(error)) {
+                    const message =
+                        typeof error.response?.data === "string"
+                            ? error.response.data
+                            : (error.response?.data?.errorMessage as string | undefined)
+                    toast.error(message || getTranslation("activity_form.toast.save_error"))
+                } else {
+                    toast.error(getTranslation("activity_form.toast.save_error"))
+                }
+            } finally {
+                setIsLoading(false)
+            }
+            return
+        }
+
+        // Edit mode — show confirmation modal before API call
+        setPendingPayload(payload)
+        setShowConfirmModal(true)
+    }
+
     return {
         // État
         isLoading,
@@ -227,11 +272,14 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         image,
         subActivities, setSubActivities,
         timeInputRef,
+        showConfirmModal,
         // Handlers
         clearError,
         handleImageUpload,
         removeImage,
         handleSubmit,
+        handleConfirmUpdate,
+        handleCancelUpdate,
         fieldRefs,
     }
 }

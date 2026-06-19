@@ -1,10 +1,13 @@
 using FluentAssertions;
+using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Admin;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace Friendout.Test;
 
@@ -22,6 +25,14 @@ public class AdminServiceTests
         public Task LogErrorAsync(string category, string message, Exception? ex = null) => Task.CompletedTask;
     }
 
+    /// <summary>No-op INotificationDispatcher for tests — dispatches nothing.</summary>
+    private sealed class NullNotificationDispatcher : INotificationDispatcher
+    {
+        public static readonly NullNotificationDispatcher Instance = new();
+        public Task DispatchNotificationAsync(Guid userId, Friendout.Domain.Enums.NotificationType type, Dictionary<string, string> data)
+            => Task.CompletedTask;
+    }
+
     private sealed class LogSpy : IAppLogService
     {
         public List<string> Warnings { get; } = new();
@@ -30,8 +41,15 @@ public class AdminServiceTests
         public Task LogErrorAsync(string category, string message, Exception? ex = null) => Task.CompletedTask;
     }
 
-    private static AdminService CreateService(Friendout.Domain.Context.FriendoutDbContext db)
-        => new(db, NullAppLogService.Instance, new HttpContextAccessor());
+    /// <summary>No-op IAppSettings for tests — returns a placeholder URL.</summary>
+    private sealed class NullAppSettings
+    {
+        public static readonly NullAppSettings Instance = new();
+        public string AppUrl => "https://localhost";
+    }
+
+    private static AdminService CreateService(FriendoutDbContext db)
+        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
     // -------------------------
     // GetLogsAsync
@@ -592,7 +610,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = self.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext });
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(self.Id);
 
@@ -612,7 +630,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext });
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(user.Id);
 
@@ -632,7 +650,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = actor.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext });
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(target.Id);
 
@@ -653,7 +671,7 @@ public class AdminServiceTests
         var logSpy = new LogSpy();
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext });
+        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         await service.DeleteUserAsync(user.Id);
 
