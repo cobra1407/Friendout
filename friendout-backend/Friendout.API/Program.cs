@@ -7,6 +7,7 @@ using friendout_backend.Extensions;
 using friendout_backend.Helpers;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using friendout_backend.Converters;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
@@ -39,8 +40,11 @@ var connectionString = builder.Configuration.GetConnectionString("FriendoutDatab
 builder.Services.AddAppForwardedHeaders();
 builder.Services.AddAppSwagger();
 builder.Services.AddControllers(options => options.Conventions.Add(new RoutePrefixConvention("api")))
-                .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters
-                    .Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+                .AddJsonOptions(opt =>
+                {
+                    opt.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                    opt.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+                });
 
 // AddInfrastructure registers AppOptions + SmtpOptions with ValidateOnStart —
 // the app will fail to start if any required key is missing.
