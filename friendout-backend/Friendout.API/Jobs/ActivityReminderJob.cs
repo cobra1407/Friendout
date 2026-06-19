@@ -1,7 +1,9 @@
 using Friendout.Domain.Context;
 using Friendout.Domain.Enums;
 using Friendout.Infrastructure.Interfaces;
+using Friendout.Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Quartz;
 
 namespace friendout_backend.Jobs;
@@ -22,14 +24,16 @@ public class ActivityReminderJob : IJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ActivityReminderJob> _logger;
+    private readonly string _appUrl;
 
     private static readonly TimeSpan WindowStart = TimeSpan.FromHours(23);
     private static readonly TimeSpan WindowEnd   = TimeSpan.FromHours(25);
 
-    public ActivityReminderJob(IServiceScopeFactory scopeFactory, ILogger<ActivityReminderJob> logger)
+    public ActivityReminderJob(IServiceScopeFactory scopeFactory, ILogger<ActivityReminderJob> logger, IOptions<AppOptions> appOptions)
     {
         _scopeFactory = scopeFactory;
         _logger       = logger;
+        _appUrl       = appOptions.Value.Url.TrimEnd('/');
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -52,6 +56,7 @@ public class ActivityReminderJob : IJob
                     .ThenInclude(up => up.User)
                 .Include(a => a.Localisation)
                 .Include(a => a.Creator)
+                .Include(a => a.Image)
                 .Where(a =>
                     a.StartAt >= windowStart &&
                     a.StartAt <  windowEnd   &&
@@ -82,11 +87,12 @@ public class ActivityReminderJob : IJob
                             NotificationType.ActivityReminder,
                             new Dictionary<string, string>
                             {
-                                ["ActivityId"]    = activity.Id,
-                                ["ActivityName"]  = activity.Title,
-                                ["Date"]          = activity.StartAt.ToString("dddd d MMMM yyyy à HH:mm"),
-                                ["Location"]      = activity.Localisation?.Address ?? "",
-                                ["OrganizerName"] = activity.Creator?.Name ?? "",
+                                ["ActivityId"]       = activity.Id,
+                                ["ActivityName"]     = activity.Title,
+                                ["Date"]             = activity.StartAt.ToString("dddd d MMMM yyyy à HH:mm"),
+                                ["Location"]         = activity.Localisation?.Address ?? "",
+                                ["OrganizerName"]    = activity.Creator?.Name ?? "",
+                                ["ActivityImageUrl"] = activity.Image?.Url ?? $"{_appUrl}/email-assets/default-activity-card.png",
                             });
                     }
                     catch (Exception ex)

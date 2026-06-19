@@ -652,13 +652,14 @@ public class ActivityService : IActivityService
                 type: NotificationType.ActivityModified,
                 buildData: (participantId, participantName) => new Dictionary<string, string>
                 {
-                    { "UserName",      participantName },
-                    { "ActivityName",  activity.Title },
-                    { "Date",          activity.StartAt.ToString("f") },
-                    { "Location",      activity.Localisation?.DisplayName ?? "" },
-                    { "OrganizerName", activity.Creator?.Name ?? "" },
-                    { "AppUrl",        _appOptions.Url },
-                    { "ActivityId", activity.Id }
+                    { "UserName",          participantName },
+                    { "ActivityName",      activity.Title },
+                    { "Date",              activity.StartAt.ToString("f") },
+                    { "Location",          activity.Localisation?.DisplayName ?? "" },
+                    { "OrganizerName",     activity.Creator?.Name ?? "" },
+                    { "AppUrl",            _appOptions.Url },
+                    { "ActivityId",        activity.Id },
+                    { "ActivityImageUrl",  activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.png" }
                 }
             );
 
@@ -710,13 +711,14 @@ public class ActivityService : IActivityService
             type: NotificationType.ActivityCanceled,
             buildData: (participantId, participantName) => new Dictionary<string, string>
             {
-                { "UserName",      participantName },
-                { "ActivityName",  activity.Title },
-                { "Date",          activity.StartAt.ToString("f") },
-                { "Location",      activity.Localisation?.DisplayName ?? "" },
-                { "OrganizerName", activity.Creator.Name },
-                { "CancelReason",  "N/A" },
-                { "AppUrl",        _appOptions.Url }
+                { "UserName",         participantName },
+                { "ActivityName",     activity.Title },
+                { "Date",             activity.StartAt.ToString("f") },
+                { "Location",         activity.Localisation?.DisplayName ?? "" },
+                { "OrganizerName",    activity.Creator.Name },
+                { "CancelReason",     "N/A" },
+                { "AppUrl",           _appOptions.Url },
+                { "ActivityImageUrl", activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.png" }
             }
         );
 
