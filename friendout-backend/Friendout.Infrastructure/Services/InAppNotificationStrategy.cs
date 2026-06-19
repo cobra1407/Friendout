@@ -41,6 +41,10 @@ public class InAppNotificationStrategy : INotificationStrategy
         if (!Guid.TryParse(userId, out var parsed) || parsed == Guid.Empty)
             return;
 
+        // AccountDeleted: the user no longer exists in the database at dispatch time.
+        if (type == NotificationType.AccountDeleted)
+            return;
+
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db                = scope.ServiceProvider.GetRequiredService<FriendoutDbContext>();
         var appLog            = scope.ServiceProvider.GetRequiredService<IAppLogService>();
