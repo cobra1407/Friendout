@@ -52,7 +52,7 @@ export default function ParticipantsCard({ participants, className }: Participan
                                         <div key={participant.participationId} className="text-sm flex gap-2 items-center">
                                             <Avatar className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
                                                 {participant.avatarUrl ? (
-                                                    <AvatarImage src={participant.avatarUrl} className="rounded-full" />
+                                                    <AvatarImage src={participant.avatarUrl} className="h-full w-full object-cover rounded-full" />
                                                 ) : (
                                                     <span className="text-red-700 font-medium">
                                                         {participant.username ? participant.username[0].toUpperCase() + participant.username[1].toLocaleLowerCase() : "?"}
@@ -76,7 +76,7 @@ export default function ParticipantsCard({ participants, className }: Participan
                                         <div key={participant.participationId} className="text-sm flex gap-2 items-center">
                                             <Avatar className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
                                                 {participant.avatarUrl ? (
-                                                    <AvatarImage src={participant.avatarUrl} />
+                                                    <AvatarImage src={participant.avatarUrl} className="h-full w-full object-cover rounded-full" />
                                                 ) : (
                                                     <span className="text-red-700 font-medium">
                                                         {participant.username ? participant.username.charAt(0).toUpperCase() : "?"}
@@ -100,7 +100,7 @@ export default function ParticipantsCard({ participants, className }: Participan
                                         <div key={participant.participationId} className="text-sm flex gap-2 items-center">
                                             <Avatar className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
                                                 {participant.avatarUrl ? (
-                                                    <AvatarImage src={participant.avatarUrl} />
+                                                    <AvatarImage src={participant.avatarUrl} className="h-full w-full object-cover rounded-full" />
                                                 ) : (
                                                     <span className="text-red-700 font-medium">
                                                         {participant.username ? participant.username.charAt(0).toUpperCase() : "?"}
