@@ -8,6 +8,7 @@ export const useAuth = () => {
     isRateLimited,
     fetchMe,
     logout,
+    updateUser,
   } = useAuthStore();
 
   return {
@@ -17,5 +18,6 @@ export const useAuth = () => {
     isRateLimited,
     fetchMe,
     logout,
+    updateUser,
   };
 };
