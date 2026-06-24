@@ -140,8 +140,9 @@ public static class AuthenticationExtensions
         options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.CorrelationCookie.SameSite     = SameSiteMode.Lax;
 
-        // Map the profile picture claim.
-        options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+        // Map the profile picture claim. The `picture` field from Google's userinfo
+        // response is a plain string URL, so a simple JSON key mapping is enough.
+        options.ClaimActions.MapJsonKey("urn:google:picture", "picture");
 
         options.Scope.Add("openid");
         options.Scope.Add("profile");
