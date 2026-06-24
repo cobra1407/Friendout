@@ -46,7 +46,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                     <div className="flex flex-wrap gap-2">
                         {isPast && <Badge variant="secondary">{getTranslation('activity.past')}</Badge>}
                         {activity.hasEquipment && (
-                            <Badge variant="outline" className="text-xs bg-blue-200">
+                            <Badge variant="outline" className="text-xs bg-blue-500/15 text-blue-700 dark:text-blue-400 border-none">
                                 {getTranslation('activity.equipment_required')}
                             </Badge>
                         )}
@@ -78,7 +78,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
 
                     {/* Overlay si activité passée */}
                     {isPast && (
-                        <div className="absolute inset-0 bg-gray-100/30 pointer-events-none" />
+                        <div className="absolute inset-0 bg-background/40 pointer-events-none" />
                     )}
                 </div>
 
@@ -170,7 +170,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                         <div className="text-xs text-muted-foreground mb-2">{getTranslation('activity.sub_activities_label')}</div>
                         <div className="space-y-1 overflow-auto">
                             {activity.subActivities.slice(0, 2).map((subActivity) => (
-                                <div key={subActivity.id} className="text-xs bg-gray-50 rounded px-2 py-1">
+                                <div key={subActivity.id} className="text-xs bg-muted rounded px-2 py-1">
                                     <div className="flex justify-between items-center">
                                         <span className="font-medium">{subActivity.name}</span>
                                         {subActivity.price ? (

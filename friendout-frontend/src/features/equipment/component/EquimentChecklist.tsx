@@ -65,7 +65,7 @@ export default function EquipmentChecklist({ activityEquipment, userEquipments, 
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </CardContent>
             </Card>
         );
@@ -91,7 +91,7 @@ export default function EquipmentChecklist({ activityEquipment, userEquipments, 
                             {checkedCount} / {activityEquipment.length}
                         </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-muted rounded-full h-2">
                         <div
                             className={`h-2 rounded-full transition-all duration-300 ${getProgressPercentage() === 100
                                 ? 'bg-green-500'
@@ -127,7 +127,7 @@ export default function EquipmentChecklist({ activityEquipment, userEquipments, 
                         return (
                             <div
                                 key={index}
-                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-gray-50 ${isChecked ? 'border-green-200 bg-green-50' : 'border-gray-200 hover:bg-gray-50'
+                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-muted/50 ${isChecked ? 'border-green-500/30 bg-green-500/10' : 'border-border hover:bg-muted/50'
                                     }`}
                                 onClick={() => handleItemToggle(equipment.equipmentId, isChecked ? 0 : 1)}
                             >
@@ -135,10 +135,10 @@ export default function EquipmentChecklist({ activityEquipment, userEquipments, 
                                     {isChecked ? (
                                         <CheckCircle2 className="w-5 h-5 text-green-600" />
                                     ) : (
-                                        <Circle className="w-5 h-5 text-gray-400" />
+                                        <Circle className="w-5 h-5 text-muted-foreground" />
                                     )}
                                 </div>
-                                <span className={`text-sm flex-1 ${isChecked ? 'line-through text-gray-500' : ''}`}>
+                                <span className={`text-sm flex-1 ${isChecked ? 'line-through text-muted-foreground' : ''}`}>
                                     {equipment.name}
                                 </span>
                                 {isChecked && (
@@ -150,7 +150,7 @@ export default function EquipmentChecklist({ activityEquipment, userEquipments, 
                                     <div className='relative inline-block'>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <FontAwesomeIcon icon={faCircleInfo} className="w-4 h-4 text-gray-500 mx-2" />
+                                                <FontAwesomeIcon icon={faCircleInfo} className="w-4 h-4 text-muted-foreground mx-2" />
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p>{equipment.description}</p>

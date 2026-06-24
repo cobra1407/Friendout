@@ -25,7 +25,7 @@ export function ParticipationButtons({
                         // Mobile first
                         "flex flex-col gap-2",
                         // Desktop
-                        "md:flex-row md:items-center bg-red"
+                        "md:flex-row md:items-center"
                     )}
                 >
                     <Button
@@ -69,7 +69,7 @@ export function ParticipationButtons({
                     </Button>
                 </div>
             ) :
-                <div className="mx-auto mb-2 inline-flex items-center gap-2 rounded-full bg-gray-100/80 px-4 py-1 text-sm font-medium text-gray-500 border-dotted border-2 border-gray-200">
+                <div className="mx-auto mb-2 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-1 text-sm font-medium text-muted-foreground border-dotted border-2 border-border">
                     <Lock className="h-4 w-4" />
                     {getTranslation('participation.closed')}
                 </div>

@@ -22,8 +22,8 @@ export default function ActivityCostSummary({
             className={cn(
                 "overflow-hidden border transition-all duration-200 hover:shadow-md",
                 isFree
-                    ? "bg-gradient-to-br from-green-50/80 to-emerald-50/60 border-emerald-200/70"
-                    : "bg-gradient-to-br from-white to-slate-50/80 border-slate-200/80"
+                    ? "bg-gradient-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-950/30 dark:to-emerald-900/10 border-emerald-200/70 dark:border-emerald-800/50"
+                    : "bg-card border-border"
             )}
         >
             <CardHeader className="pb-4">
@@ -37,11 +37,11 @@ export default function ActivityCostSummary({
 
             <CardContent className="space-y-5 pb-6">
                 {isFree ? (
-                    <div className="flex flex-col items-center justify-center rounded-xl bg-white/60 p-8 text-center shadow-sm">
-                        <div className="mb-4 rounded-full bg-emerald-100 p-4">
-                            <Gift className="h-8 w-8 text-emerald-600" />
+                    <div className="flex flex-col items-center justify-center rounded-xl bg-card/60 p-8 text-center shadow-sm">
+                        <div className="mb-4 rounded-full bg-emerald-500/15 p-4">
+                            <Gift className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
                         </div>
-                        <p className="text-xl font-semibold text-emerald-800">
+                        <p className="text-xl font-semibold text-emerald-800 dark:text-emerald-300">
                             {getTranslation("activity.all_free")}
                         </p>
                         <p className="mt-2 text-sm text-muted-foreground max-w-md">
@@ -53,14 +53,14 @@ export default function ActivityCostSummary({
                         {/* Breakdown */}
                         <div className="grid gap-4 sm:grid-cols-2">
                             {/* Main activity */}
-                            <div className="group relative rounded-lg border bg-white/80 p-4 transition-all hover:border-emerald-200 hover:shadow-sm">
+                            <div className="group relative rounded-lg border bg-card/80 p-4 transition-all hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm">
                                 <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                     {getTranslation("activity.main_activity")}
                                 </div>
                                 <div
                                     className={cn(
                                         "text-2xl font-bold",
-                                        mainPrice > 0 ? "text-emerald-700" : "text-gray-500"
+                                        mainPrice > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
                                     )}
                                 >
                                     {mainPrice > 0
@@ -71,7 +71,7 @@ export default function ActivityCostSummary({
 
                             {/* Sub activities */}
                             {(activity.subActivities?.length ?? 0) > 0 && (
-                                <div className="group relative rounded-lg border bg-white/80 p-4 transition-all hover:border-emerald-200 hover:shadow-sm">
+                                <div className="group relative rounded-lg border bg-card/80 p-4 transition-all hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm">
                                     <div className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                         <Plus className="h-3.5 w-3.5" />
                                         {getTranslation("activity.sub_activities_short")}
@@ -79,10 +79,10 @@ export default function ActivityCostSummary({
                                     <div
                                         className={cn(
                                             "text-2xl font-bold",
-                                            subsPrice > 0 ? "text-blue-600/90" : "text-gray-500"
+                                            subsPrice > 0 ? "text-blue-600/90 dark:text-blue-400" : "text-muted-foreground"
                                         )}
                                     >
-                                        <span className="text-emerald-600"> {subsPrice > 0
+                                        <span className="text-emerald-600 dark:text-emerald-400"> {subsPrice > 0
                                             ? `${subsPrice.toFixed(2)} €`
                                             : getTranslation("common.free")}
                                         </span>
@@ -92,13 +92,13 @@ export default function ActivityCostSummary({
                         </div>
 
                         {/* Total */}
-                        <div className="rounded-lg bg-emerald-50/70 px-5 py-4 ring-1 ring-emerald-200/50">
+                        <div className="rounded-lg bg-emerald-500/10 px-5 py-4 ring-1 ring-emerald-500/30">
                             <div className="flex items-center justify-between">
-                                <span className="text-base font-semibold text-emerald-800">
+                                <span className="text-base font-semibold text-emerald-800 dark:text-emerald-300">
                                     {getTranslation("activity.total")}
                                 </span>
 
-                                <span className="text-3xl font-extrabold text-emerald-700">
+                                <span className="text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">
                                     {totalPrice.toFixed(2)} €
                                 </span>
                             </div>

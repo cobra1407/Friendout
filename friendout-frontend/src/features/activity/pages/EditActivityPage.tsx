@@ -15,7 +15,7 @@ const EditActivityPage = () => {
     const { activityDetails, isLoading } = useActivityDetails(id);
 
     const header = (
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-background shadow-sm border-b">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center h-16">
                     <Button type="button" variant="ghost" onClick={() => navigate(id ? `/activities/${id}` : "/activities")} className="flex items-center gap-2 mr-4">

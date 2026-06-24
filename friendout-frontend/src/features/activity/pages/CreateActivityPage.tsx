@@ -13,7 +13,7 @@ const CreateActivityPage = ({ mode = "create" }: CreateActivityPageProps) => {
     const navigate = useNavigate();
 
     const header = (
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-background shadow-sm border-b">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center h-16">
                     <Button

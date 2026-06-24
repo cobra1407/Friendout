@@ -32,13 +32,13 @@ export function ParticipantsModal({
     const getStatusColor = (status: ParticipationStatus) => {
         switch (status) {
             case ParticipationStatus.Participating:
-                return "bg-emerald-100 text-emerald-800 border-emerald-200";
+                return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
             case ParticipationStatus.Maybe:
-                return "bg-amber-100 text-amber-800 border-amber-200";
+                return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
             case ParticipationStatus.NotParticipating:
-                return "bg-rose-100 text-rose-800 border-rose-200";
+                return "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30";
             default:
-                return "bg-gray-100 text-gray-800 border-gray-200";
+                return "bg-muted text-muted-foreground border-border";
         }
     };
 

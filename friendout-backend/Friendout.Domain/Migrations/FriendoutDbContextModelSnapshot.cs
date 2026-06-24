@@ -60,7 +60,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("access_requests");
+                    b.ToTable("access_requests", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Account", b =>
@@ -126,7 +126,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("Provider", "ProviderAccountId")
                         .IsUnique();
 
-                    b.ToTable("accounts");
+                    b.ToTable("accounts", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Achievement", b =>
@@ -163,7 +163,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("achievements");
+                    b.ToTable("achievements", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Activity", b =>
@@ -231,7 +231,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("StartAt", "ReminderSentAt");
 
-                    b.ToTable("activities");
+                    b.ToTable("activities", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.ActivityComment", b =>
@@ -269,7 +269,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("activity_comments");
+                    b.ToTable("activity_comments", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.ActivityEquipment", b =>
@@ -311,7 +311,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("ActivityId", "EquipmentId")
                         .IsUnique();
 
-                    b.ToTable("activity_equipment");
+                    b.ToTable("activity_equipment", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.AllowedEmail", b =>
@@ -338,7 +338,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("allowed_emails");
+                    b.ToTable("allowed_emails", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.AllowedGuild", b =>
@@ -370,7 +370,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("GuildId")
                         .IsUnique();
 
-                    b.ToTable("allowed_guilds");
+                    b.ToTable("allowed_guilds", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.AppLog", b =>
@@ -413,7 +413,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("Level");
 
-                    b.ToTable("app_logs");
+                    b.ToTable("app_logs", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.AppSetting", b =>
@@ -435,7 +435,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasKey("Key");
 
-                    b.ToTable("app_settings");
+                    b.ToTable("app_settings", (string)null);
 
                     b.HasData(
                         new
@@ -472,7 +472,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("equipment");
+                    b.ToTable("equipment", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Image", b =>
@@ -522,7 +522,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("images");
+                    b.ToTable("images", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Localisation", b =>
@@ -554,7 +554,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("localisations");
+                    b.ToTable("localisations", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.RefreshToken", b =>
@@ -588,7 +588,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("refresh_tokens");
+                    b.ToTable("refresh_tokens", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Session", b =>
@@ -621,7 +621,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("sessions");
+                    b.ToTable("sessions", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.SubActivity", b =>
@@ -677,7 +677,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("LocalisationId");
 
-                    b.ToTable("sub_activities");
+                    b.ToTable("sub_activities", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.User", b =>
@@ -724,7 +724,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("users");
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.UserAchievement", b =>
@@ -759,7 +759,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("UserId", "AchievementId")
                         .IsUnique();
 
-                    b.ToTable("user_achievements");
+                    b.ToTable("user_achievements", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.UserEquipment", b =>
@@ -788,7 +788,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("EquipmentId");
 
-                    b.ToTable("user_equipment");
+                    b.ToTable("user_equipment", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.UserNotification", b =>
@@ -832,7 +832,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("UserId", "IsRead");
 
-                    b.ToTable("user_notifications");
+                    b.ToTable("user_notifications", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.UserNotificationPreferences", b =>
@@ -856,7 +856,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("user_notification_preferences");
+                    b.ToTable("user_notification_preferences", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.UserParticipation", b =>
@@ -909,7 +909,7 @@ namespace Friendout.Domain.Migrations
                     b.HasIndex("UserId", "ActivityId", "SubActivityId")
                         .IsUnique();
 
-                    b.ToTable("user_participations");
+                    b.ToTable("user_participations", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.UserPreferences", b =>
@@ -931,7 +931,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("user_preferences");
+                    b.ToTable("user_preferences", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.VerificationToken", b =>
@@ -957,7 +957,7 @@ namespace Friendout.Domain.Migrations
 
                     b.HasIndex("Identifier");
 
-                    b.ToTable("verification_tokens");
+                    b.ToTable("verification_tokens", (string)null);
                 });
 
             modelBuilder.Entity("Friendout.Domain.Models.Account", b =>

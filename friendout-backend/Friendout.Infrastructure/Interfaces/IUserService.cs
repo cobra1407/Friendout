@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Friendout.Domain.DTOs.User;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Services;
@@ -38,4 +39,27 @@ public interface IUserService
     /// <param name="userId"></param>
     /// <returns></returns>
     Task<ServiceResult<string>> GetUserEmailAsync(string userId);
+
+    /// <summary>
+    /// Returns the authenticated user's profile (name, email, avatar).
+    /// </summary>
+    Task<ServiceResult<UserProfileDto>> GetUserProfileAsync(string userId);
+
+    /// <summary>
+    /// Updates the authenticated user's editable profile fields (name only for now).
+    /// </summary>
+    Task<ServiceResult<UserProfileDto>> UpdateUserProfileAsync(string userId, UpdateUserProfileDto dto);
+
+    /// <summary>
+    /// Uploads and sets a custom avatar for the authenticated user, replacing any previous
+    /// custom avatar on disk. The original OAuth avatar is preserved separately and can be
+    /// restored via ResetAvatarAsync.
+    /// </summary>
+    Task<ServiceResult<UserProfileDto>> UploadAvatarAsync(string userId, FileUpload avatar);
+
+    /// <summary>
+    /// Resets the authenticated user's avatar back to the original OAuth-provided avatar,
+    /// deleting any custom uploaded avatar from disk.
+    /// </summary>
+    Task<ServiceResult<UserProfileDto>> ResetAvatarAsync(string userId);
 } 

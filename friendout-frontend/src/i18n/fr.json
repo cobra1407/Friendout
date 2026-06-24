@@ -177,6 +177,66 @@
     "administration": "Administration",
     "admin_panel": "Panneau admin"
   },
+  "preferences": {
+    "page_title": "Mes préférences",
+    "page_description": "Gérez votre profil, l'apparence et vos notifications.",
+    "toast_saved": "Préférences enregistrées.",
+    "toast_error": "Échec de l'enregistrement des préférences.",
+    "profile": {
+      "title": "Profil",
+      "description": "Gérez vos informations personnelles.",
+      "name_label": "Nom",
+      "email_label": "Adresse email",
+      "email_hint": "Liée à votre connexion, non modifiable pour le moment.",
+      "avatar_hint": "JPG, PNG, GIF ou WebP. 20 Mo maximum — votre image sera automatiquement redimensionnée.",
+      "avatar_upload_button": "Changer l'avatar",
+      "avatar_reset_button": "Réinitialiser l'avatar par défaut",
+      "avatar_upload_error": "Échec de l'envoi de l'image.",
+      "name_required": "Le nom ne peut pas être vide.",
+      "name_too_long": "Le nom ne peut pas dépasser 191 caractères."
+    },
+    "theme": {
+      "title": "Apparence",
+      "description": "Personnalisez le thème de l'application.",
+      "mode_label": "Mode",
+      "mode_light": "Clair",
+      "mode_dark": "Sombre",
+      "color_label": "Couleur",
+      "color_default": "Défaut",
+      "color_blue": "Bleu",
+      "color_purple": "Violet",
+      "color_green": "Vert",
+      "color_orange": "Orange",
+      "preview_label": "Aperçu",
+      "preview_username": "Toi",
+      "preview_activity_title": "Soirée jeux de société",
+      "preview_badge": "Matériel requis",
+      "preview_button_view_details": "voir les détails",
+      "preview_description": "Une soirée détente avec plateaux et pizzas, ouverte à tous !",
+      "preview_date": "Samedi 12 juillet",
+      "preview_time": "19h00",
+      "preview_location": "Chez Thomas",
+      "preview_price": "Gratuit",
+      "preview_participants": "4 participants",
+      "preview_view_details": "Voir les détails",
+      "show_preview_button": "Voir l'aperçu"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Choisissez la langue de l'interface et des emails.",
+      "placeholder": "Choisir une langue",
+      "fr": "Français",
+      "en": "English"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choisissez comment vous souhaitez être notifié.",
+      "email_label": "Notifications par email",
+      "email_description": "Recevez un email pour les activités, invitations et rappels.",
+      "in_app_label": "Notifications dans l'application",
+      "in_app_description": "Recevez des notifications directement dans Friendout."
+    }
+  },
   "activity": {
     "past": "Passée",
     "equipment_required": "Matériel requis",

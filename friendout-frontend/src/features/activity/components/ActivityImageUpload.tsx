@@ -22,9 +22,9 @@ export function ActivityImageUpload({ image, onUpload, onRemove }: ActivityImage
         <div className="space-y-2">
             <Label>{getTranslation("activity_form.image_label")}</Label>
             {!image ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500 mb-2">
+                <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center">
+                    <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-2">
                         {getTranslation("activity_form.image_upload_hint")}
                     </p>
                     <input

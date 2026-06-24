@@ -139,7 +139,7 @@ export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) =
                             onChange={(e) => { setEmail(e.target.value); setErrors({}); }}
                             placeholder={getTranslation("access_request.email_placeholder")}
                             aria-invalid={!!errors.email}
-                            className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
+                            className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                         />
                         <p className="text-xs text-muted-foreground">{getTranslation("access_request.email_hint")}</p>
                         <FieldError message={errors.email} />
@@ -156,12 +156,12 @@ export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) =
                             rows={3}
                             maxLength={MAX_MESSAGE_LENGTH}
                             aria-invalid={!!errors.message}
-                            className={errors.message ? "border-red-500 focus-visible:ring-red-500" : ""}
+                            className={errors.message ? "border-destructive focus-visible:ring-destructive" : ""}
                         />
                         <div className="flex justify-between items-center">
                             <FieldError message={errors.message} />
                             <span className={`text-xs ml-auto ${
-                                message.length > MAX_MESSAGE_LENGTH ? "text-red-500" : "text-muted-foreground"
+                                message.length > MAX_MESSAGE_LENGTH ? "text-destructive" : "text-muted-foreground"
                             }`}>
                                 {message.length} / {MAX_MESSAGE_LENGTH}
                             </span>

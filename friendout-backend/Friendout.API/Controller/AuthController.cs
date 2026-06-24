@@ -14,6 +14,7 @@ public class AuthController : ControllerBase
     private readonly ITokenBlacklistService _blacklist;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly JwtService _jwtService;
+    private readonly IUserService _userService;
 
     /// <summary>
     /// Represents the AuthController class.
@@ -22,30 +23,50 @@ public class AuthController : ControllerBase
     /// <param name="blacklist">The blacklist service used to validate and invalidate tokens.</param>
     /// <param name="refreshTokenService">The refresh token service used to manage refresh tokens.</param>
     /// <param name="jwtService">The JWT service used to generate and validate JWT tokens.</param>
+    /// <param name="userService">The user service used to read up-to-date profile data from the database.</param>
     public AuthController(
         ITokenBlacklistService blacklist,
         IRefreshTokenService refreshTokenService,
-        JwtService jwtService)
+        JwtService jwtService,
+        IUserService userService)
     {
         _blacklist = blacklist;
         _refreshTokenService = refreshTokenService;
         _jwtService = jwtService;
+        _userService = userService;
     }
 
+    /// <summary>
+    /// Returns the authenticated user's current identity.
+    ///
+    /// Name and avatar are read live from the database rather than from the JWT claims:
+    /// the JWT is only refreshed every 15 minutes (or on login), so if it were the source
+    /// of truth here, a name/avatar change made on the preferences page wouldn't be reflected
+    /// until the next token rotation. Role and userId are still taken from the token, since
+    /// they're stable for the token's lifetime and avoid an extra round trip for those fields.
+    /// </summary>
     [HttpGet("auth/me")]
     [Authorize]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
         var role = User.Claims.FirstOrDefault(u => u.Type == ClaimTypes.Role)?.Value;
-        var avatarUrl = User.Claims.FirstOrDefault(c => c.Type == "avatar_url")?.Value;
         var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var profileResult = await _userService.GetUserProfileAsync(userId);
+        if (!profileResult.IsSuccess)
+            return Unauthorized();
+
+        var profile = profileResult.Data!;
 
         return Ok(new
         {
             userId,
-            User.Identity?.Name,
+            Name = profile.Name,
             Role = role,
-            AvatarUrl = avatarUrl
+            AvatarUrl = profile.AvatarUrl ?? string.Empty
         });
     }
 

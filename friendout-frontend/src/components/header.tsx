@@ -28,7 +28,7 @@ export const Header = ({ onCreateActivity, onLogout }: HeaderProps) => {
     const logoPath = logoFriendout[getCurrentSeason()];
 
     return (
-        <header className="bg-white shadow-sm border-b h-[90px]">
+        <header className="bg-background shadow-sm border-b h-[90px]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
                 <div className="flex items-center justify-between h-full gap-4">
 

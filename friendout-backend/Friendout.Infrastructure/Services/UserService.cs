@@ -2,8 +2,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
+using Friendout.Domain.DTOs.User;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
+using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,10 +14,12 @@ namespace Friendout.Infrastructure.Services;
 public class UserService : IUserService
 {
     private readonly FriendoutDbContext _friendoutDbContext;
+    private readonly IFileService _fileService;
 
-    public UserService(FriendoutDbContext friendoutDbContext)
+    public UserService(FriendoutDbContext friendoutDbContext, IFileService fileService)
     {
         _friendoutDbContext = friendoutDbContext;
+        _fileService = fileService;
     }
 
     /// <summary>
@@ -46,7 +50,7 @@ public class UserService : IUserService
 
     /// <summary>
     /// Creates or retrieves a user from an OAuth login.
-    /// 
+    ///
     /// Three scenarios are handled:
     ///   1. The OAuth account (provider + providerId) already exists → return the linked user.
     ///   2. The OAuth account is new but the email is already used by another account
@@ -137,11 +141,11 @@ public class UserService : IUserService
             return ServiceResult<User>.Success(user);
         });
     }
-    
+
     public async Task<ServiceResult<string>> GetUserEmailAsync(string  userId)
     {
         var user = await _friendoutDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        
+
         // check if user exists
         if (user is null)
         {
@@ -149,7 +153,115 @@ public class UserService : IUserService
         }
 
         if (user.Email != null) return ServiceResult<string>.Success(user.Email);
-        
+
         return ServiceResult<string>.Failure("User has no email");
+    }
+
+    public async Task<ServiceResult<UserProfileDto>> GetUserProfileAsync(string userId)
+    {
+        var user = await _friendoutDbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return ServiceResult<UserProfileDto>.Failure("User not found");
+
+        return ServiceResult<UserProfileDto>.Success(ToProfileDto(user));
+    }
+
+    public async Task<ServiceResult<UserProfileDto>> UpdateUserProfileAsync(string userId, UpdateUserProfileDto dto)
+    {
+        var name = dto.Name?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return ServiceResult<UserProfileDto>.Failure("Name cannot be empty.");
+        if (name.Length > 191)
+            return ServiceResult<UserProfileDto>.Failure("Name is too long.");
+
+        var user = await _friendoutDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return ServiceResult<UserProfileDto>.Failure("User not found");
+
+        user.Name = name;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _friendoutDbContext.SaveChangesAsync();
+
+        return ServiceResult<UserProfileDto>.Success(ToProfileDto(user));
+    }
+
+    public async Task<ServiceResult<UserProfileDto>> UploadAvatarAsync(string userId, FileUpload avatar)
+    {
+        var user = await _friendoutDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return ServiceResult<UserProfileDto>.Failure("User not found");
+
+        string newFileName;
+        try
+        {
+            newFileName = await _fileService.SaveFileAsync(avatar, FileCategory.UserAvatar);
+        }
+        catch (ArgumentException ex)
+        {
+            return ServiceResult<UserProfileDto>.Failure($"Invalid image: {ex.Message}");
+        }
+
+        var newUrl = _fileService.GetFileUrl(newFileName, FileCategory.UserAvatar);
+
+        // Delete the previous avatar from disk (best-effort) if it was one of our own uploads.
+        // Never touch an OAuth-provided avatar URL — those live on Discord/Google's own servers.
+        var previousFileName = ExtractUploadedAvatarFileName(user.AvatarUrl);
+        if (!string.IsNullOrWhiteSpace(previousFileName))
+        {
+            try { await _fileService.DeleteFileAsync(previousFileName, FileCategory.UserAvatar); }
+            catch { /* best-effort cleanup */ }
+        }
+
+        user.AvatarUrl = newUrl;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _friendoutDbContext.SaveChangesAsync();
+
+        return ServiceResult<UserProfileDto>.Success(ToProfileDto(user));
+    }
+
+    /// <summary>
+    /// Clears the user's avatar entirely, falling back to the frontend's generated avatar
+    /// (initials + background color) rather than restoring any previous OAuth/custom image.
+    /// </summary>
+    public async Task<ServiceResult<UserProfileDto>> ResetAvatarAsync(string userId)
+    {
+        var user = await _friendoutDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return ServiceResult<UserProfileDto>.Failure("User not found");
+
+        var previousFileName = ExtractUploadedAvatarFileName(user.AvatarUrl);
+        if (!string.IsNullOrWhiteSpace(previousFileName))
+        {
+            try { await _fileService.DeleteFileAsync(previousFileName, FileCategory.UserAvatar); }
+            catch { /* best-effort cleanup */ }
+        }
+
+        user.AvatarUrl = null;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _friendoutDbContext.SaveChangesAsync();
+
+        return ServiceResult<UserProfileDto>.Success(ToProfileDto(user));
+    }
+
+    private static UserProfileDto ToProfileDto(User user)
+    {
+        return new UserProfileDto(user.Name, user.Email, user.AvatarUrl, !string.IsNullOrEmpty(user.AvatarUrl));
+    }
+
+    /// <summary>
+    /// Returns the on-disk file name of the given avatar URL if (and only if) it was uploaded
+    /// through our own /uploads/users/avatars storage — never for OAuth avatar URLs, which
+    /// point to external Discord/Google CDNs and must never be deleted.
+    /// </summary>
+    private static string? ExtractUploadedAvatarFileName(string? avatarUrl)
+    {
+        if (string.IsNullOrEmpty(avatarUrl))
+            return null;
+
+        if (!avatarUrl.Contains("/uploads/users/avatars/", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var parts = avatarUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 0 ? parts[^1] : null;
     }
 }

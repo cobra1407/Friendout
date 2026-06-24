@@ -110,8 +110,8 @@ const SubActivityDetailsCard = ({ subActivity, maxVisibleParticipants, onRespons
                     </div>
                     <div className="shrink-0">
                         <div className={`px-2.5 py-1 rounded-full border text-[10px] sm:text-xs font-bold uppercase tracking-widest ${subActivity.price > 0
-                            ? "border-orange-200 bg-orange-50 text-orange-700"
-                            : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            ? "border-orange-500/30 bg-orange-500/15 text-orange-700 dark:text-orange-400"
+                            : "border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                             }`}>
                             {subActivity.price > 0 ? `${subActivity.price}€` : getTranslation('common.free')}
                         </div>
@@ -180,7 +180,7 @@ const SubActivityDetailsCard = ({ subActivity, maxVisibleParticipants, onRespons
                                                     className="h-8 w-8 ring-2 ring-background transition group-hover:opacity-80 hover:translate-y-[-5px]"
                                                 >
                                                     <AvatarImage src={p.avatarUrl} />
-                                                    <AvatarFallback className=" border text-slate-800 font-medium text-red-700">
+                                                    <AvatarFallback className="border bg-avatar text-white font-medium">
                                                         {p.username[0].toUpperCase() + p.username[1]}
                                                     </AvatarFallback>
                                                 </Avatar>

@@ -14,7 +14,7 @@ const AddSubActivityButton = ({ onClick, className }: AddSubActivityButtonProps)
             variant="secondary"
             size="sm"
             onClick={onClick}
-            className={`bg-blue-100 text-blue-800 ${className || ''}`}
+            className={`bg-blue-500/15 text-blue-700 dark:text-blue-400 hover:bg-blue-500/25 ${className || ''}`}
         >
             <Plus className="w-4 h-4 mr-2" />
             {getTranslation("sub_activity.new_subactivity")}

@@ -73,7 +73,7 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
                             )}
                         </div>
                         {isAdmin && (
-                            <Badge variant="outline" className="text-xs px-1.5 py-0 font-bold bg-red-100 text-red-800 border-none">
+                            <Badge variant="outline" className="text-xs px-1.5 py-0 font-bold bg-destructive/15 text-destructive border-none">
                                 Admin
                             </Badge>
                         )}
@@ -89,7 +89,6 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
                     <MenuButton
                         icon={<Settings className="w-4 h-4" />}
                         label={getTranslation("user_menu.preferences")}
-                        badge={getTranslation("common.soon")}
                         onClick={() => { setIsPopoverOpen(false); navigate("/preferences"); }}
                     />
                     <MenuButton

@@ -227,8 +227,8 @@ export default function SubActivityManager({ subActivities, onChange }: SubActiv
                 </div>
             ) : (
                 <div className="text-center py-6 border-2 border-dashed rounded-lg">
-                    <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">
+                    <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
                         {getTranslation("sub_activity_manager.empty_label")}
                     </p>
                     <AddSubActivityButton onClick={addSubActivity} className="mt-4" />

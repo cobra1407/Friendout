@@ -175,6 +175,66 @@
     "administration": "Administration",
     "admin_panel": "Admin panel"
   },
+  "preferences": {
+    "page_title": "My preferences",
+    "page_description": "Manage your profile, appearance and notifications.",
+    "toast_saved": "Preferences saved.",
+    "toast_error": "Failed to save preferences.",
+    "profile": {
+      "title": "Profile",
+      "description": "Manage your personal information.",
+      "name_label": "Name",
+      "email_label": "Email address",
+      "email_hint": "Tied to your login, not editable for now.",
+      "avatar_hint": "JPG, PNG, GIF or WebP. 20 MB max — your image will be automatically resized.",
+      "avatar_upload_button": "Change avatar",
+      "avatar_reset_button": "Reset to default avatar",
+      "avatar_upload_error": "Failed to upload the image.",
+      "name_required": "Name cannot be empty.",
+      "name_too_long": "Name cannot exceed 191 characters."
+    },
+    "theme": {
+      "title": "Appearance",
+      "description": "Customize the application theme.",
+      "mode_label": "Mode",
+      "mode_light": "Light",
+      "mode_dark": "Dark",
+      "color_label": "Color",
+      "color_default": "Default",
+      "color_blue": "Blue",
+      "color_purple": "Purple",
+      "color_green": "Green",
+      "color_orange": "Orange",
+      "preview_label": "Preview",
+      "preview_username": "You",
+      "preview_activity_title": "Board game night",
+      "preview_badge": "Required equipment",
+      "preview_button_view_details": "View details",
+      "preview_description": "A relaxed evening with board games and pizza, open to everyone!",
+      "preview_date": "Saturday, July 12",
+      "preview_time": "7:00 PM",
+      "preview_location": "Thomas's place",
+      "preview_price": "Free",
+      "preview_participants": "4 participants",
+      "preview_view_details": "View details",
+      "show_preview_button": "Show preview"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose the language for the interface and emails.",
+      "placeholder": "Choose a language",
+      "fr": "Français",
+      "en": "English"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose how you want to be notified.",
+      "email_label": "Email notifications",
+      "email_description": "Receive an email for activities, invitations and reminders.",
+      "in_app_label": "In-app notifications",
+      "in_app_description": "Receive notifications directly inside Friendout."
+    }
+  },
   "activity": {
     "past": "Past",
     "equipment_required": "Equipment required",

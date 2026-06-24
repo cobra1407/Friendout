@@ -76,15 +76,15 @@ export default function ActivityComments({
 
                 {/* Liste des commentaires */}
                 {comments.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Aucun commentaire pour le moment</p>
+                    <p className="text-muted-foreground text-center py-4">Aucun commentaire pour le moment</p>
                 ) : (
                     <div className="space-y-4">
                         {comments.map((comment) => (
-                            <div key={comment.commentId} className="bg-gray-50 rounded-lg p-4">
+                            <div key={comment.commentId} className="bg-muted rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
                                         <span className="font-medium">{comment.sendBy || "Utilisateur inconnu"}</span>
-                                        <span className="text-sm text-gray-500 ml-2">
+                                        <span className="text-sm text-muted-foreground ml-2">
                                             {formatDate(comment.createdAt)}
                                             {comment.updatedAt !== comment.createdAt && " (modifié)"}
                                         </span>
@@ -98,7 +98,7 @@ export default function ActivityComments({
                                                     <button
                                                         type="button"
                                                         onClick={onUpdate}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                                        className="p-1.5 text-muted-foreground hover:bg-accent rounded-full transition-colors cursor-pointer"
                                                         title="Enregistrer"
                                                     >
                                                         <Check className="h-3.5 w-3.5" />
@@ -107,7 +107,7 @@ export default function ActivityComments({
                                                     <button
                                                         type="button"
                                                         onClick={onCancelEdit}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                                        className="p-1.5 text-muted-foreground hover:bg-accent rounded-full transition-colors cursor-pointer"
                                                         title="Annuler"
                                                     >
                                                         <X className="h-3.5 w-3.5" />
@@ -118,7 +118,7 @@ export default function ActivityComments({
                                                     <button
                                                         type="button"
                                                         onClick={() => onEdit(comment.commentId, comment.content)}
-                                                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors cursor-pointer"
                                                         title="Modifier le commentaire"
                                                     >
                                                         <Edit className="h-3.5 w-3.5" />
@@ -131,7 +131,7 @@ export default function ActivityComments({
                                                                 onDelete(comment.commentId);
                                                             }
                                                         }}
-                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                                                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors cursor-pointer"
                                                         title="Supprimer le commentaire"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
@@ -158,7 +158,7 @@ export default function ActivityComments({
                                         }}
                                     />
                                 ) : (
-                                    <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                                    <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
                                 )}
                             </div>
                         ))}

@@ -78,7 +78,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         onChange={(e) => { setTitle(e.target.value); clearError("title") }}
                                         placeholder={getTranslation("activity_form.title_placeholder")}
                                         aria-invalid={!!errors.title}
-                                        className={errors.title ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                        className={errors.title ? "border-destructive focus-visible:ring-destructive" : ""}
                                     />
                                     <FieldError message={errors.title} />
                                 </div>
@@ -118,7 +118,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                     rows={4}
                                     placeholder={getTranslation("activity_form.description_placeholder")}
                                     aria-invalid={!!errors.description}
-                                    className={errors.description ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                    className={errors.description ? "border-destructive focus-visible:ring-destructive" : ""}
                                 />
                                 <FieldError message={errors.description} />
                             </div>
@@ -134,7 +134,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                                 variant="outline"
                                                 className={[
                                                     "w-full justify-start text-left font-normal",
-                                                    errors.startAt ? "border-red-500 focus-visible:ring-red-500" : "",
+                                                    errors.startAt ? "border-destructive focus-visible:ring-destructive" : "",
                                                 ].join(" ")}
                                             >
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -187,7 +187,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                             aria-invalid={!!errors.time}
                                             className={[
                                                 "pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
-                                                errors.time ? "border-red-500 focus-visible:ring-red-500" : "",
+                                                errors.time ? "border-destructive focus-visible:ring-destructive" : "",
                                             ].join(" ")}
                                         />
                                         <Button
@@ -216,9 +216,9 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                             <div className="space-y-2">
                                 <Label>{getTranslation("activity_form.image_label")}</Label>
                                 {!image ? (
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-500 mb-2">
+                                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center">
+                                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                        <p className="text-sm text-muted-foreground mb-2">
                                             {getTranslation("activity_form.image_upload_hint")}
                                         </p>
                                         <input
