@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ISettingsService, SettingsService>();
+        services.AddScoped<IUserPreferencesService, UserPreferencesService>();
         services.AddScoped<IAppLogService, AppLogService>();
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IUserService, UserService>();
