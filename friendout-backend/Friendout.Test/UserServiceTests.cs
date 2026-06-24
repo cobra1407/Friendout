@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Enums;
+using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
 using NUnit.Framework;
 using FluentAssertions;
@@ -10,6 +11,18 @@ namespace Friendout.Test;
 
 public class UserServiceTests
 {
+    // UserService now depends on IFileService for avatar uploads. None of the tests below
+    // exercise that path, so a no-op stub keeps them focused on what they actually test.
+    private static readonly IFileService NoopFileService = new NoopFileService();
+
+    private sealed class NoopFileService : IFileService
+    {
+        public Task<string> SaveFileAsync(FileUpload fileUpload, FileCategory fileCategory) => Task.FromResult("noop");
+        public Task DeleteFileAsync(string fileName, FileCategory fileCategory) => Task.CompletedTask;
+        public string GetFilePath(string fileName, FileCategory category) => fileName;
+        public string GetFileUrl(string fileName, FileCategory category) => fileName;
+    }
+
     [Test]
     public async Task GetUserByProviderAccountIdAsync_WhenAccountExists_ReturnsUser()
     {
@@ -35,7 +48,7 @@ public class UserServiceTests
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
 
-        var service = new UserService(context);
+        var service = new UserService(context, NoopFileService);
 
         // Act
         var result = await service.GetUserByProviderAccountIdAsync(ProviderEnum.Discord, "provider-123");
@@ -51,7 +64,7 @@ public class UserServiceTests
     {
         // Arrange
         await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(GetUserByProviderAccountIdAsync_WhenAccountDoesNotExist_ReturnsFailure));
-        var service = new UserService(context);
+        var service = new UserService(context, NoopFileService);
 
         // Act
         var result = await service.GetUserByProviderAccountIdAsync(ProviderEnum.Discord, "unknown");
@@ -66,7 +79,7 @@ public class UserServiceTests
     {
         // Arrange
         await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateUserFromOAuthAsync_FirstUserGetsAdminRole_AndAccountLinked));
-        var service = new UserService(context);
+        var service = new UserService(context, NoopFileService);
 
         // Act
         var result = await service.CreateUserFromOAuthAsync(
@@ -91,7 +104,7 @@ public class UserServiceTests
     {
         // Arrange
         await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateUserFromOAuthAsync_ExistingAccountReturnsSameUser));
-        var service = new UserService(context);
+        var service = new UserService(context, NoopFileService);
 
         var firstResult = await service.CreateUserFromOAuthAsync(
             ProviderEnum.Discord,
