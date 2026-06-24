@@ -16,7 +16,9 @@ public class FileValidationService : IFileValidationService
     // Taille maximale par catégorie (en bytes)
     private static readonly Dictionary<FileCategory, long> MaxSizes = new()
     {
-        { FileCategory.UserAvatar, 5 * 1024 * 1024 },      // 5 MB
+        // Avatars are resized + re-encoded to ~512x512 JPEG after upload (see FileService),
+        // so the input limit can comfortably allow full-size phone photos.
+        { FileCategory.UserAvatar, 20 * 1024 * 1024 },     // 20 MB
         { FileCategory.ActivityImage, 10 * 1024 * 1024 },  // 10 MB
         { FileCategory.ActivityAttachment, 20 * 1024 * 1024 }, // 20 MB
         { FileCategory.Document, 50 * 1024 * 1024 }        // 50 MB
