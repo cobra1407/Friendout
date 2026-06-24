@@ -12,7 +12,7 @@ export default function CommentActions({ onEdit, onDelete }: CommentActionsProps
             <button
                 type="button"
                 onClick={onEdit}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors cursor-pointer"
                 title={getTranslation('comments.edit_title')}
             >
                 <Edit className="h-4 w-4" />
@@ -21,7 +21,7 @@ export default function CommentActions({ onEdit, onDelete }: CommentActionsProps
             <button
                 type="button"
                 onClick={onDelete}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors cursor-pointer"
                 title={getTranslation('comments.delete_title')}
             >
                 <Trash2 className="h-4 w-4" />

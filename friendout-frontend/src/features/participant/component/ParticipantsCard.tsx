@@ -37,7 +37,7 @@ export default function ParticipantsCard({ participants, className }: Participan
             </CardHeader>
             <CardContent className="space-y-4">
                 {participants && participants.length === 0 ? (
-                    <div className="text-sm text-gray-500 text-center py-2">
+                    <div className="text-sm text-muted-foreground text-center py-2">
                         {getTranslation('participants.none_yet')}
                     </div>
                 ) : (
@@ -50,11 +50,11 @@ export default function ParticipantsCard({ participants, className }: Participan
                                 <div className="space-y-1">
                                     {participating.map((participant) => (
                                         <div key={participant.participationId} className="text-sm flex gap-2 items-center">
-                                            <Avatar className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
+                                            <Avatar className="w-7 h-7 rounded-full bg-avatar flex items-center justify-center">
                                                 {participant.avatarUrl ? (
                                                     <AvatarImage src={participant.avatarUrl} />
                                                 ) : (
-                                                    <span className="text-red-700 font-medium">
+                                                    <span className="text-white font-medium">
                                                         {participant.username ? participant.username[0].toUpperCase() + participant.username[1].toLocaleLowerCase() : "?"}
                                                     </span>
                                                 )}
@@ -74,11 +74,11 @@ export default function ParticipantsCard({ participants, className }: Participan
                                 <div className="space-y-1">
                                     {maybe.map((participant) => (
                                         <div key={participant.participationId} className="text-sm flex gap-2 items-center">
-                                            <Avatar className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
+                                            <Avatar className="w-7 h-7 rounded-full bg-avatar flex items-center justify-center">
                                                 {participant.avatarUrl ? (
                                                     <AvatarImage src={participant.avatarUrl} />
                                                 ) : (
-                                                    <span className="text-red-700 font-medium">
+                                                    <span className="text-white font-medium">
                                                         {participant.username ? participant.username.charAt(0).toUpperCase() : "?"}
                                                     </span>
                                                 )}
@@ -98,11 +98,11 @@ export default function ParticipantsCard({ participants, className }: Participan
                                 <div className="space-y-1">
                                     {notParticipating.map((participant) => (
                                         <div key={participant.participationId} className="text-sm flex gap-2 items-center">
-                                            <Avatar className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
+                                            <Avatar className="w-7 h-7 rounded-full bg-avatar flex items-center justify-center">
                                                 {participant.avatarUrl ? (
                                                     <AvatarImage src={participant.avatarUrl} />
                                                 ) : (
-                                                    <span className="text-red-700 font-medium">
+                                                    <span className="text-white font-medium">
                                                         {participant.username ? participant.username.charAt(0).toUpperCase() : "?"}
                                                     </span>
                                                 )}

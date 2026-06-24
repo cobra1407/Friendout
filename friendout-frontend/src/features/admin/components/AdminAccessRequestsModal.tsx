@@ -21,7 +21,7 @@ export const AdminAccessRequestsModal = ({ open, onClose }: AdminAccessRequestsM
                     <AlertCircle className="w-4 h-4 text-amber-600" />
                     {getTranslation('admin.requests.modal_title')}
                     {requests.length > 0 && (
-                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 ml-1">
+                        <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 ml-1">
                             {requests.length}
                         </Badge>
                     )}

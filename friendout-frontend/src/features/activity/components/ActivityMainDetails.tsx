@@ -62,7 +62,7 @@ export default function ActivityMainDetails({
     const linkifyOptions = {
         target: "_blank",
         rel: "noopener noreferrer",
-        className: "text-blue-800 hover:underline",
+        className: "text-blue-700 dark:text-blue-400 hover:underline",
     };
 
     const MAX_EQUIPMENT_VISIBLE = maxEquipmentVisible ?? 10;
@@ -165,7 +165,7 @@ export default function ActivityMainDetails({
                                             <span>
                                                 {getTranslation("activity.main_activity_label")}{" "}
                                                 {activity.estimatedPrice && activity.estimatedPrice > 0 ? (
-                                                    <span className="font-bold text-gray-600">
+                                                    <span className="font-bold text-muted-foreground">
                                                         {activity.estimatedPrice.toFixed(2)}€
                                                     </span>
                                                 ) : (
@@ -214,7 +214,7 @@ export default function ActivityMainDetails({
                         {getTranslation("activity.description")}
                     </h3>
                     <Linkify options={linkifyOptions}>
-                        <p className="text-gray-700 whitespace-pre-wrap">
+                        <p className="text-foreground whitespace-pre-wrap">
                             {activity.description}
                         </p>
                     </Linkify>
@@ -246,7 +246,7 @@ export default function ActivityMainDetails({
                                     {activity.activityEquipments.length > MAX_EQUIPMENT_VISIBLE && (
                                         <Badge
                                             variant="outline"
-                                            className="text-sm bg-blue-200 text-blue-800"
+                                            className="text-sm bg-blue-500/15 text-blue-700 dark:text-blue-400 border-none"
                                         >
                                             +{activity.activityEquipments.length - MAX_EQUIPMENT_VISIBLE}
                                         </Badge>

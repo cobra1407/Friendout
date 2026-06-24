@@ -101,7 +101,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
     const handleExportOutlook = () => window.open(getOutlookCalendarUrl(calendarEvent), '_blank')
 
     return (
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-background shadow-sm border-b">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Title + Back button */}
@@ -199,7 +199,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
                                             onClick={handleExportGoogle}
                                             className="flex items-center gap-3 w-full rounded-lg p-2.5 hover:bg-muted transition-colors text-left cursor-pointer"
                                         >
-                                            <div className="w-8 h-8 rounded-md bg-white border flex items-center justify-center shrink-0">
+                                            <div className="w-8 h-8 rounded-md bg-background border flex items-center justify-center shrink-0">
                                                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
                                             </div>
                                             <div>

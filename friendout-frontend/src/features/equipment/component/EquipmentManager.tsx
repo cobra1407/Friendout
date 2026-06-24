@@ -121,7 +121,7 @@ export default function EquipmentManager({
                     size="sm"
                     onClick={addEquipment}
                     disabled={!newItem.trim()}
-                    className="flex items-center gap-2 bg-blue-100 text-blue-800"
+                    className="flex items-center gap-2 bg-blue-500/15 text-blue-700 dark:text-blue-400 hover:bg-blue-500/25"
                 >
                     <Plus className="w-4 h-4" />
                     {getTranslation("equipment_manager.new_button")}
@@ -141,7 +141,7 @@ export default function EquipmentManager({
                             {equipmentItems.map((item, index) => (
                                 <div
                                     key={item.id}
-                                    className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
+                                    className="flex items-center justify-between bg-muted rounded-lg px-3 py-2"
                                 >
                                     <div className="flex items-center gap-3 flex-1">
                                         {showChecklist && (
@@ -168,13 +168,13 @@ export default function EquipmentManager({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => saveEdit(index)}
-                                                    className="p-1 h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    className="p-1 h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-500/10"
                                                 >
                                                     <Check className="w-3 h-3" />
                                                 </Button>
                                             </div>
                                         ) : (
-                                            <span className={`text-sm ${item.isChecked && showChecklist ? 'line-through text-gray-500' : ''}`}>
+                                            <span className={`text-sm ${item.isChecked && showChecklist ? 'line-through text-muted-foreground' : ''}`}>
                                                 {item.name}
                                             </span>
                                         )}
@@ -186,7 +186,7 @@ export default function EquipmentManager({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => startEditing(item)}
-                                            className="p-1 h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            className="p-1 h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10"
                                             title={getTranslation("equipment_manager.edit_title")}
                                         >
                                             <Edit className="w-3 h-3" />
@@ -196,7 +196,7 @@ export default function EquipmentManager({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => removeEquipment(index)}
-                                            className="p-1 h-6 w-6 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            className="p-1 h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
                                             title={getTranslation("equipment_manager.remove_title")}
                                         >
                                             <Trash2 className="w-3 h-3" />
@@ -210,12 +210,12 @@ export default function EquipmentManager({
             )}
 
             {equipment.length === 0 && (
-                <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
-                    <Package className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500 mb-3">
+                <div className="text-center py-6 border-2 border-dashed border-border rounded-lg">
+                    <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-3">
                         {getTranslation("equipment_manager.empty_label")}
                     </p>
-                    <p className="text-xs text-gray-400 mb-4">
+                    <p className="text-xs text-muted-foreground mb-4">
                         {getTranslation("equipment_manager.empty_examples")}
                     </p>
                 </div>

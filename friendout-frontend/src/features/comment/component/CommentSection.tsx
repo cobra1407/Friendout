@@ -81,17 +81,17 @@ export default function CommentsSection({
                 )}
 
                 {comments.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">
+                    <p className="text-muted-foreground text-center py-4">
                         {getTranslation('comments.empty')}
                     </p>
                 ) : (
                     <div className="space-y-4">
                         {comments.map((comment) => (
-                            <div key={comment.commentId} className="bg-gray-50 rounded-lg p-4">
+                            <div key={comment.commentId} className="bg-muted rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
                                         <span className="font-medium">{comment.sendBy}</span>
-                                        <span className="text-sm text-gray-500 ml-2">
+                                        <span className="text-sm text-muted-foreground ml-2">
                                             {formatCommentDate(comment.createdAt)}
                                             {comment.updatedAt !== comment.createdAt && ` ${getTranslation('comments.modified')}`}
                                         </span>
@@ -103,7 +103,7 @@ export default function CommentsSection({
                                                     <button
                                                         type="button"
                                                         onClick={() => handleUpdateComment(comment.commentId)}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                                        className="p-1.5 text-muted-foreground hover:bg-accent rounded-full transition-colors cursor-pointer"
                                                         title={getTranslation('common.save')}
                                                     >
                                                         <Check className="h-3.5 w-3.5" />
@@ -111,7 +111,7 @@ export default function CommentsSection({
                                                     <button
                                                         type="button"
                                                         onClick={cancelEdit}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                                        className="p-1.5 text-muted-foreground hover:bg-accent rounded-full transition-colors cursor-pointer"
                                                         title={getTranslation('common.cancel')}
                                                     >
                                                         <X className="h-3.5 w-3.5" />
@@ -135,7 +135,7 @@ export default function CommentsSection({
                                         autoFocus
                                     />
                                 ) : (
-                                    <p className="text-gray-700 whitespace-pre-wrap">
+                                    <p className="text-foreground whitespace-pre-wrap">
                                         {comment.content}
                                     </p>
                                 )}

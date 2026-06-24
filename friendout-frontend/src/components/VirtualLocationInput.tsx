@@ -84,10 +84,10 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
 
     if (!isEditing && canSave) {
         return (
-            <Card className="border-blue-200 bg-blue-50">
+            <Card className="border-blue-500/30 bg-blue-500/10">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-blue-600" />
+                        <MessageCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         {getTranslation("virtual_location_input.configured_title")}
                     </CardTitle>
                 </CardHeader>
@@ -127,10 +127,10 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
     }
 
     return (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-blue-500/30 bg-blue-500/10">
             <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-blue-600" />
+                    <MessageCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     {getTranslation("virtual_location_input.configuration_title")}
                 </CardTitle>
             </CardHeader>

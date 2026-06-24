@@ -74,7 +74,7 @@ export const LoginPage = () => {
                             {getTranslation("login_page.request_access_link")}{" "}
                             <button
                                 onClick={() => setRequestModalOpen(true)}
-                                className="underline underline-offset-2 hover:text-foreground transition-colors text-blue-800 cursor-pointer font-semibold"
+                                className="underline underline-offset-2 hover:text-foreground transition-colors text-blue-700 dark:text-blue-400 cursor-pointer font-semibold"
                             >
                                 {getTranslation("login_page.request_access_button")}
                             </button>
