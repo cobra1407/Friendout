@@ -1,10 +1,15 @@
 import en from './en.json';
 import fr from './fr.json';
+import { useLocaleStore } from './locale.store';
 
 const translations: Record<string, any> = { en, fr };
 
-/** Language code used by getTranslation (e.g. 'fr', 'en'). */
-export const getLang = () => (navigator.language.startsWith('fr') ? 'fr' : 'en');
+/**
+ * Language code used by getTranslation (e.g. 'fr', 'en').
+ * Reads the reactive locale store — defaults to the browser language until
+ * the user's saved preference is loaded, see locale.store.ts.
+ */
+export const getLang = () => useLocaleStore.getState().locale;
 
 /** BCP 47 locale for date/number formatting (e.g. 'fr-FR', 'en-US'). */
 export const getLocale = () => (getLang() === 'fr' ? 'fr-FR' : 'en-US');
