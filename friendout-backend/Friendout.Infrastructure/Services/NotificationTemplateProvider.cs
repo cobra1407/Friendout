@@ -60,7 +60,30 @@ public class NotificationTemplateProvider : INotificationTemplateProvider
             return await File.ReadAllTextAsync(generalEnglishPath);
 
         // 5. Inline last resort — should never happen in production
-        _logger.LogError("All templates missing. Using inline fallback.");
-        return "<html><body><p>{{ Message }}</p></body></html>";
+        _logger.LogCritical("All notification templates missing (type={Type}, locale={Locale}). Falling back to inline HTML. Check Templates/Notifications deployment.", type, locale);
+        return """
+            <html>
+            <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;">
+                <tr>
+                  <td align="center" style="padding:40px 16px;">
+                    <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;background-color:#ffffff;border-radius:24px;overflow:hidden;">
+                      <tr>
+                        <td style="padding:32px 32px 8px;">
+                          <p style="margin:0;font-size:17px;font-weight:700;color:#18181b;">Friendout</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 32px 32px;">
+                          <p style="margin:0;color:#3f3f46;font-size:15px;line-height:1.7;">{{ Message }}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """;
     }
 }

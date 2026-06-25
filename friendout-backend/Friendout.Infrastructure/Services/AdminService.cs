@@ -341,7 +341,9 @@ public class AdminService : IAdminService
 
     public async Task<ServiceResult<bool>> DeleteUserAsync(string id)
     {
-        var user = await _db.Users.FindAsync(id);
+        var user = await _db.Users
+            .Include(u => u.Preferences)
+            .FirstOrDefaultAsync(u => u.Id == id);
         if (user is null)
             return ServiceResult<bool>.Failure("not_found");
 
@@ -369,7 +371,8 @@ public class AdminService : IAdminService
                 {
                     { "UserName",  user.Name },
                     { "UserEmail", user.Email },
-                    { "AppUrl",    _appOptions.Url }
+                    { "AppUrl",    _appOptions.Url },
+                    { "Locale",    user.Preferences?.Locale ?? "en" }
                 }
             );
         }
