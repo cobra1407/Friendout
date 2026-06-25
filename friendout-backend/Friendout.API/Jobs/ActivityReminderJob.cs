@@ -66,6 +66,7 @@ public class ActivityReminderJob : IJob
                     up.SubActivityId == null &&
                     up.Status == ParticipationStatus.Participating))
                     .ThenInclude(up => up.User)
+                        .ThenInclude(u => u.Preferences)
                 .Include(a => a.Localisation)
                 .Include(a => a.Creator)
                 .Include(a => a.Image)
@@ -99,6 +100,9 @@ public class ActivityReminderJob : IJob
                             NotificationType.ActivityReminder,
                             new Dictionary<string, string>
                             {
+                                ["UserName"]         = participation.User.Name,
+                                ["AppUrl"]           = _appUrl,
+                                ["Locale"]           = participation.User.Preferences?.Locale ?? "en",
                                 ["ActivityId"]       = activity.Id,
                                 ["ActivityName"]     = activity.Title,
                                 ["Date"]             = activity.StartAt.ToString("dddd d MMMM yyyy à HH:mm"),
