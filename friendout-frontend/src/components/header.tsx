@@ -2,10 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { UserMenu } from "./UserMenu";
 import { getTranslation } from "@/i18n";
 import { getCurrentSeason } from "@/lib/utils/season.utils";
-import summerLogo from "@/assets/images/friendout-logo-summer.png";
-import winterLogo from "@/assets/images/friendout-logo-winter.png";
-import autumnLogo from "@/assets/images/friendout-logo-autumn.png";
-import springLogo from "@/assets/images/friendout-logo-spring.png";
+import summerLogo from "@/assets/images/friendout-summer.svg";
+import winterLogo from "@/assets/images/friendout-winter.svg";
+import autumnLogo from "@/assets/images/friendout-autumn.svg";
+import springLogo from "@/assets/images/friendout-spring.svg";
 import CreateActivityButton from "@/features/activity/components/CreateActivityButton";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
@@ -38,7 +38,7 @@ export const Header = ({ onCreateActivity, onLogout }: HeaderProps) => {
                             <img
                                 src={logoPath}
                                 alt={getTranslation('header.logo_alt')}
-                                className="w-full h-full object-contain sm:p-4 cursor-pointer hover:opacity-80 transition-opacity"
+                                className="w-full h-full object-contain sm:p-1 cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => navigate('/activities')}
                                 loading="eager"
                                 width={100}
