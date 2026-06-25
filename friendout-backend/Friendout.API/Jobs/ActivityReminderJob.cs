@@ -9,12 +9,19 @@ using Quartz;
 namespace friendout_backend.Jobs;
 
 /// <summary>
-/// Quartz job that sends a J-1 reminder to all participants of upcoming activities.
+/// Quartz job that sends a reminder to all participants of upcoming activities.
 ///
 /// Schedule: every hour (cron: "0 0 * * * ?").
-/// Target window: activities starting between now+23h and now+25h whose reminder has not been sent yet.
-/// The 2-hour window absorbs timing drift across hourly runs without risk of double-sending,
-/// since ReminderSentAt is set atomically after dispatch.
+/// Target window: activities starting between now and now+24h whose reminder has not been sent yet.
+///
+/// Using an open-ended "less than 24h away" window (rather than a strict [23h, 25h) slot) is
+/// intentional: it makes the job self-healing. If a run is missed (crash, redeploy, downtime),
+/// the next hourly run still catches any activity that's still upcoming and unsent. It also
+/// naturally covers activities created late (e.g. less than 24h before they start), which would
+/// otherwise never fall inside a narrow fixed window and would simply never get a reminder.
+///
+/// The lower bound (StartAt > now) excludes activities that have already started, so a late or
+/// catch-up run never sends a reminder for something that's already happening or over.
 ///
 /// Only participants with status Participating on the main activity (SubActivityId == null)
 /// are notified — same filter as ActivityModified / ActivityCanceled.
@@ -26,8 +33,7 @@ public class ActivityReminderJob : IJob
     private readonly ILogger<ActivityReminderJob> _logger;
     private readonly string _appUrl;
 
-    private static readonly TimeSpan WindowStart = TimeSpan.FromHours(23);
-    private static readonly TimeSpan WindowEnd   = TimeSpan.FromHours(25);
+    private static readonly TimeSpan ReminderLeadTime = TimeSpan.FromHours(24);
 
     public ActivityReminderJob(IServiceScopeFactory scopeFactory, ILogger<ActivityReminderJob> logger, IOptions<AppOptions> appOptions)
     {
@@ -57,9 +63,8 @@ public class ActivityReminderJob : IJob
             var dispatcher        = scope.ServiceProvider.GetRequiredService<INotificationDispatcher>();
             var appLog            = scope.ServiceProvider.GetRequiredService<IAppLogService>();
 
-            var now         = DateTime.UtcNow;
-            var windowStart = now.Add(WindowStart);
-            var windowEnd   = now.Add(WindowEnd);
+            var now       = DateTime.UtcNow;
+            var windowEnd = now.Add(ReminderLeadTime);
 
             var activities = await db.Activities
                 .Include(a => a.UserParticipations.Where(up =>
@@ -71,8 +76,8 @@ public class ActivityReminderJob : IJob
                 .Include(a => a.Creator)
                 .Include(a => a.Image)
                 .Where(a =>
-                    a.StartAt >= windowStart &&
-                    a.StartAt <  windowEnd   &&
+                    a.StartAt >  now       &&
+                    a.StartAt <= windowEnd &&
                     a.ReminderSentAt == null)
                 .ToListAsync(context.CancellationToken);
 
