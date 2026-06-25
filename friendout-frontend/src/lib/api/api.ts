@@ -7,18 +7,11 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Refresh token interceptor
-//
-// When an API call returns 401 (access token expired), this interceptor:
-//   1. Calls POST /auth/refresh — the browser sends the refresh_token cookie automatically.
-//   2. If the refresh succeeds, the backend sets new auth_token + refresh_token cookies.
-//   3. The original request is retried with the new access token.
-//   4. If the refresh fails (refresh token expired or revoked), the user is redirected
-//      to the login page.
-//
-// _retry flag: prevents infinite loops (if /auth/refresh itself returns 401).
-// ─────────────────────────────────────────────────────────────────────────────
+// On 401, try one /auth/refresh, then retry the original request.
+// _retry avoids infinite loops; refreshPromise dedupes concurrent 401s so a
+// rotated refresh token isn't invalidated by a second call before it's used.
+let refreshPromise: Promise<unknown> | null = null;
+
 api.interceptors.response.use(
   response => response,
   async (error) => {
@@ -37,7 +30,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await api.post("/auth/refresh");
+            if (!refreshPromise) {
+          refreshPromise = api.post("/auth/refresh").finally(() => {
+            refreshPromise = null;
+          });
+        }
+        await refreshPromise;
         return api(originalRequest);
       } catch {
         // Refresh failed: session is over, redirect to login.
