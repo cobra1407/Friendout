@@ -746,7 +746,7 @@ public class ActivityService : IActivityService
                     up.UserId != excludeUserId &&
                     up.SubActivityId == null &&
                     up.Status == ParticipationStatus.Participating)
-                .Select(up => new { up.UserId, up.User.Name })
+                .Select(up => new { up.UserId, up.User.Name, Locale = up.User.Preferences != null ? up.User.Preferences.Locale : "en" })
                 .Distinct()
                 .ToListAsync();
 
@@ -754,7 +754,7 @@ public class ActivityService : IActivityService
                 _notificationDispatcher.DispatchNotificationAsync(
                     Guid.Parse(p.UserId),
                     type,
-                    buildData(p.UserId, p.Name)
+                    MergeLocale(buildData(p.UserId, p.Name), p.Locale)
                 )
             );
 
@@ -764,5 +764,11 @@ public class ActivityService : IActivityService
         {
             _logger.LogError(ex, "Failed to notify participants for activity {ActivityId}", activityId);
         }
+    }
+
+    private static Dictionary<string, string> MergeLocale(Dictionary<string, string> data, string locale)
+    {
+        data["Locale"] = locale;
+        return data;
     }
 }
