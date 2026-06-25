@@ -2,6 +2,7 @@ using Friendout.Domain.Context;
 using Friendout.Domain.Enums;
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Options;
+using Friendout.Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Quartz;
@@ -100,6 +101,7 @@ public class ActivityReminderJob : IJob
                 {
                     try
                     {
+                        var locale = participation.User.Preferences?.Locale ?? "en";
                         await dispatcher.DispatchNotificationAsync(
                             Guid.Parse(participation.UserId),
                             NotificationType.ActivityReminder,
@@ -107,10 +109,10 @@ public class ActivityReminderJob : IJob
                             {
                                 ["UserName"]         = participation.User.Name,
                                 ["AppUrl"]           = _appUrl,
-                                ["Locale"]           = participation.User.Preferences?.Locale ?? "en",
+                                ["Locale"]           = locale,
                                 ["ActivityId"]       = activity.Id,
                                 ["ActivityName"]     = activity.Title,
-                                ["Date"]             = activity.StartAt.ToString("dddd d MMMM yyyy à HH:mm"),
+                                ["Date"]             = LocaleHelper.FormatDate(activity.StartAt, "dddd d MMMM yyyy à HH:mm", locale),
                                 ["Location"]         = activity.Localisation?.Address ?? "",
                                 ["OrganizerName"]    = activity.Creator?.Name ?? "",
                                 ["ActivityImageUrl"] = ToAbsoluteUrl(activity.Image?.Url, $"{_appUrl}/email-assets/default-activity-card.png"),

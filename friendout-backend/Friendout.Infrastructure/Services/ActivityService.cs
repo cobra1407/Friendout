@@ -16,6 +16,7 @@ using Friendout.Domain.Models;
 using Friendout.Infrastructure.Enums;
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Options;
+using Friendout.Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -650,11 +651,11 @@ public class ActivityService : IActivityService
                 activityId: activity.Id,
                 excludeUserId: userId,
                 type: NotificationType.ActivityModified,
-                buildData: (participantId, participantName) => new Dictionary<string, string>
+                buildData: (participantId, participantName, locale) => new Dictionary<string, string>
                 {
                     { "UserName",          participantName },
                     { "ActivityName",      activity.Title },
-                    { "Date",              activity.StartAt.ToString("f") },
+                    { "Date",              LocaleHelper.FormatDate(activity.StartAt, "f", locale) },
                     { "Location",          activity.Localisation?.DisplayName ?? "" },
                     { "OrganizerName",     activity.Creator?.Name ?? "" },
                     { "AppUrl",            _appOptions.Url },
@@ -709,11 +710,11 @@ public class ActivityService : IActivityService
             activityId: activity.Id,
             excludeUserId: userId,
             type: NotificationType.ActivityCanceled,
-            buildData: (participantId, participantName) => new Dictionary<string, string>
+            buildData: (participantId, participantName, locale) => new Dictionary<string, string>
             {
                 { "UserName",         participantName },
                 { "ActivityName",     activity.Title },
-                { "Date",             activity.StartAt.ToString("f") },
+                { "Date",             LocaleHelper.FormatDate(activity.StartAt, "f", locale) },
                 { "Location",         activity.Localisation?.DisplayName ?? "" },
                 { "OrganizerName",    activity.Creator.Name },
                 { "CancelReason",     "N/A" },
@@ -732,7 +733,7 @@ public class ActivityService : IActivityService
         string activityId,
         string excludeUserId,
         NotificationType type,
-        Func<string, string, Dictionary<string, string>> buildData)
+        Func<string, string, string, Dictionary<string, string>> buildData)
     {
         try
         {
@@ -754,7 +755,7 @@ public class ActivityService : IActivityService
                 _notificationDispatcher.DispatchNotificationAsync(
                     Guid.Parse(p.UserId),
                     type,
-                    MergeLocale(buildData(p.UserId, p.Name), p.Locale)
+                    MergeLocale(buildData(p.UserId, p.Name, p.Locale), p.Locale)
                 )
             );
 
