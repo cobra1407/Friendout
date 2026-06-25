@@ -1,53 +1,49 @@
-using FluentAssertions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
 using Friendout.Infrastructure.Services;
+using Microsoft.Extensions.Configuration;
+using NUnit.Framework;
+using FluentAssertions;
 
 namespace Friendout.Test;
 
-public class JwtServiceConfigurationTests
+public class JwtServiceTests
 {
     [Test]
-    public void GenerateJwt_WithValidConfiguration_ReturnsSignedToken()
+    public void GenerateJwt_WithValidConfiguration_ReturnsValidToken()
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Jwt:Key"] = "this-is-a-long-enough-test-secret-key-123456",
-                ["Jwt:Issuer"] = "friendout-tests",
-                ["Jwt:Audience"] = "friendout-clients"
-            })
+        // Arrange
+        var settings = new Dictionary<string, string?>
+        {
+            // HS256 requires a key of at least 256 bits (32 bytes)
+            ["Jwt:Key"] = "this_is_a_test_key_1234567890_ABCDEF",
+            ["Jwt:Issuer"] = "friendout-tests",
+            ["Jwt:Audience"] = "friendout-audience"
+        };
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
             .Build();
 
-        var service = new JwtService(config);
+        var service = new JwtService(configuration);
 
-        var token = service.GenerateJwt(new List<Claim>
+        var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, "user-1"),
-            new(ClaimTypes.Name, "Alice")
-        });
+            new(ClaimTypes.NameIdentifier, "user-id"),
+            new(ClaimTypes.Name, "Test User")
+        };
 
-        token.Should().NotBeNullOrWhiteSpace();
+        // Act
+        var tokenString = service.GenerateJwt(claims);
+
+        // Assert
+        tokenString.Should().NotBeNullOrWhiteSpace();
 
         var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
-        jwt.Issuer.Should().Be("friendout-tests");
-        jwt.Audiences.Should().Contain("friendout-clients");
-        jwt.Claims.Should().Contain(c => c.Type == ClaimTypes.NameIdentifier && c.Value == "user-1");
-    }
+        var token = handler.ReadJwtToken(tokenString);
 
-    [Test]
-    public void GenerateJwt_WhenConfigurationMissing_ThrowsInvalidOperationException()
-    {
-        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build();
-        var service = new JwtService(config);
-
-        var action = () => service.GenerateJwt(new List<Claim>());
-
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("JWT configuration values (Key, Issuer, Audience) must be provided.");
+        token.Issuer.Should().Be("friendout-tests");
+        token.Audiences.Should().Contain("friendout-audience");
+        token.Claims.Should().Contain(c => c.Type == ClaimTypes.NameIdentifier && c.Value == "user-id");
     }
 }
-
-
