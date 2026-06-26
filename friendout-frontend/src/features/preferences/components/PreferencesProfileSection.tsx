@@ -127,6 +127,9 @@ export const PreferencesProfileSection = ({
                             className="hidden"
                         />
                     </div>
+                    <p className="text-xs text-muted-foreground sm:hidden">
+                        {getTranslation("preferences.profile.avatar_hint")}
+                    </p>
 
                     {profile?.hasCustomAvatar && (
                         <Button
@@ -149,7 +152,7 @@ export const PreferencesProfileSection = ({
                     {profile?.email && (
                         <p className="text-sm text-muted-foreground">{profile.email}</p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="hidden sm:block text-xs text-muted-foreground mt-1">
                         {getTranslation("preferences.profile.avatar_hint")}
                     </p>
                 </div>
