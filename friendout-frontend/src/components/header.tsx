@@ -34,7 +34,7 @@ export const Header = ({ onCreateActivity, onLogout }: HeaderProps) => {
 
                     {/* Logo */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="w-[60px] sm:w-[100px] h-[60px] sm:h-[100px] flex items-center justify-center flex-shrink-0">
+                        <div className="w-[60px] sm:w-[100px] h-[80px] sm:h-[100px] flex items-center justify-center flex-shrink-0">
                             <img
                                 src={logoPath}
                                 alt={getTranslation('header.logo_alt')}
