@@ -4,13 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Spinner } from "@/components/ui/spinner"
 import { FieldError } from "@/components/ui/FieldError"
 import { getTranslation } from "@/i18n"
 import { LanguageField } from "@/features/preferences/components/LanguageField"
 import { profileNameSchema } from "@/features/preferences/schema/profile.schema"
 import type { UserProfile } from "@/features/preferences/types/profile.type"
 import type { SupportedLocale } from "@/features/preferences/types/preferences.type"
+import { PreferencesProfileSectionSkeleton } from "@/features/preferences/components/PreferencesProfileSectionSkeleton"
 
 interface PreferencesProfileSectionProps {
     profile: UserProfile | undefined
@@ -82,12 +82,7 @@ export const PreferencesProfileSection = ({
     const avatarBusy = isUploadingAvatar || isResettingAvatar
 
     if (isLoading) {
-        return (
-            <div className="rounded-xl border bg-card overflow-hidden">
-                <div className="h-28 sm:h-36 bg-muted animate-pulse" />
-                <div className="flex justify-center py-8"><Spinner /></div>
-            </div>
-        )
+        return <PreferencesProfileSectionSkeleton />
     }
 
     return (
@@ -112,7 +107,11 @@ export const PreferencesProfileSection = ({
                             className="absolute -bottom-1 -right-1 flex items-center justify-center size-7 rounded-full bg-primary text-primary-foreground shadow-sm ring-2 ring-card hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
                             title={getTranslation("preferences.profile.avatar_upload_button")}
                         >
-                            {isUploadingAvatar ? <Spinner className="size-3.5" /> : <Camera className="size-3.5" />}
+                            {isUploadingAvatar ? (
+                                <span className="size-3.5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin inline-block" />
+                            ) : (
+                                <Camera className="size-3.5" />
+                            )}
                         </button>
                         <input
                             ref={fileInputRef}
