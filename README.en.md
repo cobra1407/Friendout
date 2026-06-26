@@ -13,8 +13,8 @@
 ## 📸 Preview
 ![login.png](docs/screenshots/login.png)
 ![activities.png](docs/screenshots/activities.png)
-![activity-details.jpeg](docs/screenshots/activity-details.jpeg)
-![create-activity.jpeg](docs/screenshots/create-activity.jpeg)
+![activity-details.jpeg](docs/screenshots/activity-details.png)
+![create-activity.jpeg](docs/screenshots/create-activity.png)
 
 ---
 

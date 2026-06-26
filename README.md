@@ -13,8 +13,8 @@
 ## 📸 Aperçu
 ![login.png](docs/screenshots/login.png)
 ![activities.png](docs/screenshots/activities.png)
-![activity-details.jpeg](docs/screenshots/activity-details.jpeg)
-![create-activity.jpeg](docs/screenshots/create-activity.jpeg)
+![activity-details.jpeg](docs/screenshots/activity-details.png)
+![create-activity.jpeg](docs/screenshots/create-activity.png)
 ---
 
 ## 🙋 À propos de ce projet
@@ -203,5 +203,3 @@ Les retours, issues et pull requests sont les bienvenus ! Ce projet est avant to
 ## 📄 Licence
 
 Ce projet est sous licence [GPLv2](LICENSE).
-
-
