@@ -16,6 +16,7 @@ const ACCESS_DENIED_CODES = ["discord_access_denied", "google_access_denied"];
 
 export const LoginPage = () => {
     const [requestModalOpen, setRequestModalOpen] = useState(false);
+    const [deniedEmail, setDeniedEmail] = useState("");
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -26,6 +27,10 @@ export const LoginPage = () => {
 
             // Auto-open the request modal when the user was denied access.
             if (ACCESS_DENIED_CODES.includes(errorCode)) {
+                // Pre-fill the access request form with the email the user just tried to
+                // sign in with (sent back by the backend after a Google whitelist rejection),
+                const email = params.get("email");
+                if (email) setDeniedEmail(email);
                 setRequestModalOpen(true);
             }
         }
@@ -102,6 +107,7 @@ export const LoginPage = () => {
             <RequestAccessModal
                 open={requestModalOpen}
                 onClose={() => setRequestModalOpen(false)}
+                defaultEmail={deniedEmail}
             />
         </>
     );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { z } from "zod";
 import { PartyPopper, Send } from "lucide-react";
@@ -22,15 +22,22 @@ type FieldErrors = { email?: string; message?: string; api?: string };
 interface RequestAccessModalProps {
     open: boolean;
     onClose: () => void;
+    defaultEmail?: string;
 }
 
-export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) => {
-    const [email, setEmail] = useState("");
+export const RequestAccessModal = ({ open, onClose, defaultEmail = "" }: RequestAccessModalProps) => {
+    const [email, setEmail] = useState(defaultEmail);
     const [message, setMessage] = useState("");
     const [honeypot, setHoneypot] = useState("");
     const [errors, setErrors] = useState<FieldErrors>({});
     const [submitted, setSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (open && defaultEmail) {
+            setEmail(defaultEmail);
+        }
+    }, [open, defaultEmail]);
 
     const handleClose = () => {
         setEmail("");
@@ -160,9 +167,8 @@ export const RequestAccessModal = ({ open, onClose }: RequestAccessModalProps) =
                         />
                         <div className="flex justify-between items-center">
                             <FieldError message={errors.message} />
-                            <span className={`text-xs ml-auto ${
-                                message.length > MAX_MESSAGE_LENGTH ? "text-destructive" : "text-muted-foreground"
-                            }`}>
+                            <span className={`text-xs ml-auto ${message.length > MAX_MESSAGE_LENGTH ? "text-destructive" : "text-muted-foreground"
+                                }`}>
                                 {message.length} / {MAX_MESSAGE_LENGTH}
                             </span>
                         </div>
