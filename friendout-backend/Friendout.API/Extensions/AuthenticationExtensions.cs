@@ -179,7 +179,8 @@ public static class AuthenticationExtensions
             if (string.IsNullOrEmpty(email) || !allowedEmails.Contains(email))
             {
                 await appLog.LogWarningAsync("Auth", $"Google login refused — email not in whitelist: {email}");
-                context.Response.Redirect($"{loginUrl}?error_code=google_access_denied");
+                var encodedEmail = Uri.EscapeDataString(email ?? "");
+                context.Response.Redirect($"{loginUrl}?error_code=google_access_denied&email={encodedEmail}");
                 context.HandleResponse();
                 return;
             }
