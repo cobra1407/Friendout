@@ -15,6 +15,7 @@
 ![activities.png](docs/screenshots/activities.png)
 ![activity-details.jpeg](docs/screenshots/activity-details.png)
 ![create-activity.jpeg](docs/screenshots/create-activity.png)
+![admin-panel.png](docs/screenshots/admin-panel.png)
 
 ---
 
@@ -30,7 +31,7 @@ I'm sharing this code as open source because I've learned a lot myself by readin
 
 ## 🎯 What is Friendout?
 
-**Friendout** is a web application to **create and join activities with friends**. Authentication is handled exclusively via **Discord OAuth** — no password, no sign-up form.
+**Friendout** is a web application to **create and join activities with friends**. Authentication is handled via **Discord OAuth** or **Google OAuth** — no password, no sign-up form.
 
 In practice, you can:
 - Create an activity (game, outing, event...) with a date and description
@@ -46,7 +47,7 @@ In practice, you can:
 | Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, shadcn/ui |
 | Backend | ASP.NET Core 9 (C#), Entity Framework Core 9 |
 | Database | MySQL 8.4 |
-| Auth | Discord OAuth 2.0 + JWT |
+| Auth | Discord OAuth 2.0, Google OAuth 2.0 + JWT |
 | Infrastructure | Docker + Docker Compose, Nginx |
 
 ---
@@ -150,7 +151,9 @@ Friendout uses a two-layer authentication system:
 
 ---
 
-## 🔧 Discord Setup
+## 🔧 OAuth Setup
+
+### Discord
 
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create a new application
@@ -165,6 +168,21 @@ Friendout uses a two-layer authentication system:
 
 4. Copy the **Client ID** and **Client Secret** into your `.env`
 
+### Google
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create an **OAuth 2.0 Client ID** (Web application type)
+3. Under **Authorized redirect URIs**, add the URI matching your context:
+
+   | Context | Redirect URI to add |
+   |---|---|
+   | **Docker (local)** | `http://localhost/api/auth/callback/google` |
+   | **Local development (without Docker)** | `http://localhost:5122/signin-google` |
+
+4. Copy the **Client ID** and **Client Secret** into your `.env`
+
+> Only whitelisted emails (stored in the database) can sign in via Google. Anyone not on the list can submit an access request from the login page.
+
 ---
 
 ## 🔑 Environment Variables
@@ -176,6 +194,8 @@ Friendout uses a two-layer authentication system:
 | `ConnectionStrings__FriendoutDatabase` | MySQL connection string |
 | `Authentication__Discord__ClientId` | Discord OAuth Client ID |
 | `Authentication__Discord__ClientSecret` | Discord OAuth Client Secret |
+| `Authentication__Google__ClientId` | Google OAuth Client ID |
+| `Authentication__Google__ClientSecret` | Google OAuth Client Secret |
 | `Jwt__Key` | JWT signing key (min. 32 characters) |
 | `Jwt__Issuer` | Token issuer URL |
 | `Jwt__Audience` | Token audience URL |

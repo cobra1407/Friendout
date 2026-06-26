@@ -15,6 +15,7 @@
 ![activities.png](docs/screenshots/activities.png)
 ![activity-details.jpeg](docs/screenshots/activity-details.png)
 ![create-activity.jpeg](docs/screenshots/create-activity.png)
+![admin-panel.png](docs/screenshots/admin-panel.png)
 ---
 
 ## 🙋 À propos de ce projet
@@ -29,7 +30,7 @@ Je partage ce code en open source parce que j'ai moi-même appris énormément e
 
 ## 🎯 C'est quoi Friendout ?
 
-**Friendout** est une application web pour **créer et rejoindre des activités entre amis**. L'authentification se fait uniquement via **Discord OAuth** — pas de mot de passe, pas de formulaire d'inscription.
+**Friendout** est une application web pour **créer et rejoindre des activités entre amis**. L'authentification se fait via **Discord OAuth** ou **Google OAuth** — pas de mot de passe, pas de formulaire d'inscription.
 
 Concrètement, tu peux :
 - Créer une activité (jeu, sortie, événement...) avec une date et une description
@@ -45,7 +46,7 @@ Concrètement, tu peux :
 | Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, shadcn/ui |
 | Backend | ASP.NET Core 9 (C#), Entity Framework Core 9 |
 | Base de données | MySQL 8.4 |
-| Authentification | Discord OAuth 2.0 + JWT |
+| Authentification | Discord OAuth 2.0, Google OAuth 2.0 + JWT |
 | Infrastructure | Docker + Docker Compose, Nginx |
 
 ---
@@ -131,7 +132,9 @@ friendout/
 
 ---
 
-## 🔧 Configuration Discord
+## 🔧 Configuration OAuth
+
+### Discord
 
 1. Va sur le [Discord Developer Portal](https://discord.com/developers/applications)
 2. Crée une nouvelle application
@@ -146,6 +149,21 @@ friendout/
 
 4. Copie le **Client ID** et le **Client Secret** dans ton `.env`
 
+### Google
+
+1. Va sur la [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Crée un **ID client OAuth 2.0** (type "Application web")
+3. Dans **URI de redirection autorisés**, ajoute l'URI correspondant à ton contexte :
+
+   | Contexte | URI de redirection à ajouter |
+   |---|---|
+   | **Docker (local)** | `http://localhost/api/auth/callback/google` |
+   | **Développement local (sans Docker)** | `http://localhost:5122/signin-google` |
+
+4. Copie le **Client ID** et le **Client Secret** dans ton `.env`
+
+> Seuls les emails autorisés (whitelist en base) peuvent se connecter via Google. Une personne non autorisée peut faire une demande d'accès depuis la page de connexion.
+
 ---
 
 ## 🔑 Variables d'environnement
@@ -157,6 +175,8 @@ friendout/
 | `ConnectionStrings__FriendoutDatabase` | Chaîne de connexion MySQL |
 | `Authentication__Discord__ClientId` | Client ID Discord OAuth |
 | `Authentication__Discord__ClientSecret` | Client Secret Discord OAuth |
+| `Authentication__Google__ClientId` | Client ID Google OAuth |
+| `Authentication__Google__ClientSecret` | Client Secret Google OAuth |
 | `Jwt__Key` | Clé de signature JWT (min. 32 caractères) |
 | `Jwt__Issuer` | URL de l'émetteur du token |
 | `Jwt__Audience` | URL de l'audience du token |
