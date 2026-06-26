@@ -2,8 +2,8 @@ import { Bell } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Spinner } from "@/components/ui/spinner"
 import { getTranslation } from "@/i18n"
+import { PreferencesNotificationsSectionSkeleton } from "@/features/preferences/components/PreferencesNotificationsSectionSkeleton"
 
 interface PreferencesNotificationsSectionProps {
     emailEnabled: boolean | undefined
@@ -37,7 +37,7 @@ export const PreferencesNotificationsSection = ({
             </CardHeader>
             <CardContent className="pt-0 space-y-4">
                 {isLoading ? (
-                    <div className="flex justify-center py-3"><Spinner /></div>
+                    <PreferencesNotificationsSectionSkeleton />
                 ) : (
                     <>
                         <div className="flex items-center justify-between gap-4 py-1">
