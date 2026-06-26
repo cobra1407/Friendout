@@ -58,6 +58,12 @@ export const PreferencesProfileSection = ({
         .toUpperCase()
         .slice(0, 2)
 
+    const handleNameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            event.currentTarget.blur()
+        }
+    }
+
     const handleNameBlur = () => {
         if (!profile) return
 
@@ -121,6 +127,9 @@ export const PreferencesProfileSection = ({
                             className="hidden"
                         />
                     </div>
+                    <p className="text-xs text-muted-foreground sm:hidden">
+                        {getTranslation("preferences.profile.avatar_hint")}
+                    </p>
 
                     {profile?.hasCustomAvatar && (
                         <Button
@@ -143,7 +152,7 @@ export const PreferencesProfileSection = ({
                     {profile?.email && (
                         <p className="text-sm text-muted-foreground">{profile.email}</p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="hidden sm:block text-xs text-muted-foreground mt-1">
                         {getTranslation("preferences.profile.avatar_hint")}
                     </p>
                 </div>
@@ -158,6 +167,7 @@ export const PreferencesProfileSection = ({
                             id="profile-name"
                             value={name}
                             onChange={(e) => { setName(e.target.value); setNameTouched(true); setNameError(undefined) }}
+                            onKeyDown={handleNameKeyDown}
                             onBlur={handleNameBlur}
                             disabled={isSavingName}
                             maxLength={191}
