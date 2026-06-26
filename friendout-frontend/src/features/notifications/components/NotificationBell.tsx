@@ -32,7 +32,8 @@ export function NotificationBell() {
             <PopoverContent
                 align="end"
                 sideOffset={8}
-                className="w-80 p-0 shadow-lg origin-top-right"
+                collisionPadding={12}
+                className="w-[calc(100vw-24px)] sm:w-80 p-0 shadow-lg origin-top-right"
             >
                 <NotificationDropdown
                     notifications={notifications}
