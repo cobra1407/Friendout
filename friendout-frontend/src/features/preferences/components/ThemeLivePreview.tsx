@@ -7,6 +7,7 @@ import defaultActivityImage from "@/assets/images/default-activity-card.png"
 
 interface ThemeLivePreviewProps {
     className?: string;
+    ref?: React.Ref<HTMLDivElement>;
 }
 
 const ThemeLivePreview = ({ className }: ThemeLivePreviewProps) => {
