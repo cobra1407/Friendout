@@ -58,6 +58,12 @@ export const PreferencesProfileSection = ({
         .toUpperCase()
         .slice(0, 2)
 
+    const handleNameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            event.currentTarget.blur()
+        }
+    }
+
     const handleNameBlur = () => {
         if (!profile) return
 
@@ -158,6 +164,7 @@ export const PreferencesProfileSection = ({
                             id="profile-name"
                             value={name}
                             onChange={(e) => { setName(e.target.value); setNameTouched(true); setNameError(undefined) }}
+                            onKeyDown={handleNameKeyDown}
                             onBlur={handleNameBlur}
                             disabled={isSavingName}
                             maxLength={191}
