@@ -65,7 +65,7 @@ public static class AuthenticationExtensions
 
         options.Events = new JwtBearerEvents
         {
-            OnTokenValidated = context =>
+            OnTokenValidated = async context =>
             {
                 // Check if this token has been blacklisted (i.e. the user already logged out).
                 // We use the Jti claim (unique token ID) as the blacklist key.
@@ -74,9 +74,24 @@ public static class AuthenticationExtensions
 
                 var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
                 if (jti != null && blacklist.IsBlacklisted(jti))
+                {
                     context.Fail("Token has been invalidated.");
+                    return;
+                }
 
-                return Task.CompletedTask;
+                // Ensures a deleted user is rejected immediately instead of keeping access
+                // until their token naturally expires.
+                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId != null)
+                {
+                    var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
+                    var userExists = await db.Users.AnyAsync(u => u.Id == userId);
+                    if (!userExists)
+                    {
+                        context.Fail("User no longer exists.");
+                        return;
+                    }
+                }
             },
 
             OnMessageReceived = context =>

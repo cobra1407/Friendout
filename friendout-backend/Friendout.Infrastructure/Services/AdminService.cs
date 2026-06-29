@@ -23,6 +23,7 @@ public class AdminService : IAdminService
     private readonly INotificationDispatcher _notificationDispatcher;
     private readonly AppOptions _appOptions;
     private readonly ISettingsService _settingsService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
     public AdminService(
         FriendoutDbContext db,
@@ -30,6 +31,7 @@ public class AdminService : IAdminService
         IHttpContextAccessor httpContextAccessor,
         INotificationDispatcher notificationDispatcher,
         ISettingsService settingsService,
+        IRefreshTokenService refreshTokenService,
         IOptions<AppOptions> appOptions)
     {
         _db = db;
@@ -37,6 +39,7 @@ public class AdminService : IAdminService
         _httpContextAccessor = httpContextAccessor;
         _notificationDispatcher = notificationDispatcher;
         _settingsService = settingsService;
+        _refreshTokenService = refreshTokenService;
         _appOptions = appOptions.Value;
     }
 
@@ -377,6 +380,9 @@ public class AdminService : IAdminService
         if (actorId == id)
             return ServiceResult<bool>.Failure("cannot_delete_self");
 
+        // Revoke refresh tokens so they can't be used to get a new access token later.
+        await _refreshTokenService.RevokeAllAsync(id);
+
         // Notify the user before deletion — the account will no longer exist after.
         // Fire-and-forget — notification failure must never block the deletion.
         if (!string.IsNullOrEmpty(user.Email))
@@ -393,10 +399,6 @@ public class AdminService : IAdminService
                 }
             );
         }
-
-        // Prevent an admin from deleting themselves.
-        if (actorId == id)
-            return ServiceResult<bool>.Failure("cannot_delete_self");
 
         _db.Users.Remove(user);
 
