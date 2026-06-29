@@ -7,7 +7,7 @@ import { LocalisationType } from '@/features/localisation/types/localisation.typ
 import { getLocalisationDisplayText } from '@/lib/maps';
 import { useEffect, useState } from 'react';
 import { formatDate, formatTime } from '@/lib/utils/date.utils';
-import defaultActivityImage from '@/assets/images/default-activity-card.png';
+import defaultActivityImage from '@/assets/images/default-activity-card.webp';
 import { resolveMediaUrl } from '@/lib/media';
 import { getTranslation } from '@/i18n';
 

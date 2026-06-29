@@ -50,6 +50,10 @@ public static class ApplicationExtensions
 
     /// <summary>
     /// Configures static file serving for uploaded files.
+    /// Uploaded files are named with a GUID and never overwritten in place — a new upload
+    /// always gets a new filename — so it's safe to cache them aggressively client-side.
+    /// This matters when self-hosting on modest hardware (e.g. a Raspberry Pi), since it
+    /// avoids re-serving the same image bytes on every page reload.
     /// </summary>
     public static IApplicationBuilder UseAppStaticFiles(
         this IApplicationBuilder app,
@@ -61,7 +65,11 @@ public static class ApplicationExtensions
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
-            RequestPath  = "/uploads"
+            RequestPath  = "/uploads",
+            OnPrepareResponse = ctx =>
+            {
+                ctx.Context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+            }
         });
 
         return app;
