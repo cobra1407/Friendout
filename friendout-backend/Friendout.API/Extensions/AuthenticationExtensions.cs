@@ -273,7 +273,9 @@ public static class AuthenticationExtensions
             var db             = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
             var allowedGuildIds = await db.AllowedGuilds.Select(g => g.GuildId).ToListAsync();
 
-            if (allowedGuildIds.Count > 0 && !guilds.Any(g => allowedGuildIds.Contains(g.Id)))
+            // Restriction enabled: an empty allowlist means no guild is authorized yet,
+            // so every login must be refused (not the previous "open" behavior).
+            if (!guilds.Any(g => allowedGuildIds.Contains(g.Id)))
             {
                 var appLog = context.HttpContext.RequestServices.GetRequiredService<IAppLogService>();
                 await appLog.LogWarningAsync("Auth", "Login refused — no matching allowed guild.");

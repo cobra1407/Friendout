@@ -1,4 +1,4 @@
-import { Server, Search, Plus, Trash2, TriangleAlert } from "lucide-react";
+import { Server, Search, Plus, Trash2, TriangleAlert, InfoIcon } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,11 +36,19 @@ export const AdminGuildsSection = () => {
                     </div>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
-                    {accessMode?.isOpenMode && (
+                    {accessMode?.isDiscordOpenMode && (
+                        <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/40 px-3 py-2.5">
+                            <InfoIcon className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-sky-800 dark:text-sky-300">
+                                {getTranslation('admin.guilds.open_mode_warning')}
+                            </p>
+                        </div>
+                    )}
+                    {!accessMode?.isDiscordOpenMode && accessMode?.isDiscordRestrictionLocksEveryone && (
                         <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2.5">
                             <TriangleAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                             <p className="text-xs text-amber-800 dark:text-amber-300">
-                                {getTranslation('admin.guilds.open_mode_warning')}
+                                {getTranslation('admin.guilds.restriction_locks_everyone_warning')}
                             </p>
                         </div>
                     )}

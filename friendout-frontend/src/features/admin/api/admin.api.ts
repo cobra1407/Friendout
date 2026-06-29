@@ -39,7 +39,10 @@ export interface AccessSettingsDto {
 }
 
 export interface AccessModeDto {
-    isOpenMode: boolean;
+    isDiscordOpenMode: boolean;
+    isDiscordRestrictionLocksEveryone: boolean;
+    isGoogleOpenMode: boolean;
+    isGoogleRestrictionLocksEveryone: boolean;
     guildCount: number;
     emailCount: number;
 }

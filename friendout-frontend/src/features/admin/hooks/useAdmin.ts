@@ -26,6 +26,7 @@ export const useAdminSettings = () => {
         onSuccess: () => {
             toast.success(getTranslation('admin.settings.toast_saved'));
             qc.invalidateQueries({ queryKey: ["admin", "access-settings"] });
+            qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
         onError: () => toast.error(getTranslation('admin.settings.toast_error')),
     });
@@ -134,6 +135,7 @@ export const useAdminEmails = () => {
             toast.success(getTranslation('admin.toast.email_added'));
             setEmail("");
             qc.invalidateQueries({ queryKey: ["admin", "emails"] });
+            qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
         onError: () => toast.error(getTranslation('admin.toast.email_error')),
     });
@@ -143,6 +145,7 @@ export const useAdminEmails = () => {
         onSuccess: () => {
             toast.success(getTranslation('admin.toast.email_deleted'));
             qc.invalidateQueries({ queryKey: ["admin", "emails"] });
+            qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
     });
 
