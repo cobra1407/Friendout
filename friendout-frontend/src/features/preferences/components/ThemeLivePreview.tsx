@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTranslation } from "@/i18n";
 import { Calendar, Clock, Euro, MapPin, Users } from "lucide-react";
-import defaultActivityImage from "@/assets/images/default-activity-card.png"
+import defaultActivityImage from "@/assets/images/default-activity-card.webp"
 
 interface ThemeLivePreviewProps {
     className?: string;

@@ -660,7 +660,7 @@ public class ActivityService : IActivityService
                     { "OrganizerName",     activity.Creator?.Name ?? "" },
                     { "AppUrl",            _appOptions.Url },
                     { "ActivityId",        activity.Id },
-                    { "ActivityImageUrl",  activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.png" }
+                    { "ActivityImageUrl",  activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.webp" }
                 }
             );
 
@@ -719,7 +719,7 @@ public class ActivityService : IActivityService
                 { "OrganizerName",    activity.Creator.Name },
                 { "CancelReason",     "N/A" },
                 { "AppUrl",           _appOptions.Url },
-                { "ActivityImageUrl", activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.png" }
+                { "ActivityImageUrl", activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.webp" }
             }
         );
 

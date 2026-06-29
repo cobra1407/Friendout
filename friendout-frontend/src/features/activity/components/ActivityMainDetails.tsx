@@ -10,7 +10,7 @@ import {
     Users,
 } from "lucide-react";
 
-import DefaultActivityImage from "@/assets/images/default-activity-card.png";
+import DefaultActivityImage from "@/assets/images/default-activity-card.webp";
 import Linkify from "linkify-react";
 
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type";

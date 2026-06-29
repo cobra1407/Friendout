@@ -8,7 +8,7 @@ using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Utils;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
 
 namespace Friendout.Infrastructure.Services
@@ -36,11 +36,20 @@ namespace Friendout.Infrastructure.Services
             Directory.CreateDirectory(_baseFolder);
         }
 
-        // Avatars are always resized down to a fixed square and re-encoded as JPEG, regardless
+        // Avatars are always resized down to a fixed square and re-encoded as WebP, regardless
         // of the original format or size. This keeps storage small and predictable rather than
-        // rejecting large uploads outright — a 20MB phone photo becomes a ~20-60KB avatar.
+        // rejecting large uploads outright — a 20MB phone photo becomes a ~15-45KB avatar.
+        // WebP defaults to *lossless* in ImageSharp 3.x (unlike most encoders/tools), which
+        // produces much larger files than expected — FileFormat must be set explicitly to Lossy.
         private const int AvatarMaxDimension = 512;
-        private const int AvatarJpegQuality = 82;
+        private const int AvatarWebpQuality = 82;
+
+        // Activity images are only ever displayed as a small card thumbnail or within the
+        // details page, never at full resolution — resizing down avoids shipping multi-MB
+        // phone photos to every visitor (and decoding them client-side), which matters a lot
+        // when the app is self-hosted on modest hardware like a Raspberry Pi.
+        private const int ActivityImageMaxWidth = 1280;
+        private const int ActivityImageWebpQuality = 80;
 
         public async Task<string> SaveFileAsync(FileUpload file, FileCategory category)
         {
@@ -57,7 +66,10 @@ namespace Friendout.Infrastructure.Services
             Directory.CreateDirectory(targetFolder);
 
             var isAvatar = category == FileCategory.UserAvatar;
-            var extension = isAvatar ? ".jpg" : Path.GetExtension(file.FileName).ToLowerInvariant();
+            var isActivityImage = category == FileCategory.ActivityImage;
+            // Both avatars and activity images are re-encoded as WebP after resizing, so the
+            // stored extension reflects that — the original format/extension is discarded.
+            var extension = (isAvatar || isActivityImage) ? ".webp" : Path.GetExtension(file.FileName).ToLowerInvariant();
 
             // Use Guid to avoid conflicts and security attacks
             var fileName = $"{Guid.NewGuid()}{extension}";
@@ -71,6 +83,10 @@ namespace Friendout.Infrastructure.Services
             {
                 await SaveResizedAvatarAsync(file.Stream, filePath);
             }
+            else if (isActivityImage)
+            {
+                await SaveResizedActivityImageAsync(file.Stream, filePath);
+            }
             else
             {
                 await using var output = new FileStream(filePath, FileMode.Create);
@@ -82,7 +98,7 @@ namespace Friendout.Infrastructure.Services
 
         /// <summary>
         /// Resizes the image to fit within a fixed square (cropping to fill, not letterboxing)
-        /// and re-encodes it as JPEG at a controlled quality, regardless of the input format.
+        /// and re-encodes it as lossy WebP at a controlled quality, regardless of the input format.
         /// </summary>
         private static async Task SaveResizedAvatarAsync(Stream sourceStream, string destinationPath)
         {
@@ -94,7 +110,27 @@ namespace Friendout.Infrastructure.Services
                 Size = new Size(AvatarMaxDimension, AvatarMaxDimension)
             }));
 
-            var encoder = new JpegEncoder { Quality = AvatarJpegQuality };
+            var encoder = new WebpEncoder { FileFormat = WebpFileFormatType.Lossy, Quality = AvatarWebpQuality };
+            await image.SaveAsync(destinationPath, encoder);
+        }
+
+        /// <summary>
+        /// Downscales the image to a max width (keeping aspect ratio, never upscaling smaller
+        /// images) and re-encodes it as lossy WebP. Activity images are only ever shown as small
+        /// thumbnails or within the details page, so there's no reason to keep multi-MB
+        /// originals around.
+        /// </summary>
+        private static async Task SaveResizedActivityImageAsync(Stream sourceStream, string destinationPath)
+        {
+            using var image = await SixLabors.ImageSharp.Image.LoadAsync(sourceStream);
+
+            image.Mutate(ctx => ctx.Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Max,
+                Size = new Size(ActivityImageMaxWidth, ActivityImageMaxWidth)
+            }));
+
+            var encoder = new WebpEncoder { FileFormat = WebpFileFormatType.Lossy, Quality = ActivityImageWebpQuality };
             await image.SaveAsync(destinationPath, encoder);
         }
 
