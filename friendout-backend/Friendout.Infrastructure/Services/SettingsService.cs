@@ -1,10 +1,12 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Admin;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Friendout.Infrastructure.Services;
@@ -12,10 +14,28 @@ namespace Friendout.Infrastructure.Services;
 public class SettingsService : ISettingsService
 {
     private readonly FriendoutDbContext _db;
+    private readonly IAppLogService _appLog;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public SettingsService(FriendoutDbContext db)
+    public SettingsService(FriendoutDbContext db, IAppLogService appLog, IHttpContextAccessor httpContextAccessor)
     {
         _db = db;
+        _appLog = appLog;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    /// <summary>Resolves the display name + id of the admin performing the current request, for log attribution.</summary>
+    private async Task<(string id, string name)> GetActorAsync()
+    {
+        var ctx = _httpContextAccessor.HttpContext;
+
+        var actorId = ctx?.Items["UserId"] as string
+                      ?? ctx?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                      ?? "unknown";
+
+        if (actorId == "unknown") return (actorId, "unknown");
+        var actor = await _db.Users.FindAsync(actorId);
+        return (actorId, actor?.Name ?? actorId);
     }
 
     public async Task<AccessSettingsDto> GetAccessSettingsAsync()
@@ -37,10 +57,30 @@ public class SettingsService : ISettingsService
     {
         try
         {
+            var current = await GetAccessSettingsAsync();
+
             await UpsertAsync("discord_restricted", dto.DiscordRestricted ? "true" : "false");
             await UpsertAsync("google_restricted",  dto.GoogleRestricted  ? "true" : "false");
 
             await _db.SaveChangesAsync();
+
+            var (actorId, actorName) = await GetActorAsync();
+
+            if (dto.DiscordRestricted != current.DiscordRestricted)
+            {
+                if (dto.DiscordRestricted)
+                    await _appLog.LogInfoAsync("Auth", $"{actorName} ({actorId}) enabled Discord login restriction.");
+                else
+                    await _appLog.LogWarningAsync("Auth", $"{actorName} ({actorId}) disabled Discord login restriction — access is now open to everyone.");
+            }
+
+            if (dto.GoogleRestricted != current.GoogleRestricted)
+            {
+                if (dto.GoogleRestricted)
+                    await _appLog.LogInfoAsync("Auth", $"{actorName} ({actorId}) enabled Google login restriction.");
+                else
+                    await _appLog.LogWarningAsync("Auth", $"{actorName} ({actorId}) disabled Google login restriction — access is now open to everyone.");
+            }
 
             return ServiceResult<AccessSettingsDto>.Success(
                 new AccessSettingsDto(dto.DiscordRestricted, dto.GoogleRestricted));
