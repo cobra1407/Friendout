@@ -22,18 +22,21 @@ public class AdminService : IAdminService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly INotificationDispatcher _notificationDispatcher;
     private readonly AppOptions _appOptions;
+    private readonly ISettingsService _settingsService;
 
     public AdminService(
         FriendoutDbContext db,
         IAppLogService appLog,
         IHttpContextAccessor httpContextAccessor,
         INotificationDispatcher notificationDispatcher,
+        ISettingsService settingsService,
         IOptions<AppOptions> appOptions)
     {
         _db = db;
         _appLog = appLog;
         _httpContextAccessor = httpContextAccessor;
         _notificationDispatcher = notificationDispatcher;
+        _settingsService = settingsService;
         _appOptions = appOptions.Value;
     }
 
@@ -58,7 +61,21 @@ public class AdminService : IAdminService
     {
         var guildCount = await _db.AllowedGuilds.CountAsync();
         var emailCount = await _db.AllowedEmails.CountAsync();
-        return new AccessModeDto(IsOpenMode: guildCount == 0, GuildCount: guildCount, EmailCount: emailCount);
+        var settings   = await _settingsService.GetAccessSettingsAsync();
+
+        var isDiscordOpenMode = !settings.DiscordRestricted;
+        var isDiscordRestrictionLocksEveryone = settings.DiscordRestricted && guildCount == 0;
+
+        var isGoogleOpenMode = !settings.GoogleRestricted;
+        var isGoogleRestrictionLocksEveryone = settings.GoogleRestricted && emailCount == 0;
+
+        return new AccessModeDto(
+            IsDiscordOpenMode: isDiscordOpenMode,
+            IsDiscordRestrictionLocksEveryone: isDiscordRestrictionLocksEveryone,
+            IsGoogleOpenMode: isGoogleOpenMode,
+            IsGoogleRestrictionLocksEveryone: isGoogleRestrictionLocksEveryone,
+            GuildCount: guildCount,
+            EmailCount: emailCount);
     }
 
     // -------------------------

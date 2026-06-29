@@ -41,6 +41,18 @@ public class AdminServiceTests
         public Task LogErrorAsync(string category, string message, Exception? ex = null) => Task.CompletedTask;
     }
 
+    /// <summary>Fake ISettingsService for tests — both restrictions disabled by default.</summary>
+    private sealed class FakeSettingsService : ISettingsService
+    {
+        public static readonly FakeSettingsService Instance = new();
+        public bool DiscordRestricted { get; set; } = false;
+        public bool GoogleRestricted { get; set; } = false;
+        public Task<AccessSettingsDto> GetAccessSettingsAsync()
+            => Task.FromResult(new AccessSettingsDto(DiscordRestricted, GoogleRestricted));
+        public Task<ServiceResult<AccessSettingsDto>> UpdateAccessSettingsAsync(UpdateAccessSettingsDto dto)
+            => Task.FromResult(ServiceResult<AccessSettingsDto>.Success(new AccessSettingsDto(dto.DiscordRestricted, dto.GoogleRestricted)));
+    }
+
     /// <summary>No-op IAppSettings for tests — returns a placeholder URL.</summary>
     private sealed class NullAppSettings
     {
@@ -49,7 +61,7 @@ public class AdminServiceTests
     }
 
     private static AdminService CreateService(FriendoutDbContext db)
-        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, FakeSettingsService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
     // -------------------------
     // GetLogsAsync
@@ -610,7 +622,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = self.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(self.Id);
 
@@ -630,7 +642,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(user.Id);
 
@@ -650,7 +662,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = actor.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(target.Id);
 
@@ -671,11 +683,97 @@ public class AdminServiceTests
         var logSpy = new LogSpy();
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
 
         await service.DeleteUserAsync(user.Id);
 
         logSpy.Warnings.Should().ContainSingle()
             .Which.Should().Contain(user.Id);
+    }
+
+    // -------------------------
+    // GetAccessModeAsync
+    // -------------------------
+
+    [Test]
+    public async Task GetAccessMode_IsDiscordOpenMode_WhenDiscordRestrictionDisabled()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsDiscordOpenMode_WhenDiscordRestrictionDisabled));
+        var settings = new FakeSettingsService { DiscordRestricted = false };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsDiscordOpenMode.Should().BeTrue();
+        result.IsDiscordRestrictionLocksEveryone.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task GetAccessMode_IsDiscordRestrictionLocksEveryone_WhenRestrictedButNoGuildConfigured()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsDiscordRestrictionLocksEveryone_WhenRestrictedButNoGuildConfigured));
+        var settings = new FakeSettingsService { DiscordRestricted = true };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsDiscordOpenMode.Should().BeFalse();
+        result.IsDiscordRestrictionLocksEveryone.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task GetAccessMode_DiscordFlagsBothFalse_WhenRestrictedWithGuildConfigured()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_DiscordFlagsBothFalse_WhenRestrictedWithGuildConfigured));
+        db.AllowedGuilds.Add(new AllowedGuild { GuildId = "123" });
+        await db.SaveChangesAsync();
+        var settings = new FakeSettingsService { DiscordRestricted = true };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsDiscordOpenMode.Should().BeFalse();
+        result.IsDiscordRestrictionLocksEveryone.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task GetAccessMode_IsGoogleOpenMode_WhenGoogleRestrictionDisabled()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsGoogleOpenMode_WhenGoogleRestrictionDisabled));
+        var settings = new FakeSettingsService { GoogleRestricted = false };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsGoogleOpenMode.Should().BeTrue();
+        result.IsGoogleRestrictionLocksEveryone.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task GetAccessMode_IsGoogleRestrictionLocksEveryone_WhenRestrictedButNoEmailConfigured()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsGoogleRestrictionLocksEveryone_WhenRestrictedButNoEmailConfigured));
+        var settings = new FakeSettingsService { GoogleRestricted = true };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsGoogleOpenMode.Should().BeFalse();
+        result.IsGoogleRestrictionLocksEveryone.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task GetAccessMode_GoogleFlagsBothFalse_WhenRestrictedWithEmailConfigured()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_GoogleFlagsBothFalse_WhenRestrictedWithEmailConfigured));
+        db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
+        await db.SaveChangesAsync();
+        var settings = new FakeSettingsService { GoogleRestricted = true };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsGoogleOpenMode.Should().BeFalse();
+        result.IsGoogleRestrictionLocksEveryone.Should().BeFalse();
     }
 }
