@@ -363,7 +363,10 @@
       "google_restricted_on": "Seules les adresses email autorisées peuvent se connecter.",
       "google_restricted_off": "Tout le monde avec un compte Google peut se connecter.",
       "toast_saved": "Paramètres sauvegardés.",
-      "toast_error": "Échec de la sauvegarde des paramètres."
+      "toast_error": "Échec de la sauvegarde des paramètres.",
+      "no_login_method_modal_title": "Plus aucun moyen de se connecter",
+      "no_login_method_modal_description": "Cela désactiverait Discord et Google comme moyens de connexion en même temps, ce qui bloquerait tout le monde, y compris vous. Ajoutez au moins un serveur ou un email, ou laissez l'un des deux fournisseurs activé.",
+      "no_login_method_modal_confirm": "Compris"
     },
     "page_title": "Panneau de contrôle",
     "system_operational": "Système opérationnel",
@@ -415,7 +418,8 @@
       "empty": "Aucun serveur configuré",
       "no_name": "Sans nom",
       "open_mode_warning": "La restriction de connexion Discord est désactivée — l'accès est ouvert à tous ceux qui ont un compte Discord.",
-      "restriction_locks_everyone_warning": "La restriction de connexion Discord est activée, mais aucun serveur n'est configuré — personne ne peut actuellement se connecter via Discord. Ajoutez au moins un serveur pour autoriser des connexions.",
+      "disabled_as_login_method_info": "Discord est désactivé comme moyen de connexion — la restriction est activée mais aucun serveur n'est configuré. Les utilisateurs peuvent toujours se connecter avec Google.",
+      "no_login_method_warning": "Ni Discord ni Google ne peuvent actuellement être utilisés pour se connecter. Ajoutez au moins un serveur ou un email, ou désactivez une des deux restrictions.",
       "delete_confirm_title": "Retirer ce serveur ?",
       "delete_confirm_description": "Vous allez retirer \"{{name}}\" des serveurs autorisés. Les membres de ce serveur ne pourront plus se connecter.",
       "delete_confirm": "Retirer"
@@ -425,7 +429,8 @@
       "description": "Whitelist Gmail OAuth",
       "empty": "Aucun email configuré",
       "open_mode_warning": "La restriction de connexion Google est désactivée — l'accès est ouvert à tous ceux qui ont un compte Google.",
-      "restriction_locks_everyone_warning": "La restriction de connexion Google est activée, mais aucun email n'est configuré — personne ne peut actuellement se connecter via Google. Ajoutez au moins un email pour autoriser des connexions.",
+      "disabled_as_login_method_info": "Google est désactivé comme moyen de connexion — la restriction est activée mais aucun email n'est configuré. Les utilisateurs peuvent toujours se connecter avec Discord.",
+      "no_login_method_warning": "Ni Discord ni Google ne peuvent actuellement être utilisés pour se connecter. Ajoutez au moins un serveur ou un email, ou désactivez une des deux restrictions.",
       "delete_confirm_title": "Retirer cet email ?",
       "delete_confirm_description": "Vous allez retirer \"{{email}}\" de la liste blanche. Cet utilisateur ne pourra plus se connecter.",
       "delete_confirm": "Retirer"

@@ -14,6 +14,12 @@ export const AdminEmailsSection = () => {
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const pendingEmail = emails.find(e => e.id === pendingDeleteId);
 
+    const handleAddKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && email.trim() && !addMutation.isPending) {
+            addMutation.mutate();
+        }
+    };
+
     return (
         <>
             <Card className="border shadow-sm">
@@ -30,18 +36,26 @@ export const AdminEmailsSection = () => {
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
                     {accessMode?.isGoogleOpenMode && (
-                        <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/40 px-3 py-2.5">
-                            <InfoIcon className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-sky-800 dark:text-sky-300">
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2.5">
+                            <TriangleAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-amber-800 dark:text-amber-300">
                                 {getTranslation('admin.emails.open_mode_warning')}
                             </p>
                         </div>
                     )}
-                    {!accessMode?.isGoogleOpenMode && accessMode?.isGoogleRestrictionLocksEveryone && (
-                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2.5">
-                            <TriangleAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-amber-800 dark:text-amber-300">
-                                {getTranslation('admin.emails.restriction_locks_everyone_warning')}
+                    {!accessMode?.isGoogleOpenMode && accessMode?.isGoogleRestrictionLocksEveryone && !accessMode?.noLoginMethodAvailable && (
+                        <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/40 px-3 py-2.5">
+                            <InfoIcon className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-sky-800 dark:text-sky-300">
+                                {getTranslation('admin.emails.disabled_as_login_method_info')}
+                            </p>
+                        </div>
+                    )}
+                    {accessMode?.noLoginMethodAvailable && (
+                        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/40 px-3 py-2.5">
+                            <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-red-800 dark:text-red-300">
+                                {getTranslation('admin.emails.no_login_method_warning')}
                             </p>
                         </div>
                     )}
@@ -51,6 +65,7 @@ export const AdminEmailsSection = () => {
                             placeholder="John@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            onKeyDown={handleAddKeyDown}
                             className="h-8 text-sm"
                         />
                         <Button

@@ -1,5 +1,6 @@
 import { getTranslation } from "@/i18n";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DiscordLoginButton } from "../components/DiscordLoginButton";
 import { GoogleLoginButton } from "../components/GoogleLoginButton";
@@ -17,6 +18,15 @@ const ACCESS_DENIED_CODES = ["discord_access_denied", "google_access_denied"];
 export const LoginPage = () => {
     const [requestModalOpen, setRequestModalOpen] = useState(false);
     const [deniedEmail, setDeniedEmail] = useState("");
+
+    // Defaults to both available while loading, so the buttons aren't both hidden during
+    // the brief fetch — a provider disappears only once we know for sure it's disabled.
+    const { data: loginMethods } = useQuery({
+        queryKey: ["auth", "login-methods"],
+        queryFn: authApi.loginMethods,
+    });
+    const discordAvailable = loginMethods?.discordAvailable ?? true;
+    const googleAvailable = loginMethods?.googleAvailable ?? true;
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -67,12 +77,16 @@ export const LoginPage = () => {
                         <p className="text-center text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6">
                             {getTranslation("login_page.welcome_sentence")}
                         </p>
-                        <DiscordLoginButton onClick={handleDiscordLogin}>
-                            {getTranslation("login_page.login_button")}
-                        </DiscordLoginButton>
-                        <GoogleLoginButton onClick={handleGoogleLogin}>
-                            {getTranslation("login_page.login_button_google")}
-                        </GoogleLoginButton>
+                        {discordAvailable && (
+                            <DiscordLoginButton onClick={handleDiscordLogin}>
+                                {getTranslation("login_page.login_button")}
+                            </DiscordLoginButton>
+                        )}
+                        {googleAvailable && (
+                            <GoogleLoginButton onClick={handleGoogleLogin}>
+                                {getTranslation("login_page.login_button_google")}
+                            </GoogleLoginButton>
+                        )}
 
                         {/* Request access link */}
                         <p className="text-sm text-muted-foreground">

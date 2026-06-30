@@ -361,7 +361,10 @@
       "google_restricted_on": "Only allowed email addresses can log in.",
       "google_restricted_off": "Anyone with a Google account can log in.",
       "toast_saved": "Settings saved.",
-      "toast_error": "Failed to save settings."
+      "toast_error": "Failed to save settings.",
+      "no_login_method_modal_title": "No login method left",
+      "no_login_method_modal_description": "This would disable both Discord and Google as login methods at the same time, locking everyone out, including you. Add at least one server or email, or leave one of the two providers enabled.",
+      "no_login_method_modal_confirm": "Got it"
     },
     "page_title": "Control panel",
     "system_operational": "System operational",
@@ -413,7 +416,8 @@
       "empty": "No server configured",
       "no_name": "No name",
       "open_mode_warning": "Discord login restriction is disabled — access is open to everyone with a Discord account.",
-      "restriction_locks_everyone_warning": "Discord login restriction is enabled, but no server is configured — nobody can log in via Discord right now. Add at least one server to allow connections.",
+      "disabled_as_login_method_info": "Discord is disabled as a login method — the restriction is enabled but no server is configured. People can still sign in with Google.",
+      "no_login_method_warning": "Neither Discord nor Google can currently be used to log in. Add at least one server or email, or disable one of the two restrictions.",
       "delete_confirm_title": "Remove this server?",
       "delete_confirm_description": "You are about to remove \"{{name}}\" from authorized servers. Users in this server will no longer be able to log in.",
       "delete_confirm": "Remove"
@@ -423,7 +427,8 @@
       "description": "Gmail OAuth whitelist",
       "empty": "No email configured",
       "open_mode_warning": "Google login restriction is disabled — access is open to everyone with a Google account.",
-      "restriction_locks_everyone_warning": "Google login restriction is enabled, but no email is configured — nobody can log in via Google right now. Add at least one email to allow connections.",
+      "disabled_as_login_method_info": "Google is disabled as a login method — the restriction is enabled but no email is configured. People can still sign in with Discord.",
+      "no_login_method_warning": "Neither Discord nor Google can currently be used to log in. Add at least one server or email, or disable one of the two restrictions.",
       "delete_confirm_title": "Remove this email?",
       "delete_confirm_description": "You are about to remove \"{{email}}\" from the whitelist. This user will no longer be able to log in.",
       "delete_confirm": "Remove"

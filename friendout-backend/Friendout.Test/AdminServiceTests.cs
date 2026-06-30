@@ -809,4 +809,32 @@ public class AdminServiceTests
         result.IsGoogleOpenMode.Should().BeFalse();
         result.IsGoogleRestrictionLocksEveryone.Should().BeFalse();
     }
+
+    [Test]
+    public async Task GetAccessMode_NoLoginMethodAvailable_WhenBothRestrictedWithEmptyAllowlists()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_NoLoginMethodAvailable_WhenBothRestrictedWithEmptyAllowlists));
+        var settings = new FakeSettingsService { DiscordRestricted = true, GoogleRestricted = true };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.NoLoginMethodAvailable.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task GetAccessMode_NoLoginMethodAvailable_IsFalse_WhenOnlyOneProviderIsUnusable()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_NoLoginMethodAvailable_IsFalse_WhenOnlyOneProviderIsUnusable));
+        db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
+        await db.SaveChangesAsync();
+        var settings = new FakeSettingsService { DiscordRestricted = true, GoogleRestricted = true };
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+
+        var result = await service.GetAccessModeAsync();
+
+        result.IsDiscordRestrictionLocksEveryone.Should().BeTrue();
+        result.IsGoogleRestrictionLocksEveryone.Should().BeFalse();
+        result.NoLoginMethodAvailable.Should().BeFalse();
+    }
 }

@@ -31,6 +31,7 @@ public class AdminController : ControllerBase
         "request_already_resolved" => BadRequest(new { error = errorMessage }),
         "last_admin" => BadRequest(new { error = errorMessage }),
         "cannot_delete_self" => BadRequest(new { error = errorMessage }),
+        "no_login_method_left" => BadRequest(new { error = errorMessage }),
         _ => StatusCode(500, new { error = errorMessage })
     };
 

@@ -43,6 +43,7 @@ export interface AccessModeDto {
     isDiscordRestrictionLocksEveryone: boolean;
     isGoogleOpenMode: boolean;
     isGoogleRestrictionLocksEveryone: boolean;
+    noLoginMethodAvailable: boolean;
     guildCount: number;
     emailCount: number;
 }

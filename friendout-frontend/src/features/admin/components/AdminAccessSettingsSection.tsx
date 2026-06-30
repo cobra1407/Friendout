@@ -1,13 +1,15 @@
-import { Shield } from "lucide-react";
+import { Shield, TriangleAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Modal, ModalHeader, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { getTranslation } from "@/i18n";
 import { useAdminSettings } from "../hooks/useAdmin";
 
 export const AdminAccessSettingsSection = () => {
-    const { settings, isLoading, updateMutation } = useAdminSettings();
+    const { settings, isLoading, updateMutation, noLoginMethodLeftOpen, setNoLoginMethodLeftOpen } = useAdminSettings();
 
     const handleToggle = (key: "discordRestricted" | "googleRestricted") => {
         if (!settings) return;
@@ -18,6 +20,7 @@ export const AdminAccessSettingsSection = () => {
     };
 
     return (
+        <>
         <Card className="border shadow-sm">
             <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -78,5 +81,31 @@ export const AdminAccessSettingsSection = () => {
                 )}
             </CardContent>
         </Card>
+
+        <Modal
+            open={noLoginMethodLeftOpen}
+            onClose={() => setNoLoginMethodLeftOpen(false)}
+            className="max-w-sm"
+        >
+            <ModalHeader>
+                <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-full bg-red-50 dark:bg-red-950/40">
+                        <TriangleAlert className="w-4 h-4 text-destructive" />
+                    </div>
+                    <ModalTitle>
+                        {getTranslation('admin.settings.no_login_method_modal_title')}
+                    </ModalTitle>
+                </div>
+                <ModalDescription>
+                    {getTranslation('admin.settings.no_login_method_modal_description')}
+                </ModalDescription>
+            </ModalHeader>
+            <div className="flex justify-end mt-4">
+                <Button onClick={() => setNoLoginMethodLeftOpen(false)}>
+                    {getTranslation('admin.settings.no_login_method_modal_confirm')}
+                </Button>
+            </div>
+        </Modal>
+        </>
     );
 };

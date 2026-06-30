@@ -11,15 +11,20 @@ public record AccessRequestDto(int Id, string Email, string? Message, AccessRequ
 // Access mode DTO with summary counts for admin dashboard.
 // IsDiscordOpenMode: Discord restriction toggle is off — anyone with a Discord account can log in.
 // IsDiscordRestrictionLocksEveryone: Discord restriction toggle is on but no guild is configured yet,
-// so the allowlist is empty and the Discord login check blocks every user (admins included).
+// meaning Discord is effectively disabled as a login method (this is a valid admin choice, not
+// necessarily a problem on its own).
 // IsGoogleOpenMode: Google restriction toggle is off — anyone with a Google account can log in.
 // IsGoogleRestrictionLocksEveryone: Google restriction toggle is on but no email is configured yet,
-// so the whitelist is empty and the Google login check blocks every user (admins included).
+// meaning Google is effectively disabled as a login method (same as above).
+// NoLoginMethodAvailable: both Discord and Google are unusable at the same time — nobody can log
+// in at all. The backend already refuses to reach this state via UpdateAccessSettingsAsync, but
+// it's surfaced here too as a defensive signal for the admin UI.
 public record AccessModeDto(
     bool IsDiscordOpenMode,
     bool IsDiscordRestrictionLocksEveryone,
     bool IsGoogleOpenMode,
     bool IsGoogleRestrictionLocksEveryone,
+    bool NoLoginMethodAvailable,
     int GuildCount,
     int EmailCount);
 public record AppLogDto(int Id, string Level, string Category, string Message, string? Exception, DateTime CreatedAt);

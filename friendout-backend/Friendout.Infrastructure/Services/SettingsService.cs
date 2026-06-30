@@ -57,6 +57,16 @@ public class SettingsService : ISettingsService
     {
         try
         {
+            // A provider is unusable as a login method when it's restricted with an empty
+            // allowlist (everyone is filtered out). Disabling Discord or Google entirely is a
+            // valid choice on its own — the corresponding login button just disappears — but
+            // refuse the update if it would leave *no* usable login method at all.
+            var discordUnusable = dto.DiscordRestricted && !await _db.AllowedGuilds.AnyAsync();
+            var googleUnusable  = dto.GoogleRestricted  && !await _db.AllowedEmails.AnyAsync();
+
+            if (discordUnusable && googleUnusable)
+                return ServiceResult<AccessSettingsDto>.Failure("no_login_method_left");
+
             var current = await GetAccessSettingsAsync();
 
             await UpsertAsync("discord_restricted", dto.DiscordRestricted ? "true" : "false");
