@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Friendout.Domain.Context;
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 namespace friendout_backend.Controller;
 
@@ -15,6 +17,8 @@ public class AuthController : ControllerBase
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly JwtService _jwtService;
     private readonly IUserService _userService;
+    private readonly ISettingsService _settingsService;
+    private readonly FriendoutDbContext _db;
 
     /// <summary>
     /// Represents the AuthController class.
@@ -24,16 +28,39 @@ public class AuthController : ControllerBase
     /// <param name="refreshTokenService">The refresh token service used to manage refresh tokens.</param>
     /// <param name="jwtService">The JWT service used to generate and validate JWT tokens.</param>
     /// <param name="userService">The user service used to read up-to-date profile data from the database.</param>
+    /// <param name="settingsService">The settings service used to read the Discord/Google restriction toggles.</param>
+    /// <param name="db">Used to count allowed guilds/emails when computing login method availability.</param>
     public AuthController(
         ITokenBlacklistService blacklist,
         IRefreshTokenService refreshTokenService,
         JwtService jwtService,
-        IUserService userService)
+        IUserService userService,
+        ISettingsService settingsService,
+        FriendoutDbContext db)
     {
         _blacklist = blacklist;
         _refreshTokenService = refreshTokenService;
         _jwtService = jwtService;
         _userService = userService;
+        _settingsService = settingsService;
+        _db = db;
+    }
+
+    /// <summary>
+    /// Public endpoint (no auth) telling the login page which provider buttons to show.
+    /// A provider is "available" unless it's restricted with an empty allowlist, in which case
+    /// it's effectively disabled as a login method — see SettingsService.UpdateAccessSettingsAsync,
+    /// which already refuses to leave both providers unavailable at the same time.
+    /// </summary>
+    [HttpGet("auth/login-methods")]
+    public async Task<IActionResult> GetLoginMethods()
+    {
+        var settings = await _settingsService.GetAccessSettingsAsync();
+
+        var discordAvailable = !settings.DiscordRestricted || await _db.AllowedGuilds.AnyAsync();
+        var googleAvailable  = !settings.GoogleRestricted  || await _db.AllowedEmails.AnyAsync();
+
+        return Ok(new { discordAvailable, googleAvailable });
     }
 
     /// <summary>

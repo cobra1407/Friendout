@@ -11,6 +11,11 @@ const GOOGLE_AUTH_URL =
   import.meta.env.VITE_GOOGLE_AUTH_URL ??
   `${API_BASE_URL.replace(/\/$/, "")}/auth/google`;
 
+export interface LoginMethodsDto {
+  discordAvailable: boolean;
+  googleAvailable: boolean;
+}
+
 export const authApi = {
   me: async (): Promise<User | null> => {
     try {
@@ -29,6 +34,11 @@ export const authApi = {
       console.error("Failed to fetch user:", error);
       throw error;
     }
+  },
+
+  loginMethods: async (): Promise<LoginMethodsDto> => {
+    const res = await api.get<LoginMethodsDto>("/auth/login-methods");
+    return res.data;
   },
 
   logout: async () => {
