@@ -72,11 +72,14 @@ public class AdminService : IAdminService
         var isGoogleOpenMode = !settings.GoogleRestricted;
         var isGoogleRestrictionLocksEveryone = settings.GoogleRestricted && emailCount == 0;
 
+        var noLoginMethodAvailable = isDiscordRestrictionLocksEveryone && isGoogleRestrictionLocksEveryone;
+
         return new AccessModeDto(
             IsDiscordOpenMode: isDiscordOpenMode,
             IsDiscordRestrictionLocksEveryone: isDiscordRestrictionLocksEveryone,
             IsGoogleOpenMode: isGoogleOpenMode,
             IsGoogleRestrictionLocksEveryone: isGoogleRestrictionLocksEveryone,
+            NoLoginMethodAvailable: noLoginMethodAvailable,
             GuildCount: guildCount,
             EmailCount: emailCount);
     }

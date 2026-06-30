@@ -79,6 +79,9 @@ public class SettingsServiceTests
     public async Task UpdateAccessSettings_PersistsBothValues()
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateAccessSettings_PersistsBothValues));
+        db.AllowedGuilds.Add(new AllowedGuild { GuildId = "123" });
+        db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
+        await db.SaveChangesAsync();
         var service = CreateService(db, new LogSpy(), "admin-1", "Thomas");
 
         var result = await service.UpdateAccessSettingsAsync(new UpdateAccessSettingsDto(true, true));
@@ -87,6 +90,62 @@ public class SettingsServiceTests
         var stored = await service.GetAccessSettingsAsync();
         stored.DiscordRestricted.Should().BeTrue();
         stored.GoogleRestricted.Should().BeTrue();
+    }
+
+    // -------------------------
+    // UpdateAccessSettingsAsync — no_login_method_left guard
+    // -------------------------
+
+    [Test]
+    public async Task UpdateAccessSettings_AllowsEnablingDiscordAlone_EvenWithEmptyGuildAllowlist()
+    {
+        // Disabling Discord as a login method while Google stays open is a valid admin
+        // choice on its own — only leaving *both* providers unusable should be refused.
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateAccessSettings_AllowsEnablingDiscordAlone_EvenWithEmptyGuildAllowlist));
+        var service = CreateService(db, new LogSpy(), "admin-1", "Thomas");
+
+        var result = await service.UpdateAccessSettingsAsync(new UpdateAccessSettingsDto(true, false));
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task UpdateAccessSettings_RefusesUpdate_WhenItWouldLeaveNoLoginMethod()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateAccessSettings_RefusesUpdate_WhenItWouldLeaveNoLoginMethod));
+        var service = CreateService(db, new LogSpy(), "admin-1", "Thomas");
+
+        var result = await service.UpdateAccessSettingsAsync(new UpdateAccessSettingsDto(true, true));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("no_login_method_left");
+    }
+
+    [Test]
+    public async Task UpdateAccessSettings_RefusesUpdate_DoesNotPersistAnything()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateAccessSettings_RefusesUpdate_DoesNotPersistAnything));
+        var service = CreateService(db, new LogSpy(), "admin-1", "Thomas");
+
+        await service.UpdateAccessSettingsAsync(new UpdateAccessSettingsDto(true, true));
+
+        var stored = await service.GetAccessSettingsAsync();
+        stored.DiscordRestricted.Should().BeFalse();
+        stored.GoogleRestricted.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task UpdateAccessSettings_AllowsBothRestricted_WhenBothAllowlistsHaveEntries()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateAccessSettings_AllowsBothRestricted_WhenBothAllowlistsHaveEntries));
+        db.AllowedGuilds.Add(new AllowedGuild { GuildId = "123" });
+        db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
+        await db.SaveChangesAsync();
+        var service = CreateService(db, new LogSpy(), "admin-1", "Thomas");
+
+        var result = await service.UpdateAccessSettingsAsync(new UpdateAccessSettingsDto(true, true));
+
+        result.IsSuccess.Should().BeTrue();
     }
 
     // -------------------------
@@ -183,6 +242,9 @@ public class SettingsServiceTests
     public async Task UpdateAccessSettings_LogsBoth_WhenBothValuesChangeInOneCall()
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateAccessSettings_LogsBoth_WhenBothValuesChangeInOneCall));
+        db.AllowedGuilds.Add(new AllowedGuild { GuildId = "123" });
+        db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
+        await db.SaveChangesAsync();
         var logSpy = new LogSpy();
         var service = CreateService(db, logSpy, "admin-1", "Thomas");
 
