@@ -21,6 +21,12 @@ export const AdminGuildsSection = () => {
             g.label?.toLowerCase().includes(search.toLowerCase())
     );
 
+    const handleAddKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && guildId.trim() && !addMutation.isPending) {
+            addMutation.mutate();
+        }
+    };
+
     return (
         <>
             <Card className="border shadow-sm">
@@ -37,18 +43,26 @@ export const AdminGuildsSection = () => {
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
                     {accessMode?.isDiscordOpenMode && (
-                        <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/40 px-3 py-2.5">
-                            <InfoIcon className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-sky-800 dark:text-sky-300">
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2.5">
+                            <TriangleAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-amber-800 dark:text-amber-300">
                                 {getTranslation('admin.guilds.open_mode_warning')}
                             </p>
                         </div>
                     )}
-                    {!accessMode?.isDiscordOpenMode && accessMode?.isDiscordRestrictionLocksEveryone && (
-                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2.5">
-                            <TriangleAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-amber-800 dark:text-amber-300">
-                                {getTranslation('admin.guilds.restriction_locks_everyone_warning')}
+                    {!accessMode?.isDiscordOpenMode && accessMode?.isDiscordRestrictionLocksEveryone && !accessMode?.noLoginMethodAvailable && (
+                        <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/40 px-3 py-2.5">
+                            <InfoIcon className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-sky-800 dark:text-sky-300">
+                                {getTranslation('admin.guilds.disabled_as_login_method_info')}
+                            </p>
+                        </div>
+                    )}
+                    {accessMode?.noLoginMethodAvailable && (
+                        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/40 px-3 py-2.5">
+                            <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-red-800 dark:text-red-300">
+                                {getTranslation('admin.guilds.no_login_method_warning')}
                             </p>
                         </div>
                     )}
@@ -57,6 +71,7 @@ export const AdminGuildsSection = () => {
                             placeholder={getTranslation('admin.guilds.guild_id_placeholder')}
                             value={guildId}
                             onChange={(e) => setGuildId(e.target.value)}
+                            onKeyDown={handleAddKeyDown}
                             className="h-8 text-sm font-mono"
                         />
                         <div className="flex gap-2">
@@ -64,6 +79,7 @@ export const AdminGuildsSection = () => {
                                 placeholder={getTranslation('admin.guilds.label_placeholder')}
                                 value={label}
                                 onChange={(e) => setLabel(e.target.value)}
+                                onKeyDown={handleAddKeyDown}
                                 className="h-8 text-sm"
                             />
                             <Button

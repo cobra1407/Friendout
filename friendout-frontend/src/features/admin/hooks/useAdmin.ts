@@ -15,6 +15,7 @@ export const useAccessMode = () => {
 
 export const useAdminSettings = () => {
     const qc = useQueryClient();
+    const [noLoginMethodLeftOpen, setNoLoginMethodLeftOpen] = useState(false);
 
     const { data: settings, isLoading } = useQuery({
         queryKey: ["admin", "access-settings"],
@@ -28,10 +29,17 @@ export const useAdminSettings = () => {
             qc.invalidateQueries({ queryKey: ["admin", "access-settings"] });
             qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
-        onError: () => toast.error(getTranslation('admin.settings.toast_error')),
+        onError: (error: any) => {
+            const errorCode = error?.response?.data?.error;
+            if (errorCode === 'no_login_method_left') {
+                setNoLoginMethodLeftOpen(true);
+            } else {
+                toast.error(getTranslation('admin.settings.toast_error'));
+            }
+        },
     });
 
-    return { settings, isLoading, updateMutation };
+    return { settings, isLoading, updateMutation, noLoginMethodLeftOpen, setNoLoginMethodLeftOpen };
 };
 
 export const useAdminLogs = () => {
