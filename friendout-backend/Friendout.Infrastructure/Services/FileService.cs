@@ -124,11 +124,16 @@ namespace Friendout.Infrastructure.Services
         {
             using var image = await SixLabors.ImageSharp.Image.LoadAsync(sourceStream);
 
-            image.Mutate(ctx => ctx.Resize(new ResizeOptions
+            // ResizeMode.Max upscales smaller images in ImageSharp 3.x, so we only resize
+            // when the image actually exceeds the cap — smaller images are re-encoded as-is.
+            if (image.Width > ActivityImageMaxWidth || image.Height > ActivityImageMaxWidth)
             {
-                Mode = ResizeMode.Max,
-                Size = new Size(ActivityImageMaxWidth, ActivityImageMaxWidth)
-            }));
+                image.Mutate(ctx => ctx.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(ActivityImageMaxWidth, ActivityImageMaxWidth)
+                }));
+            }
 
             var encoder = new WebpEncoder { FileFormat = WebpFileFormatType.Lossy, Quality = ActivityImageWebpQuality };
             await image.SaveAsync(destinationPath, encoder);
