@@ -347,6 +347,17 @@
         "equipment_exist" : "L'equipement existe deja"
     }
   },
+  "equipment_list": {
+    "toast": {
+        "fetch_error": "Impossible de charger vos listes d'équipement",
+        "create_success": "Liste d'équipement créée",
+        "create_error": "Impossible de créer la liste d'équipement",
+        "update_success": "Liste d'équipement mise à jour",
+        "update_error": "Impossible de mettre à jour la liste d'équipement",
+        "delete_success": "Liste d'équipement supprimée",
+        "delete_error": "Impossible de supprimer la liste d'équipement"
+    }
+  },
   "error404": {
     "message": "Oups ! La page que vous recherchez n'existe pas.",
     "back_home": "Retour à l'accueil",

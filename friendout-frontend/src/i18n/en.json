@@ -345,6 +345,17 @@
         "equipment_exist" : "Equipment already exist."
     }
  },
+  "equipment_list": {
+    "toast": {
+        "fetch_error": "Failed to load your equipment lists",
+        "create_success": "Equipment list created",
+        "create_error": "Failed to create the equipment list",
+        "update_success": "Equipment list updated",
+        "update_error": "Failed to update the equipment list",
+        "delete_success": "Equipment list deleted",
+        "delete_error": "Failed to delete the equipment list"
+    }
+ },
   "error404": {
     "message": "Oops! The page you are looking for does not exist.",
     "back_home": "Back to Home",
