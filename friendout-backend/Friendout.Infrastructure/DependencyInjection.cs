@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IEquipmentService, EquipmentService>();
+        services.AddScoped<IEquipmentListService, EquipmentListService>();
         services.AddScoped<IParticipantService, ParticipantService>();
         services.AddScoped<ICommentService, CommentService>();
 
