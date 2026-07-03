@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Friendout.Domain.Constants;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.EquipmentList;
 using Friendout.Domain.Models;
@@ -32,7 +33,7 @@ public class EquipmentListService : IEquipmentListService
             var lists = await _friendoutDbContext.EquipmentLists
                 .Include(l => l.Items)
                 .Where(l => l.UserId == userId)
-                .OrderBy(l => l.createdAt)
+                .OrderBy(l => l.CreatedAt)
                 .ToListAsync();
 
             return ServiceResult<List<EquipmentListDto>>.Success(lists.Select(MapToDto).ToList());
@@ -83,6 +84,7 @@ public class EquipmentListService : IEquipmentListService
             {
                 UserId = userId,
                 Name = name,
+                Icon = ResolveIcon(request.Icon),
                 Items = SanitizeItems(request.Items)
                     .Select(itemName => new EquipmentListItem { Name = itemName })
                     .ToList()
@@ -123,6 +125,7 @@ public class EquipmentListService : IEquipmentListService
                 return ServiceResult<EquipmentListDto>.Failure("You already have an equipment list with this name");
 
             list.Name = name;
+            list.Icon = ResolveIcon(request.Icon);
             list.UpdatedAt = DateTime.UtcNow;
 
             // Replace items entirely rather than diffing — lists are small and this keeps the logic simple.
@@ -165,6 +168,15 @@ public class EquipmentListService : IEquipmentListService
     }
 
     /// <summary>
+    /// Falls back to the default icon when the requested key is missing or not part
+    /// of the whitelist, rather than rejecting the whole request for an icon issue.
+    /// </summary>
+    private static string ResolveIcon(string? requestedIcon)
+    {
+        return EquipmentListIcons.IsValid(requestedIcon) ? requestedIcon! : EquipmentListIcons.Default;
+    }
+
+    /// <summary>
     /// Trims, drops blanks, and deduplicates (case-insensitive) a raw list of equipment names.
     /// </summary>
     private static List<string> SanitizeItems(List<string> rawItems)
@@ -182,6 +194,7 @@ public class EquipmentListService : IEquipmentListService
         {
             Id = list.Id,
             Name = list.Name,
+            Icon = list.Icon,
             Items = list.Items.Select(i => i.Name).ToList(),
             CreatedAt = list.CreatedAt,
             UpdatedAt = list.UpdatedAt
