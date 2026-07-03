@@ -94,7 +94,6 @@ export const UserMenu = ({ onLogout }: UserMenuProps) => {
                     <MenuButton
                         icon={<Package className="w-4 h-4" />}
                         label={getTranslation("user_menu.my_equipment")}
-                        badge={getTranslation("common.soon")}
                         onClick={() => { setIsPopoverOpen(false); navigate("/equipment"); }}
                     />
                 </div>

@@ -39,6 +39,14 @@
     "button_creating": "Creating...",
     "button_saving": "Saving...",
     "equipment_label": "Required equipment (optional)",
+    "equipment_list_selector": {
+        "trigger": "From a list",
+        "label": "Your saved lists",
+        "description": "Pick a list to add its items to the equipment above.",
+        "placeholder": "Choose a list...",
+        "applied": "\"{{name}}\" added to required equipment",
+        "nothing_new": "All items from this list are already added"
+    },
     "confirm_update_modal": {
       "title": "Update this activity?",
       "description": "Participants will be notified by email of this update.",
@@ -162,6 +170,7 @@
     "close": "Close",
     "free": "Free",
     "loading": "Loading...",
+    "saving": "Saving...",
     "export_calendar": "Export to Calendar",
     "calendar_exported": "Activity exported to your calendar!",
     "export_ics": ".ics file (Apple / Outlook)",
@@ -346,6 +355,27 @@
     }
  },
   "equipment_list": {
+  "page_title": "My equipment lists",
+  "page_description": "Create reusable equipment lists to quickly fill in the required equipment when creating an activity.",
+  "new_list": "New list",
+  "empty_state": "You don't have any equipment list yet. Create one to reuse it next time you create an activity.",
+  "empty_items": "No items in this list.",
+  "item_count": "{{count}} items",
+  "item_count_one": "1 item",
+  "more_items": "+{{count}}",
+  "form": {
+      "create_title": "New equipment list",
+        "edit_title": "Edit equipment list",
+        "description": "Give your list a name and add the equipment you'll want to reuse.",
+        "name_label": "List name",
+        "name_placeholder": "e.g. Hiking, Camping, Bike ride...",
+        "icon_label": "Icon"
+    },
+    "delete_confirm": {
+        "title": "Delete \"{{name}}\"?",
+        "description": "This action cannot be undone. Activities already created with this list won't be affected.",
+        "confirm_button": "Delete"
+    },
     "toast": {
         "fetch_error": "Failed to load your equipment lists",
         "create_success": "Equipment list created",
@@ -355,7 +385,7 @@
         "delete_success": "Equipment list deleted",
         "delete_error": "Failed to delete the equipment list"
     }
- },
+  },
   "error404": {
     "message": "Oops! The page you are looking for does not exist.",
     "back_home": "Back to Home",
