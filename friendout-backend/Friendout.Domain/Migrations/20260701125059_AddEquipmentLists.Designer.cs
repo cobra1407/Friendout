@@ -4,6 +4,7 @@ using Friendout.Domain.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Friendout.Domain.Migrations
 {
     [DbContext(typeof(FriendoutDbContext))]
-    partial class FriendoutDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701125059_AddEquipmentLists")]
+    partial class AddEquipmentLists
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -484,11 +487,6 @@ namespace Friendout.Domain.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(3)")
                         .HasColumnName("created_at");
-
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("icon");
 
                     b.Property<string>("Name")
                         .IsRequired()

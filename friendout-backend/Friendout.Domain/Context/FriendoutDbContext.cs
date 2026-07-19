@@ -17,6 +17,8 @@ namespace Friendout.Domain.Context
         public DbSet<Equipment> Equipment { get; set; }
         public DbSet<UserEquipment> UserEquipment { get; set; }
         public DbSet<ActivityEquipment> ActivityEquipment { get; set; }
+        public DbSet<EquipmentList> EquipmentLists { get; set; }
+        public DbSet<EquipmentListItem> EquipmentListItems { get; set; }
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
         public DbSet<VerificationToken> VerificationTokens { get; set; }
@@ -218,6 +220,27 @@ namespace Friendout.Domain.Context
             modelBuilder.Entity<ActivityEquipment>(entity =>
             {
                 entity.HasIndex(e => new { e.ActivityId, e.EquipmentId }).IsUnique();
+            });
+
+            modelBuilder.Entity<EquipmentList>(entity =>
+            {
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.UserId, e.Name }).IsUnique();
+
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.EquipmentLists)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Items)
+                    .WithOne(e => e.EquipmentList)
+                    .HasForeignKey(e => e.EquipmentListId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<EquipmentListItem>(entity =>
+            {
+                entity.HasIndex(e => e.EquipmentListId);
             });
 
             modelBuilder.Entity<UserAchievement>(entity =>

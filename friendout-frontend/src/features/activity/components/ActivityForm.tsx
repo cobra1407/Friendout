@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import EquipmentManager from "@/features/equipment/component/EquipmentManager"
+import { EquipmentListSelector } from "@/features/equipmentList/components/EquipmentListSelector"
 import SubActivityManager from "@/features/subActivity/component/SubActivityManager"
 import type { Activity } from "@/features/activity/types/activity.type"
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type"
@@ -210,7 +211,14 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                             </div>
 
                             <SubActivityManager subActivities={subActivities} onChange={setSubActivities} />
-                            <EquipmentManager equipment={requiredEquipment} onChange={setRequiredEquipment} showChecklist={false} />
+                            <EquipmentManager
+                                equipment={requiredEquipment}
+                                onChange={setRequiredEquipment}
+                                showChecklist={false}
+                                headerAction={
+                                    <EquipmentListSelector currentItems={requiredEquipment} onApply={setRequiredEquipment} />
+                                }
+                            />
 
                             {/* Image */}
                             <div className="space-y-2">

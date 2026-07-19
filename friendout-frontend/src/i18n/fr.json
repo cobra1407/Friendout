@@ -38,6 +38,14 @@
     "button_creating": "Création...",
     "button_saving": "Enregistrement...",
     "equipment_label": "Équipements requis (optionnel)",
+    "equipment_list_selector": {
+        "trigger": "Depuis une liste",
+        "label": "Vos listes enregistrées",
+        "description": "Choisissez une liste pour ajouter ses éléments à l'équipement ci-dessus.",
+        "placeholder": "Choisir une liste...",
+        "applied": "\"{{name}}\" ajoutée à l'équipement requis",
+        "nothing_new": "Tous les éléments de cette liste sont déjà ajoutés"
+    },
     "confirm_update_modal": {
       "title": "Modifier l'activité ?",
       "description": "Les participants seront notifiés par email de cette modification.",
@@ -164,6 +172,7 @@
     "close": "Fermer",
     "free": "Gratuit",
     "loading": "Chargement...",
+    "saving": "Enregistrement...",
     "export_calendar": "Exporter au calendrier",
     "calendar_exported": "Activité exportée dans votre calendrier !",
     "export_ics": "Fichier .ics (Apple / Outlook)",
@@ -173,7 +182,7 @@
   "user_menu": {
     "my_account": "Mon compte",
     "preferences": "Mes préférences",
-    "my_equipment": "Mes équipements",
+    "my_equipment": "Mes listes d'équipement",
     "administration": "Administration",
     "admin_panel": "Panneau admin"
   },
@@ -345,6 +354,41 @@
     "checklist_summary": "{{checked}} sur {{total}} équipements cochés",
     "error":{
         "equipment_exist" : "L'equipement existe deja"
+    }
+  },
+  "equipment_list": {
+    "page_title": "Mes listes d'équipement",
+    "page_description": "Créez des listes d'équipement réutilisables pour préremplir rapidement l'équipement requis lors de la création d'une activité.",
+    "new_list": "Nouvelle liste",
+    "empty_state": "Vous n'avez pas encore de liste d'équipement. Créez-en une pour la réutiliser lors de votre prochaine activité.",
+    "empty_items": "Aucun élément dans cette liste.",
+    "item_count": "{{count}} éléments",
+    "item_count_one": "1 élément",
+    "more_items": "+{{count}}",
+    "view_modal": {
+        "description": "Liste complète du matériel de cette liste."
+    },
+    "form": {
+        "create_title": "Nouvelle liste d'équipement",
+        "edit_title": "Modifier la liste d'équipement",
+        "description": "Donnez un nom à votre liste et ajoutez l'équipement que vous voulez réutiliser.",
+        "name_label": "Nom de la liste",
+        "name_placeholder": "ex. Randonnée, Camping, Balade à vélo...",
+        "icon_label": "Icône"
+    },
+    "delete_confirm": {
+        "title": "Supprimer \"{{name}}\" ?",
+        "description": "Cette action est irréversible. Les activités déjà créées avec cette liste ne seront pas affectées.",
+        "confirm_button": "Supprimer"
+    },
+    "toast": {
+        "fetch_error": "Impossible de charger vos listes d'équipement",
+        "create_success": "Liste d'équipement créée",
+        "create_error": "Impossible de créer la liste d'équipement",
+        "update_success": "Liste d'équipement mise à jour",
+        "update_error": "Impossible de mettre à jour la liste d'équipement",
+        "delete_success": "Liste d'équipement supprimée",
+        "delete_error": "Impossible de supprimer la liste d'équipement"
     }
   },
   "error404": {

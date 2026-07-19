@@ -13,6 +13,7 @@ import CreateActivityPage from '@/features/activity/pages/CreateActivityPage'
 import EditActivityPage from '@/features/activity/pages/EditActivityPage'
 import AdminPage from '@/features/admin/pages/AdminPage'
 import PreferencesPage from '@/features/preferences/pages/PreferencesPage'
+import EquipmentListsPage from '@/features/equipmentList/pages/EquipmentListsPage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useLocaleStore } from '@/i18n/locale.store'
 
@@ -44,8 +45,7 @@ function App() {
                             <Route path="/activities/:id" element={<ActivityDetailsPage />} />
                             <Route path="/admin" element={<AdminPage />} />
                             <Route path="/preferences" element={<PreferencesPage />} />
-                            {/* Placeholder route — page to be implemented */}
-                            <Route path="/equipment" element={<div className="p-8 text-center text-muted-foreground">Équipements — à venir</div>} />
+                            <Route path="/equipment" element={<EquipmentListsPage />} />
                         </Route>
                         <Route path="*" element={<Error404Page />} />
                     </Routes>

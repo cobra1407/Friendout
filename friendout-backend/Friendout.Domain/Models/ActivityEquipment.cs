@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Friendout.Domain.Models
 {
-    [Table("activity_equipment")]
+    [Table("activity_equipments")]
     public class ActivityEquipment
     {
         [Key]

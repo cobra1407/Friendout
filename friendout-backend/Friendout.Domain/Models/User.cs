@@ -45,6 +45,7 @@ namespace Friendout.Domain.Models
         public ICollection<UserParticipation> UserParticipation { get; set; } = new List<UserParticipation>();
         public ICollection<ActivityComment> Comments { get; set; } = new List<ActivityComment>();
         public ICollection<UserEquipment> UserEquipments { get; set; } = new List<UserEquipment>();
+        public ICollection<EquipmentList> EquipmentLists { get; set; } = new List<EquipmentList>();
         public ICollection<UserAchievement> UserAchievements { get; set; } = new List<UserAchievement>();
         public ICollection<UserNotification> Notifications { get; set; } = new List<UserNotification>();
         public UserPreferences? Preferences { get; set; }
