@@ -57,6 +57,16 @@ export interface AppLogDto {
     createdAt: string;
 }
 
+export interface HealthCheckEntryDto {
+    name: string;
+    status: "Healthy" | "Degraded" | "Unhealthy";
+}
+
+export interface HealthDto {
+    status: "Healthy" | "Degraded" | "Unhealthy";
+    checks: HealthCheckEntryDto[];
+}
+
 export const adminApi = {
 
     // ------ Logs management ------
@@ -97,4 +107,9 @@ export const adminApi = {
 
     submitAccessRequest: (dto: { email: string; message?: string }) =>
         api.post("/access-requests", dto),
+
+    // ------ Health check ------
+    // Public endpoint (/api/health, no auth) — also used by Docker healthchecks
+    // and external uptime monitors, not just this admin badge.
+    getHealth: () => api.get<HealthDto>("/health").then(r => r.data),
 };

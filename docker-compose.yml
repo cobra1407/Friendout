@@ -58,6 +58,12 @@
       - uploads_data:/app/uploads
     networks:
       - friendout-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # React Frontend + Nginx
   frontend:
@@ -67,7 +73,8 @@
     container_name: friendout-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
     networks:

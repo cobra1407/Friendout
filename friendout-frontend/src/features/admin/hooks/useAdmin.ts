@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { adminApi } from "../api/admin.api";
 import { toast } from "sonner";
@@ -263,4 +263,48 @@ export const useAdminAccessRequests = () => {
     });
 
     return { requests, isLoading, resolveMutation };
+};
+
+// Polls the public /api/health endpoint for the "system operational" badge in
+// AdminPageHeader. A failed request (network error, 5xx, timeout) is treated
+// the same as an explicit "Unhealthy" status — both mean "something's wrong".
+// retry: false because a health check that silently retries before showing
+// red defeats the point of the badge.
+//
+// The check usually resolves in well under a second (same Docker network), so
+// naively showing a "checking" state the instant the request starts causes a
+// visible flash: grey badge for ~50ms, then it snaps to green. Instead we only
+// reveal the "checking" badge if the request is still pending after
+// CHECKING_REVEAL_DELAY_MS — fast responses (the common case) go straight to
+// their final colored state with a single render, no flash at all. Slow
+// responses still get a visible "checking" state, since silence forever would
+// be worse than a delayed spinner.
+const CHECKING_REVEAL_DELAY_MS = 400;
+
+export const useHealthCheck = () => {
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["admin", "health"],
+        queryFn: adminApi.getHealth,
+        refetchInterval: 30_000,
+        retry: false,
+    });
+
+    const [showChecking, setShowChecking] = useState(false);
+
+    useEffect(() => {
+        if (!isLoading) {
+            setShowChecking(false);
+            return;
+        }
+        const timer = setTimeout(() => setShowChecking(true), CHECKING_REVEAL_DELAY_MS);
+        return () => clearTimeout(timer);
+    }, [isLoading]);
+
+    const status: "checking" | "healthy" | "down" | null = isLoading
+        ? (showChecking ? "checking" : null)
+        : !isError && data?.status === "Healthy"
+            ? "healthy"
+            : "down";
+
+    return { status };
 };

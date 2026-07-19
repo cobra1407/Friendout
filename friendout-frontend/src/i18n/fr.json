@@ -414,6 +414,8 @@
     },
     "page_title": "Panneau de contrôle",
     "system_operational": "Système opérationnel",
+    "system_checking": "Vérification...",
+    "system_down": "Problème détecté",
     "search_placeholder": "Rechercher...",
     "no_results": "Aucun résultat",
     "nav": {
