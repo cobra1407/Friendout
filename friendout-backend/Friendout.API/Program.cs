@@ -39,6 +39,7 @@ var connectionString = builder.Configuration.GetConnectionString("FriendoutDatab
 
 builder.Services.AddAppForwardedHeaders();
 builder.Services.AddAppSwagger();
+builder.Services.AddAppHealthChecks();
 builder.Services.AddControllers(options => options.Conventions.Add(new RoutePrefixConvention("api")))
                 .AddJsonOptions(opt =>
                 {
@@ -110,4 +111,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
+app.MapAppHealthChecks();
 app.Run();
