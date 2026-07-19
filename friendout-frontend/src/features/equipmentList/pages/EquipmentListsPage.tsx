@@ -10,6 +10,7 @@ import { useEquipmentLists } from "@/features/equipmentList/hooks/useEquipmentLi
 import { EquipmentListCard } from "@/features/equipmentList/components/EquipmentListCard";
 import { EquipmentListFormModal } from "@/features/equipmentList/components/EquipmentListFormModal";
 import { DeleteEquipmentListModal } from "@/features/equipmentList/components/DeleteEquipmentListModal";
+import { EquipmentListViewModal } from "@/features/equipmentList/components/EquipmentListViewModal";
 import type { EquipmentList } from "@/features/equipmentList/types/equipmentList.type";
 import type { EquipmentListIconKey } from "@/features/equipmentList/utils/equipmentListIcons";
 import EquipmentListCardSkeleton from "../components/EquipmentListCardSkeleton";
@@ -29,6 +30,7 @@ export default function EquipmentListsPage() {
     const [editingList, setEditingList] = useState<EquipmentList | undefined>(undefined);
     const [listPendingDeletion, setListPendingDeletion] = useState<EquipmentList | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [viewingList, setViewingList] = useState<EquipmentList | null>(null);
 
     const handleLogout = async () => {
         await authApi.logout();
@@ -116,6 +118,7 @@ export default function EquipmentListsPage() {
                             <EquipmentListCard
                                 key={list.id}
                                 list={list}
+                                onView={setViewingList}
                                 onEdit={openEditModal}
                                 onDelete={setListPendingDeletion}
                             />
@@ -125,6 +128,7 @@ export default function EquipmentListsPage() {
             </div>
 
             <EquipmentListFormModal
+                key={`${editingList?.id ?? "create"}-${isFormOpen}`}
                 open={isFormOpen}
                 isSubmitting={isSubmitting}
                 initialList={editingList}
@@ -138,6 +142,11 @@ export default function EquipmentListsPage() {
                 isDeleting={isDeleting}
                 onCancel={() => setListPendingDeletion(null)}
                 onConfirm={handleConfirmDelete}
+            />
+
+            <EquipmentListViewModal
+                list={viewingList}
+                onClose={() => setViewingList(null)}
             />
         </ActivityLayout>
     );

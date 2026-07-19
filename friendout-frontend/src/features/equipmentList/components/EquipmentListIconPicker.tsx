@@ -31,7 +31,7 @@ export function EquipmentListIconPicker({ value, onChange }: EquipmentListIconPi
                             aria-checked={isSelected}
                             onClick={() => onChange(key)}
                             className={cn(
-                                "flex items-center justify-center w-9 h-9 rounded-full transition-all",
+                                "flex items-center justify-center w-9 h-9 rounded-full transition-all cursor-pointer",
                                 colors.bg,
                                 colors.icon,
                                 isSelected

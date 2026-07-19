@@ -182,7 +182,7 @@
   "user_menu": {
     "my_account": "Mon compte",
     "preferences": "Mes préférences",
-    "my_equipment": "Mes équipements",
+    "my_equipment": "Mes listes d'équipement",
     "administration": "Administration",
     "admin_panel": "Panneau admin"
   },
@@ -365,6 +365,9 @@
     "item_count": "{{count}} éléments",
     "item_count_one": "1 élément",
     "more_items": "+{{count}}",
+    "view_modal": {
+        "description": "Liste complète du matériel de cette liste."
+    },
     "form": {
         "create_title": "Nouvelle liste d'équipement",
         "edit_title": "Modifier la liste d'équipement",

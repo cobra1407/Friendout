@@ -10,18 +10,22 @@ const MAX_VISIBLE_ITEMS = 5;
 
 interface EquipmentListCardProps {
     list: EquipmentList;
+    onView: (list: EquipmentList) => void;
     onEdit: (list: EquipmentList) => void;
     onDelete: (list: EquipmentList) => void;
 }
 
-export function EquipmentListCard({ list, onEdit, onDelete }: EquipmentListCardProps) {
+export function EquipmentListCard({ list, onView, onEdit, onDelete }: EquipmentListCardProps) {
     const visibleItems = list.items.slice(0, MAX_VISIBLE_ITEMS);
     const remainingCount = list.items.length - visibleItems.length;
     const Icon = getEquipmentListIcon(list.icon);
     const colors = getEquipmentListIconColorClasses(list.icon);
 
     return (
-        <Card className="relative flex flex-col overflow-hidden pl-2 hover:shadow-lg transition-shadow">
+        <Card
+            className="relative flex flex-col overflow-hidden pl-2 hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => onView(list)}
+        >
             <div className={`absolute inset-y-0 left-0 w-1 ${colors.solid}`} />
 
             <CardHeader className="pb-3">
@@ -64,11 +68,11 @@ export function EquipmentListCard({ list, onEdit, onDelete }: EquipmentListCardP
             </CardContent>
 
             <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={() => onEdit(list)}>
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(list); }}>
                     <Pencil className="w-3.5 h-3.5" />
                     {getTranslation("common.edit")}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => onDelete(list)}>
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(list); }}>
                     <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     {getTranslation("common.delete")}
                 </Button>

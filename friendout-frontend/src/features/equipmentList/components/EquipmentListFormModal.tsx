@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,19 +25,18 @@ export function EquipmentListFormModal({
     onClose,
     onSubmit
 }: EquipmentListFormModalProps) {
-    const [name, setName] = useState("");
-    const [icon, setIcon] = useState<EquipmentListIconKey>(DEFAULT_EQUIPMENT_LIST_ICON);
-    const [items, setItems] = useState<string[]>([]);
+    const [name, setName] = useState(initialList?.name ?? "");
+    const [icon, setIcon] = useState<EquipmentListIconKey>(
+        (initialList?.icon as EquipmentListIconKey) ?? DEFAULT_EQUIPMENT_LIST_ICON
+    );
+    const [items, setItems] = useState<string[]>(initialList?.items ?? []);
     const isEditMode = !!initialList;
 
-    // Reset the form whenever the modal opens or the target list changes,
-    // so stale values from a previous edit don't leak into a new one.
-    useEffect(() => {
-        if (!open) return;
-        setName(initialList?.name ?? "");
-        setIcon((initialList?.icon as EquipmentListIconKey) ?? DEFAULT_EQUIPMENT_LIST_ICON);
-        setItems(initialList?.items ?? []);
-    }, [open, initialList]);
+    // No reset effect here on purpose: the parent remounts this component (via a
+    // `key` tied to the target list + open state) every time the modal opens, so
+    // the state above is already correct on the very first render. Resetting via
+    // an effect after mount was the previous approach, but it rendered one frame
+    // with stale values before correcting itself, causing a visible icon flash.
 
     const handleSubmit = async () => {
         const trimmedName = name.trim();

@@ -180,7 +180,7 @@
   "user_menu": {
     "my_account": "My account",
     "preferences": "Preferences",
-    "my_equipment": "My equipment",
+    "my_equipment": "My equipment lists",
     "administration": "Administration",
     "admin_panel": "Admin panel"
   },
@@ -363,6 +363,9 @@
   "item_count": "{{count}} items",
   "item_count_one": "1 item",
   "more_items": "+{{count}}",
+  "view_modal": {
+      "description": "Full list of equipment in this list."
+  },
   "form": {
       "create_title": "New equipment list",
         "edit_title": "Edit equipment list",
