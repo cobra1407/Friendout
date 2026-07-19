@@ -19,6 +19,12 @@ RUN dotnet publish Friendout.API/Friendout.API.csproj \
     FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
+# curl is used by the Docker healthcheck (docker-compose.yml) to poll /api/health.
+# Not included in the base aspnet image, so we install it explicitly.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create the uploads folder (mounted volume in production)
 RUN mkdir -p /app/uploads
 
