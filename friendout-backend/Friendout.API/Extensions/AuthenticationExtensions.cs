@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace friendout_backend.Extensions;
@@ -67,30 +68,47 @@ public static class AuthenticationExtensions
         {
             OnTokenValidated = async context =>
             {
-                // Check if this token has been blacklisted (i.e. the user already logged out).
-                // We use the Jti claim (unique token ID) as the blacklist key.
-                var blacklist = context.HttpContext.RequestServices
-                    .GetRequiredService<ITokenBlacklistService>();
-
-                var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
-                if (jti != null && blacklist.IsBlacklisted(jti))
+                try
                 {
-                    context.Fail("Token has been invalidated.");
-                    return;
-                }
+                    // Check if this token has been blacklisted (i.e. the user already logged out).
+                    // We use the Jti claim (unique token ID) as the blacklist key.
+                    var blacklist = context.HttpContext.RequestServices
+                        .GetRequiredService<ITokenBlacklistService>();
 
-                // Ensures a deleted user is rejected immediately instead of keeping access
-                // until their token naturally expires.
-                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId != null)
-                {
-                    var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
-                    var userExists = await db.Users.AnyAsync(u => u.Id == userId);
-                    if (!userExists)
+                    var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+                    if (jti != null && blacklist.IsBlacklisted(jti))
                     {
-                        context.Fail("User no longer exists.");
+                        context.Fail("Token has been invalidated.");
                         return;
                     }
+
+                    // Ensures a deleted user is rejected immediately instead of keeping access
+                    // until their token naturally expires.
+                    var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (userId != null)
+                    {
+                        var db = context.HttpContext.RequestServices.GetRequiredService<FriendoutDbContext>();
+                        var userExists = await db.Users.AnyAsync(u => u.Id == userId);
+                        if (!userExists)
+                        {
+                            context.Fail("User no longer exists.");
+                            return;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // The database can be briefly unreachable (outage, restart, network blip).
+                    // We can't confirm the token is still valid without it, so we fail the
+                    // authentication closed rather than letting the exception bubble up as an
+                    // unhandled 500 — that would crash *every* authenticated request (including
+                    // the public /api/health endpoint, whenever the caller's browser sends the
+                    // auth cookie) instead of degrading gracefully to "unauthenticated".
+                    var logger = context.HttpContext.RequestServices
+                        .GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("Auth");
+                    logger.LogError(ex, "Token validation failed: could not reach the database.");
+                    context.Fail("Could not validate the token right now.");
                 }
             },
 

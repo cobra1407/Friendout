@@ -51,7 +51,10 @@ builder.Services.AddControllers(options => options.Conventions.Add(new RoutePref
 // the app will fail to start if any required key is missing.
 builder.Services.AddInfrastructure(uploadsBasePath, builder.Configuration);
 builder.Services.AddDbContext<FriendoutDbContext>(opt =>
-    opt.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    // Pinned version (matches mysql:8.4 in docker-compose.yml) instead of
+    // ServerVersion.AutoDetect(): AutoDetect hits the DB just to construct the
+    // DbContext, which crashes before our own error handling (e.g. health check) runs.
+    opt.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 0))));
 
 builder.Services.AddAppCors(builder.Configuration);
 builder.Services.AddAppAuthentication(builder.Configuration);
