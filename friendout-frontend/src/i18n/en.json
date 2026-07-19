@@ -412,6 +412,8 @@
     },
     "page_title": "Control panel",
     "system_operational": "System operational",
+    "system_checking": "Checking...",
+    "system_down": "System issue detected",
     "search_placeholder": "Search...",
     "no_results": "No results",
     "nav": {
