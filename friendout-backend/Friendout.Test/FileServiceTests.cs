@@ -8,10 +8,7 @@ using Friendout.Infrastructure.Services;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using FluentAssertions;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using Image = SixLabors.ImageSharp.Image;
+using SkiaSharp;
 
 namespace Friendout.Test;
 
@@ -46,10 +43,12 @@ public class FileServiceTests
     /// <summary>Builds a real (decodable) in-memory PNG of the given size, for tests that exercise image resizing.</summary>
     private static byte[] CreateTestPng(int width, int height)
     {
-        using var image = new Image<Rgba32>(width, height);
-        using var ms = new MemoryStream();
-        image.SaveAsPng(ms);
-        return ms.ToArray();
+        using var bitmap = new SKBitmap(width, height);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.White);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
     }
 
     [Test]
@@ -122,7 +121,7 @@ public class FileServiceTests
         fileName.Should().EndWith(".webp");
 
         var physicalPath = service.GetFilePath(fileName, FileCategory.ActivityImage);
-        using var savedImage = await Image.LoadAsync(physicalPath);
+        using var savedImage = SKBitmap.Decode(physicalPath);
         savedImage.Width.Should().Be(1280);
         savedImage.Height.Should().Be(640);
     }
@@ -146,7 +145,7 @@ public class FileServiceTests
 
         // Assert
         var physicalPath = service.GetFilePath(fileName, FileCategory.ActivityImage);
-        using var savedImage = await Image.LoadAsync(physicalPath);
+        using var savedImage = SKBitmap.Decode(physicalPath);
         savedImage.Width.Should().Be(200);
         savedImage.Height.Should().Be(100);
     }
@@ -172,7 +171,7 @@ public class FileServiceTests
         fileName.Should().EndWith(".webp");
 
         var physicalPath = service.GetFilePath(fileName, FileCategory.UserAvatar);
-        using var savedImage = await Image.LoadAsync(physicalPath);
+        using var savedImage = SKBitmap.Decode(physicalPath);
         savedImage.Width.Should().Be(512);
         savedImage.Height.Should().Be(512);
     }
@@ -208,4 +207,3 @@ public class FileServiceTests
         }
     }
 }
-
