@@ -7,9 +7,7 @@ using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Utils;
 using Microsoft.Extensions.Options;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace Friendout.Infrastructure.Services
 {
@@ -39,8 +37,6 @@ namespace Friendout.Infrastructure.Services
         // Avatars are always resized down to a fixed square and re-encoded as WebP, regardless
         // of the original format or size. This keeps storage small and predictable rather than
         // rejecting large uploads outright — a 20MB phone photo becomes a ~15-45KB avatar.
-        // WebP defaults to *lossless* in ImageSharp 3.x (unlike most encoders/tools), which
-        // produces much larger files than expected — FileFormat must be set explicitly to Lossy.
         private const int AvatarMaxDimension = 512;
         private const int AvatarWebpQuality = 82;
 
@@ -97,41 +93,80 @@ namespace Friendout.Infrastructure.Services
         }
 
         /// <summary>
-        /// Resizes the image to fit within a fixed square (cropping to fill, not letterboxing)
-        /// and re-encodes it as lossy WebP at a controlled quality, regardless of the input format.
+        /// Center-crops the image to a square and resizes it to a fixed size, then re-encodes
+        /// it as lossy WebP. SkiaSharp has no built-in "crop to fill" resize mode, so the crop
+        /// rectangle is computed manually before resizing.
+        /// Decoding/resizing/encoding is CPU-bound and fully synchronous in SkiaSharp, so it
+        /// runs on a thread pool thread via Task.Run rather than blocking the request thread.
         /// </summary>
-        private static async Task SaveResizedAvatarAsync(Stream sourceStream, string destinationPath)
+        private static Task SaveResizedAvatarAsync(Stream sourceStream, string destinationPath)
         {
-            using var image = await SixLabors.ImageSharp.Image.LoadAsync(sourceStream);
-
-            image.Mutate(ctx => ctx.Resize(new ResizeOptions
+            return Task.Run(() =>
             {
-                Mode = ResizeMode.Crop,
-                Size = new Size(AvatarMaxDimension, AvatarMaxDimension)
-            }));
+                using var original = SKBitmap.Decode(sourceStream)
+                    ?? throw new InvalidOperationException("Unsupported or corrupt image.");
+                using var originalImage = SKImage.FromBitmap(original);
 
-            var encoder = new WebpEncoder { FileFormat = WebpFileFormatType.Lossy, Quality = AvatarWebpQuality };
-            await image.SaveAsync(destinationPath, encoder);
+                var cropSize = Math.Min(original.Width, original.Height);
+                var cropX = (original.Width - cropSize) / 2;
+                var cropY = (original.Height - cropSize) / 2;
+                var sourceRect = new SKRect(cropX, cropY, cropX + cropSize, cropY + cropSize);
+                var destRect = new SKRect(0, 0, AvatarMaxDimension, AvatarMaxDimension);
+
+                // SKFilterQuality/SKPaint.FilterQuality are obsolete as of SkiaSharp 4 — sampling
+                // quality is now passed explicitly to DrawImage via SKSamplingOptions instead.
+                var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
+
+                using var surface = SKSurface.Create(new SKImageInfo(AvatarMaxDimension, AvatarMaxDimension));
+                var canvas = surface.Canvas;
+                canvas.Clear(SKColors.Transparent);
+                canvas.DrawImage(originalImage, sourceRect, destRect, sampling);
+                using var resizedImage = surface.Snapshot();
+
+                EncodeAndSave(resizedImage, destinationPath, AvatarWebpQuality);
+            });
         }
 
         /// <summary>
-        /// Downscales the image to a max width (keeping aspect ratio, never upscaling smaller
-        /// images) and re-encodes it as lossy WebP. Activity images are only ever shown as small
-        /// thumbnails or within the details page, so there's no reason to keep multi-MB
-        /// originals around.
+        /// Downscales the image to fit within a max width/height (keeping aspect ratio, never
+        /// upscaling smaller images) and re-encodes it as lossy WebP.
         /// </summary>
-        private static async Task SaveResizedActivityImageAsync(Stream sourceStream, string destinationPath)
+        private static Task SaveResizedActivityImageAsync(Stream sourceStream, string destinationPath)
         {
-            using var image = await SixLabors.ImageSharp.Image.LoadAsync(sourceStream);
-
-            image.Mutate(ctx => ctx.Resize(new ResizeOptions
+            return Task.Run(() =>
             {
-                Mode = ResizeMode.Max,
-                Size = new Size(ActivityImageMaxWidth, ActivityImageMaxWidth)
-            }));
+                using var original = SKBitmap.Decode(sourceStream)
+                    ?? throw new InvalidOperationException("Unsupported or corrupt image.");
 
-            var encoder = new WebpEncoder { FileFormat = WebpFileFormatType.Lossy, Quality = ActivityImageWebpQuality };
-            await image.SaveAsync(destinationPath, encoder);
+                var scale = Math.Min(1.0, (double)ActivityImageMaxWidth / Math.Max(original.Width, original.Height));
+
+                if (scale >= 1.0)
+                {
+                    // Already within bounds — save as-is (still re-encoded to WebP below).
+                    using var originalImage = SKImage.FromBitmap(original);
+                    EncodeAndSave(originalImage, destinationPath, ActivityImageWebpQuality);
+                    return;
+                }
+
+                var targetWidth = Math.Max(1, (int)Math.Round(original.Width * scale));
+                var targetHeight = Math.Max(1, (int)Math.Round(original.Height * scale));
+                var targetInfo = new SKImageInfo(targetWidth, targetHeight, original.ColorType, original.AlphaType);
+
+                // SKFilterQuality is obsolete as of SkiaSharp 4 — SKSamplingOptions replaces it.
+                var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
+                using var resizedBitmap = original.Resize(targetInfo, sampling)
+                    ?? throw new InvalidOperationException("Failed to resize activity image.");
+                using var resizedImage = SKImage.FromBitmap(resizedBitmap);
+
+                EncodeAndSave(resizedImage, destinationPath, ActivityImageWebpQuality);
+            });
+        }
+
+        private static void EncodeAndSave(SKImage image, string destinationPath, int quality)
+        {
+            using var data = image.Encode(SKEncodedImageFormat.Webp, quality);
+            using var output = File.OpenWrite(destinationPath);
+            data.SaveTo(output);
         }
 
         public string GetFileUrl(string fileName, FileCategory category)
