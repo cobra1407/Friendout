@@ -1,0 +1,40 @@
+name: Backend CI
+
+# Runs on every PR (including Dependabot's) that touches the backend, plus on
+# pushes to main. A green check here means "it compiles and the test suite
+# still passes" — it won't catch everything (Docker/ARM-specific issues,
+# licensing changes like the ImageSharp one, visual regressions), but it
+# removes the "let me pull this branch and build it locally" step for the
+# common case of a dependency bump breaking the build.
+on:
+  pull_request:
+    paths:
+      - "friendout-backend/**"
+      - ".github/workflows/backend-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "friendout-backend/**"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: friendout-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "console;verbosity=normal"

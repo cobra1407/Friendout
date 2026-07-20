@@ -2,7 +2,9 @@ import en from './en.json';
 import fr from './fr.json';
 import { useLocaleStore } from './locale.store';
 
-const translations: Record<string, any> = { en, fr };
+type TranslationTree = { [key: string]: string | TranslationTree };
+
+const translations: Record<string, TranslationTree> = { en, fr };
 
 /**
  * Language code used by getTranslation (e.g. 'fr', 'en').
@@ -17,11 +19,14 @@ export const getLocale = () => (getLang() === 'fr' ? 'fr-FR' : 'en-US');
 export const getTranslation = (key: string, params?: Record<string, string | number>) => {
   const lang = getLang();
   const parts = key.split('.');
-  let result: any = translations[lang];
+  let result: string | TranslationTree | undefined = translations[lang];
 
   for (const part of parts) {
-    result = result?.[part];
-    if (result === undefined) break;
+    if (typeof result !== 'object' || result === undefined) {
+      result = undefined;
+      break;
+    }
+    result = result[part];
   }
 
   let str = typeof result === 'string' ? result : key;

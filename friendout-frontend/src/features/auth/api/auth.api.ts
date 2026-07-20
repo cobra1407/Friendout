@@ -27,7 +27,7 @@ export const authApi = {
           return null; // user not authenticated
         }
         if (error.response?.status === 429) {
-          throw new Error("rate_limited"); // preserve auth state
+          throw new Error("rate_limited", { cause: error }); // preserve auth state
         }
       }
 
