@@ -1,9 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { adminApi } from "../api/admin.api";
 import { toast } from "sonner";
 import { getTranslation } from "@/i18n";
 import { UserRole } from "@/features/user/enum/userRole.enum";
+
+const getErrorCode = (error: unknown): string | undefined =>
+    axios.isAxiosError(error) ? error.response?.data?.error : undefined;
 
 export const useAccessMode = () => {
     const { data, isLoading } = useQuery({
@@ -29,8 +33,8 @@ export const useAdminSettings = () => {
             qc.invalidateQueries({ queryKey: ["admin", "access-settings"] });
             qc.invalidateQueries({ queryKey: ["admin", "access-mode"] });
         },
-        onError: (error: any) => {
-            const errorCode = error?.response?.data?.error;
+        onError: (error: unknown) => {
+            const errorCode = getErrorCode(error);
             if (errorCode === 'no_login_method_left') {
                 setNoLoginMethodLeftOpen(true);
             } else {
@@ -206,8 +210,8 @@ export const useAdminUsers = () => {
             toast.success(getTranslation('admin.toast.role_updated'));
             qc.invalidateQueries({ queryKey: ["admin", "users"] });
         },
-        onError: (error: any) => {
-            const errorCode = error?.response?.data?.error;
+        onError: (error: unknown) => {
+            const errorCode = getErrorCode(error);
             if (errorCode === 'last_admin') {
                 toast.error(getTranslation('admin.toast.role_last_admin'));
             } else {
@@ -222,8 +226,8 @@ export const useAdminUsers = () => {
             toast.success(getTranslation('admin.toast.user_deleted'));
             qc.invalidateQueries({ queryKey: ["admin", "users"] });
         },
-        onError: (error: any) => {
-            const errorCode = error?.response?.data?.error;
+        onError: (error: unknown) => {
+            const errorCode = getErrorCode(error);
             if (errorCode === 'last_admin') {
                 toast.error(getTranslation('admin.toast.role_last_admin'));
             } else if (errorCode === 'cannot_delete_self') {
