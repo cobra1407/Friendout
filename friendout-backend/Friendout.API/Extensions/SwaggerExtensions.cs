@@ -7,7 +7,6 @@ public static class SwaggerExtensions
 {
     public static IServiceCollection AddAppSwagger(this IServiceCollection services)
     {
-        services.AddOpenApi();
         services.AddEndpointsApiExplorer();
 
         services.AddSwaggerGen(opt =>
