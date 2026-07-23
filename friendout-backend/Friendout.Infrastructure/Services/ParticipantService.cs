@@ -17,11 +17,13 @@ public class ParticipantService : IParticipantService
 {
     private readonly FriendoutDbContext _friendoutDbContext;
     private readonly ILogger<ParticipantService> _logger;
+    private readonly IActivitiesHubNotifier _hubNotifier;
 
-    public ParticipantService(FriendoutDbContext friendoutDbContext, ILogger<ParticipantService> logger)
+    public ParticipantService(FriendoutDbContext friendoutDbContext, ILogger<ParticipantService> logger, IActivitiesHubNotifier hubNotifier)
     {
         _friendoutDbContext = friendoutDbContext;
         _logger = logger;
+        _hubNotifier = hubNotifier;
     }
 
     public async Task<ServiceResult<UserActivityParticipantsDto>> GetActivityParticipantsAsync(string activityId)
@@ -85,7 +87,7 @@ public class ParticipantService : IParticipantService
 
         if (activity is null)
             return ServiceResult<UserActivityParticipationDto>.Failure("Can't participate to this activity"); // Activity doesn't exist
-        
+
         // Prevent joining if activity already started
         if (activity.StartAt < DateTime.UtcNow)
             return ServiceResult<UserActivityParticipationDto>.Failure("This activity is already started");
@@ -167,7 +169,7 @@ public class ParticipantService : IParticipantService
                     }
                 }
             }
-            
+
             try
             {
                 await _friendoutDbContext.SaveChangesAsync();
@@ -214,8 +216,6 @@ public class ParticipantService : IParticipantService
 
             var subActivitiesParticipation =
                 userParticipations.Where(p => p.SubActivityId != null).ToList();
-
-
 
             var result = new UserActivityParticipationDto
             {
@@ -267,6 +267,33 @@ public class ParticipantService : IParticipantService
                     .ToList()
             };
 
+            // Fire-and-forget: notify anyone viewing this activity's detail page that the
+            // participant list changed
+            var participantsUpdate = new UserActivityParticipantsDto
+            {
+                MainActivityParticipants = allParticipations
+                    .Where(p => p.SubActivityId == null)
+                    .Select(p => new ParticipantDto
+                    {
+                        ParticipationId = p.Id,
+                        Username = p.User.Name,
+                        AvatarUrl = p.User.AvatarUrl,
+                        ParticipationStatus = p.Status
+                    })
+                    .ToList(),
+                SubActivityParticipants = allParticipations
+                    .Where(p => p.SubActivityId != null)
+                    .Select(p => new ParticipantDto
+                    {
+                        ParticipationId = p.Id,
+                        Username = p.User.Name,
+                        AvatarUrl = p.User.AvatarUrl,
+                        ParticipationStatus = p.Status,
+                        SubActivityId = p.SubActivityId
+                    })
+                    .ToList()
+            };
+            _ = _hubNotifier.NotifyParticipantsChangedAsync(command.ActivityId, participantsUpdate);
 
             return ServiceResult<UserActivityParticipationDto>.Success(result);
         }
@@ -277,4 +304,3 @@ public class ParticipantService : IParticipantService
         }
     }
 }
-

@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
     getMyNotifications,
@@ -6,6 +7,7 @@ import {
     markAllAsRead,
     deleteNotification,
 } from "@/features/notifications/api/notifications.api"
+import { getHubConnection } from "@/lib/signalr/hubConnection"
 
 const NOTIFICATIONS_KEY = ["notifications"]
 const UNREAD_COUNT_KEY  = ["notifications", "unread-count"]
@@ -21,10 +23,30 @@ export function useNotifications() {
     const { data: unreadCount = 0 } = useQuery({
         queryKey: UNREAD_COUNT_KEY,
         queryFn: getUnreadCount,
-        // Todo: replace this with websockets when the backend supports it, so we don't have to poll every 30 seconds
-        // Poll every 30 seconds so the badge stays fresh without websockets
+        // Kept as a fallback: the WebSocket push below (see useEffect) is what actually keeps
+        // the badge live now, but polling stays as a safety net in case the connection is down
+        // (e.g. the client's browser blocks WebSockets, or a network blip outlasts SignalR's
+        // own automatic reconnect).
         refetchInterval: 30_000,
     })
+
+    // Live push: invalidate both queries the instant a notification arrives, instead of
+    // waiting for the next poll. See WebSocketNotificationStrategy on the backend — it fires
+    // alongside the persisted in-app notification, not instead of it, so this is purely a
+    // delivery-speed improvement, not a new data source.
+    useEffect(() => {
+        const connection = getHubConnection()
+
+        const handleNotificationReceived = () => {
+            qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY })
+            qc.invalidateQueries({ queryKey: UNREAD_COUNT_KEY })
+        }
+
+        connection.on("NotificationReceived", handleNotificationReceived)
+        return () => {
+            connection.off("NotificationReceived", handleNotificationReceived)
+        }
+    }, [qc])
 
     const { mutate: read } = useMutation({
         mutationFn: markAsRead,

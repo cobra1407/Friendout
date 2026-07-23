@@ -14,11 +14,13 @@ public class CommentService : ICommentService
 {
     private readonly FriendoutDbContext _dbContext;
     private readonly ILogger<CommentService> _logger;
+    private readonly IActivitiesHubNotifier _hubNotifier;
 
-    public CommentService(FriendoutDbContext dbContext, ILogger<CommentService> logger)
+    public CommentService(FriendoutDbContext dbContext, ILogger<CommentService> logger, IActivitiesHubNotifier hubNotifier)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _hubNotifier = hubNotifier;
     }
 
     public async Task<ServiceResult<CommentDto>> CreateCommentAsync(string activityId, string userId, string content)
@@ -73,6 +75,8 @@ public class CommentService : ICommentService
                 UserId = comment.UserId
             };
 
+            _ = _hubNotifier.NotifyNewCommentAsync(activityId, dto);
+
             return ServiceResult<CommentDto>.Success(dto);
         }
         catch (Exception ex)
@@ -124,6 +128,8 @@ public class CommentService : ICommentService
                 UpdatedAt = comment.UpdatedAt
             };
 
+            _ = _hubNotifier.NotifyCommentUpdatedAsync(activityId, dto);
+
             return ServiceResult<CommentDto>.Success(dto);
         }
         catch (Exception ex)
@@ -160,6 +166,8 @@ public class CommentService : ICommentService
 
             _dbContext.Comments.Remove(comment);
             await _dbContext.SaveChangesAsync();
+
+            _ = _hubNotifier.NotifyCommentDeletedAsync(activityId, commentId);
 
             return ServiceResult<bool>.Success(true);
         }

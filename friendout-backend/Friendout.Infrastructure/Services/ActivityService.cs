@@ -31,6 +31,7 @@ public class ActivityService : IActivityService
     private readonly ILogger<ActivityService> _logger;
     private readonly IFileService _fileService;
     private readonly INotificationDispatcher _notificationDispatcher;
+    private readonly IActivitiesHubNotifier _hubNotifier;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly AppOptions _appOptions;
 
@@ -39,6 +40,7 @@ public class ActivityService : IActivityService
         ILogger<ActivityService> logger,
         IFileService fileService,
         INotificationDispatcher notificationDispatcher,
+        IActivitiesHubNotifier hubNotifier,
         IServiceScopeFactory scopeFactory,
         IOptions<AppOptions> appOptions)
     {
@@ -46,6 +48,7 @@ public class ActivityService : IActivityService
         _logger = logger;
         _fileService = fileService;
         _notificationDispatcher = notificationDispatcher;
+        _hubNotifier = hubNotifier;
         _scopeFactory = scopeFactory;
         _appOptions = appOptions.Value;
     }
@@ -457,6 +460,9 @@ public class ActivityService : IActivityService
                     Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.Name }
                 }).FirstAsync();
 
+            // Fire-and-forget: push the new activity to every connected client (main feed).
+            _ = _hubNotifier.NotifyNewActivityAsync(updatedActivityDto);
+
             return ServiceResult<ActivityDto>.Success(updatedActivityDto);
         }
         catch (Exception ex)
@@ -725,6 +731,8 @@ public class ActivityService : IActivityService
 
         _friendoutDbContext.Activities.Remove(activity);
         await _friendoutDbContext.SaveChangesAsync();
+
+        _ = _hubNotifier.NotifyDeletedActivityAsync(activity.Id);
 
         return ServiceResult<ActivityDto>.Success(activityDto);
     }

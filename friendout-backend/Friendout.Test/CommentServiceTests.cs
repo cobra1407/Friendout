@@ -28,7 +28,7 @@ public class CommentServiceTests
         context.Activities.Add(activity);
         await context.SaveChangesAsync();
 
-        var service = new CommentService(context, TestLogger<CommentService>.Instance);
+        var service = new CommentService(context, TestLogger<CommentService>.Instance, new NoopActivitiesHubNotifier());
 
         var result = await service.CreateCommentAsync(activity.Id, user.Id, "  Hello world  ");
 
@@ -42,7 +42,7 @@ public class CommentServiceTests
     public async Task CreateCommentAsync_WithEmptyContent_ReturnsFailure()
     {
         await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateCommentAsync_WithEmptyContent_ReturnsFailure));
-        var service = new CommentService(context, TestLogger<CommentService>.Instance);
+        var service = new CommentService(context, TestLogger<CommentService>.Instance, new NoopActivitiesHubNotifier());
 
         var result = await service.CreateCommentAsync("activity-1", "user-1", " ");
 
@@ -84,7 +84,7 @@ public class CommentServiceTests
         context.Comments.Add(comment);
         await context.SaveChangesAsync();
 
-        var service = new CommentService(context, TestLogger<CommentService>.Instance);
+        var service = new CommentService(context, TestLogger<CommentService>.Instance, new NoopActivitiesHubNotifier());
 
         var result = await service.UpdateCommentAsync(activity.Id, comment.Id, other.Id, "Updated");
 
@@ -125,7 +125,7 @@ public class CommentServiceTests
         context.Comments.Add(comment);
         await context.SaveChangesAsync();
 
-        var service = new CommentService(context, TestLogger<CommentService>.Instance);
+        var service = new CommentService(context, TestLogger<CommentService>.Instance, new NoopActivitiesHubNotifier());
 
         var result = await service.DeleteCommentAsync(activity.Id, comment.Id, user.Id);
 

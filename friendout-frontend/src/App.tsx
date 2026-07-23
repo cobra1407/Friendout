@@ -16,6 +16,7 @@ import PreferencesPage from '@/features/preferences/pages/PreferencesPage'
 import EquipmentListsPage from '@/features/equipmentList/pages/EquipmentListsPage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useLocaleStore } from '@/i18n/locale.store'
+import { useRealtimeConnection } from '@/features/realtime/hooks/useRealtimeConnection'
 
 const queryClient = new QueryClient()
 
@@ -24,6 +25,9 @@ function App() {
     useEffect(() => {
         fetchMe();
     }, []);
+
+    // Starts/stops the shared SignalR connection
+    useRealtimeConnection();
 
     // Subscribing here (even unused) forces a re-render of the whole tree when the
     // locale changes, so every getTranslation() call site picks up the new language

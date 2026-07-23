@@ -12,7 +12,7 @@ public class ParticipantServiceTests
     public async Task GetActivityParticipantsAsync_WhenActivityMissing_ReturnsFailure()
     {
         await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(GetActivityParticipantsAsync_WhenActivityMissing_ReturnsFailure));
-        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
 
         var result = await service.GetActivityParticipantsAsync("unknown");
 
@@ -32,7 +32,7 @@ public class ParticipantServiceTests
         context.Activities.Add(activity);
         await context.SaveChangesAsync();
 
-        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
 
         var createResult = await service.SaveParticipationAsync(new UpdateParticipationCommand
         {
@@ -95,7 +95,7 @@ public class ParticipantServiceTests
         context.SubActivities.AddRange(sub1, sub2);
         await context.SaveChangesAsync();
 
-        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
 
         var result = await service.SaveParticipationAsync(new UpdateParticipationCommand
         {
@@ -133,7 +133,7 @@ public class ParticipantServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
 
         var createResult = await service.SaveParticipationAsync(new UpdateParticipationCommand
         {
@@ -185,7 +185,7 @@ public class ParticipantServiceTests
         context.SubActivities.Add(sub1);
         await context.SaveChangesAsync();
 
-        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
 
         var mainFirst = await service.SaveParticipationAsync(new UpdateParticipationCommand
         {
@@ -256,7 +256,7 @@ public class ParticipantServiceTests
         context.SubActivities.Add(subActivity);
         await context.SaveChangesAsync();
 
-        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance);
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
 
         await service.SaveParticipationAsync(new UpdateParticipationCommand
         {
