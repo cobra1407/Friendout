@@ -629,6 +629,7 @@ public class ActivityServiceTests
             TestLogger<ActivityService>.Instance,
             new NoopFileService(),
             new NoopNotificationDispatcher(),
+            new NoopActivitiesHubNotifier(),
             new NoopScopeFactory(),
             Options.Create(new AppOptions { Url = "http://localhost" }));
     }
