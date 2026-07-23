@@ -68,9 +68,12 @@ public class NotificationService : INotificationService
         data.TryAdd("Locale", userPrefs.Locale);
 
         // Filter strategies based on user preferences.
+        // WebSocket shares the InAppEnabled flag on purpose — it's a delivery-speed enhancement
+        // of the in-app channel, not a separately configurable one (see WebSocketNotificationStrategy).
         var activeStrategies = _strategies.Where(s =>
             (s.StrategyName == "Email" && notifPrefs.EmailEnabled) ||
-            (s.StrategyName == "InApp"  && notifPrefs.InAppEnabled)
+            (s.StrategyName == "InApp"  && notifPrefs.InAppEnabled) ||
+            (s.StrategyName == "WebSocket" && notifPrefs.InAppEnabled)
         );
 
         // Execute each active strategy independently — one failure doesn't block the others.

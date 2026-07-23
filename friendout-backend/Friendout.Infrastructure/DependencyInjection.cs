@@ -1,9 +1,11 @@
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
+using Friendout.Infrastructure.WebSocketHub;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 
 namespace Friendout.Infrastructure;
 
@@ -46,9 +48,21 @@ public static class DependencyInjection
         services.AddScoped<ITemplateEngine, SimpleTemplateEngine>();
         services.AddScoped<INotificationStrategy, EmailNotificationStrategy>();  // ← email channel
         services.AddScoped<INotificationStrategy, InAppNotificationStrategy>();  // ← in-app channel
+        services.AddScoped<INotificationStrategy, WebSocketNotificationStrategy>(); // ← live push channel
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
         services.AddScoped<IInAppNotificationService, InAppNotificationService>();
+
+        // ---- Real-time (SignalR) ----
+        // SignalR uses its own JSON serializer, entirely separate from the MVC controllers'
+        // AddJsonOptions (Program.cs) — without this, enums like ParticipationStatus are sent
+        // as raw numbers over the hub (0, 1, 2…) instead of the strings ("Participating", …)
+        services.AddSignalR().AddJsonProtocol(options =>
+        {
+            options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+
+        services.AddSingleton<IActivitiesHubNotifier, ActivitiesHubNotifier>();
 
         // ---- File services ----
         services.AddScoped<IFileValidationService, FileValidationService>();
