@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useState } from "react";
 import ActivityHeader from "@/features/activity/components/ActivityHeader";
 import { ActivityLayout } from "@/features/activity/layout/activityLayout";
 import { Spinner } from "@/components/ui/spinner";
@@ -9,10 +10,12 @@ import { useActivityDetails } from "@/features/activity/hooks/useActivityDetails
 import { useActivityEquipmentSync } from "@/features/activity/hooks/useActivityEquipmentSync";
 import { useActivityParticipationSync } from "@/features/activity/hooks/useActivityParticipationSync";
 import { useActivityCommentHandlers } from "@/features/activity/hooks/useActivityCommentHandlers";
+import { useRealtimeActivityDetail } from "@/features/realtime/hooks/useRealtimeActivityDetail";
 import { ActivityDetailsContent } from "@/features/activity/components/ActivityDetailsContent";
 import { getTranslation } from "@/i18n";
 import { useOgMeta } from "@/lib/utils/useOgMeta";
 import api from "@/lib/api/api";
+import type { Comment } from "@/features/comment/types/comment.type";
 
 export const ActivityDetailsPage = () => {
     const navigate = useNavigate();
@@ -20,6 +23,8 @@ export const ActivityDetailsPage = () => {
     const { user } = useAuth();
 
     const { activityDetails, setActivityDetails, isLoading } = useActivityDetails(id);
+    // clearer message can be shown instead of the generic not-found screen.
+    const [wasDeletedWhileViewing, setWasDeletedWhileViewing] = useState(false);
     const equipmentActions = useActivityEquipmentSync(
         activityDetails,
         setActivityDetails
@@ -28,43 +33,70 @@ export const ActivityDetailsPage = () => {
         activityDetails,
         setActivityDetails
     );
+
+    // Lifted out of the useActivityCommentHandlers call below so the exact same function
+    // references can also be passed to useRealtimeActivityDetail — a comment created by someone
+    // else arrives as the same shape over the WebSocket, so it reuses the same merge logic
+    // instead of duplicating it.
+    const handleCommentCreated = useCallback((newComment: Comment) => {
+        setActivityDetails((prev) => {
+            if (!prev) return prev;
+
+            const currentComments = prev.comments ?? [];
+
+            // avoid duplicating a comment
+            const commentExists = currentComments.some(
+                (comment) => comment.commentId === newComment.commentId
+            );
+
+            if (commentExists) {
+                return prev;
+            }
+            return {
+                ...prev,
+                comments: [newComment, ...currentComments]
+            };
+        });
+    }, [setActivityDetails]);
+
+    const handleCommentUpdated = useCallback((updatedComment: Comment) => {
+        setActivityDetails((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                comments: prev.comments.map((comment) =>
+                    comment.commentId === updatedComment.commentId ? updatedComment : comment
+                ),
+            };
+        });
+    }, [setActivityDetails]);
+
+    const handleCommentDeleted = useCallback((deletedCommentId: string) => {
+        setActivityDetails((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                comments: prev.comments.filter((comment) => comment.commentId !== deletedCommentId),
+            };
+        });
+    }, [setActivityDetails]);
+
     const commentHandlers = useActivityCommentHandlers({
-        onCommentCreated: (newComment) => {
-            setActivityDetails((prev) => {
-                if (!prev) return prev;
+        onCommentCreated: handleCommentCreated,
+        onCommentUpdated: handleCommentUpdated,
+        onCommentDeleted: handleCommentDeleted,
+    });
 
-                return {
-                    ...prev,
-                    comments: [newComment, ...(prev.comments ?? [])],
-                };
-            });
-        },
-        onCommentUpdated: (updatedComment) => {
-            setActivityDetails((prev) => {
-                if (!prev) return prev;
-
-                return {
-                    ...prev,
-                    comments: prev.comments.map((comment) =>
-                        comment.commentId === updatedComment.commentId
-                            ? updatedComment
-                            : comment
-                    ),
-                };
-            });
-        },
-        onCommentDeleted: (deletedCommentId) => {
-            setActivityDetails((prev) => {
-                if (!prev) return prev;
-
-                return {
-                    ...prev,
-                    comments: prev.comments.filter(
-                        (comment) => comment.commentId !== deletedCommentId
-                    ),
-                };
-            });
-        },
+    useRealtimeActivityDetail({
+        activityId: id,
+        onNewComment: handleCommentCreated,
+        onCommentUpdated: handleCommentUpdated,
+        onCommentDeleted: handleCommentDeleted,
+        onParticipantsChanged: participationActions.applyRealtimeParticipantsUpdate,
+        // Shows a dedicated "this activity was just deleted" screen (see render below) rather
+        // than the generic not-found one — someone mid-read gets a clear explanation of what just
+        // happened instead of a message that sounds like they followed a broken/expired link.
+        onActivityDeleted: () => setWasDeletedWhileViewing(true),
     });
 
     const handleOnBack = () => navigate("/activities");
@@ -97,6 +129,21 @@ export const ActivityDetailsPage = () => {
                 <div className="flex items-center justify-center h-full">
                     <Spinner className="w-8 h-8" />
                 </div>
+            </ActivityLayout>
+        );
+    }
+
+    if (wasDeletedWhileViewing) {
+        return (
+            <ActivityLayout header={<div className="h-16" />}>
+                <ErrorState
+                    title={getTranslation('activity.deleted_while_viewing')}
+                    description={getTranslation('activity.deleted_while_viewing_description')}
+                    icon={
+                        <img src={findIcon} alt={getTranslation('activity.deleted_while_viewing_icon_alt')} className="h-8 w-8" />
+                    }
+                    primaryAction={{ label: getTranslation('common.back'), onClick: handleOnBack }}
+                />
             </ActivityLayout>
         );
     }

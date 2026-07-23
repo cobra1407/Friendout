@@ -4,15 +4,18 @@ import { ActivityLayout } from "@/features/activity/layout/activityLayout";
 import type { Activity } from "@/features/activity/types/activity.type";
 import { ActivityToolbar } from "@/features/activity/components/ActivityToolsBar";
 import { getActivities } from "@/features/activity/api/activity.api";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import ActivityCardSkeleton from "@/features/activity/components/ActivityCardSkeleton";
 import { authApi } from "@/features/auth/api/auth.api";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { ActivityFilter, TimeFilter } from "@/features/activity/types/activityFilter.type";
+import { useRealtimeActivitiesFeed } from "@/features/realtime/hooks/useRealtimeActivitiesFeed";
 import EmptyActivity from "../components/EmptyActivity";
 
 export const ActivitiesPage = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [skip, setSkip] = useState(0);
@@ -61,6 +64,32 @@ export const ActivitiesPage = () => {
     useEffect(() => {
         loadActivities(true);
     }, []);
+
+    // Prepend a newly created activity to the top of the list — but only when it would
+    // actually belong there given the current view. A blind insert could show a "past"
+    // activity while the user explicitly filtered for past ones, or someone else's activity
+    // while "only mine" is active, or silently override an active search. In any of those
+    // cases we simply skip the insert; the user sees it next time they clear the filter/search
+    // or reload — no worse than before this feature existed.
+    const handleNewActivity = useCallback((activity: Activity) => {
+        if (search.trim() !== "") return;
+        if (timeFilter === "past") return;
+        if (onlyMine && activity.createdBy !== user?.userId) return;
+
+        setActivities(prev => {
+            if (prev.some(a => a.id === activity.id)) return prev;
+            return [activity, ...prev];
+        });
+    }, [search, timeFilter, onlyMine, user?.userId]);
+
+    const handleDeleteActivity = useCallback((activityId: string) => {
+        setActivities(prev => prev.filter(a => a.id !== activityId));
+    }, []);
+
+    useRealtimeActivitiesFeed({
+        onNewActivity: handleNewActivity,
+        onDeletedActivity: handleDeleteActivity
+    });
 
     // infinite scroll observer
     useEffect(() => {

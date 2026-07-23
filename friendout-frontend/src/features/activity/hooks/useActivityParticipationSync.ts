@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type";
 import { useActivityParticipation } from "@/features/participant/hooks/useActivityParticipation";
 import type { UserActivityParticipation } from "@/features/participant/types/UserParticipation.type";
+import type { UserActivityParticipants } from "@/features/participant/types/UserActivityParticipants";
 import {
     getSubActivitySelectedStatus as getSubActivitySelectedStatusUtil,
     getSubActivitiesSelectedStatus as getSubActivitiesSelectedStatusUtil,
@@ -73,6 +74,43 @@ export function useActivityParticipationSync(
         onSubActivitiesParticipationSuccess: onSubSuccess,
     });
 
+    /**
+     * Real-time updates to the list of participants for both the main activity
+     * and its sub-activities.
+     *
+     * This function is typically called when receiving a WebSocket event
+     * containing the updated participation data.
+     *
+     * @function applyRealtimeParticipantsUpdate
+     * @param {UserActivityParticipants} updated - The object containing updated participant lists for the main activity and/or sub-activities.
+     * @returns {void}
+     */
+    const applyRealtimeParticipantsUpdate = useCallback(
+        (updated: UserActivityParticipants) => {
+            setActivityDetails(prev => {
+                if (!prev) return prev;
+
+                const participantsBySubActivity = new Map<string, typeof prev.subActivities[number]["participants"]>();
+                updated.subActivityParticipants?.forEach(participant => {
+                    if (!participant.subActivityId) return;
+                    const existing = participantsBySubActivity.get(participant.subActivityId) ?? [];
+                    participantsBySubActivity.set(participant.subActivityId, [...existing, participant]);
+                });
+
+                return {
+                    ...prev,
+                    participants: updated.mainActivityParticipants ?? prev.participants,
+                    subActivities: prev.subActivities.map(sa => {
+                        const updatedParticipants = participantsBySubActivity.get(sa.id);
+                        if (!updatedParticipants) return sa;
+                        return { ...sa, participants: updatedParticipants };
+                    }),
+                };
+            });
+        },
+        [setActivityDetails]
+    );
+
     const getSubActivitySelectedStatus = useCallback(
         (subActivityId: string) =>
             getSubActivitySelectedStatusUtil(
@@ -100,5 +138,6 @@ export function useActivityParticipationSync(
             participation.handleSubActivitiesParticipationChange,
         getSubActivitySelectedStatus,
         getSubActivitiesSelectedStatus,
+        applyRealtimeParticipantsUpdate,
     };
 }
