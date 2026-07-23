@@ -29,7 +29,6 @@ export function getHubConnection(): signalR.HubConnection {
                 withCredentials: true,
             })
             .withAutomaticReconnect()
-            .withAutomaticReconnect()
             .build();
     }
 
