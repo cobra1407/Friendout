@@ -20,6 +20,10 @@ public static class ApplicationExtensions
             // Clear default restrictions so all proxies in the Docker network are trusted.
             options.KnownNetworks.Clear();
             options.KnownProxies.Clear();
+            // ForwardLimit defaults to 1 hop — too low when there's an external proxy/CDN
+            // in front of this container's own nginx (2+ hops). Otherwise every visitor can
+            // resolve to the same IP, silently sharing the per-IP rate limiter across everyone.
+            options.ForwardLimit = null;
         });
 
         return services;
