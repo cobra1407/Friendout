@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Friendout.Infrastructure;
 
@@ -57,12 +58,19 @@ public static class DependencyInjection
         // SignalR uses its own JSON serializer, entirely separate from the MVC controllers'
         // AddJsonOptions (Program.cs) — without this, enums like ParticipationStatus are sent
         // as raw numbers over the hub (0, 1, 2…) instead of the strings ("Participating", …)
-        services.AddSignalR().AddJsonProtocol(options =>
+        services.AddSignalR(options =>
+        {
+            // The global HTTP rate limiter (Program.cs) only covers the initial negotiate
+            // request — once a WebSocket is upgraded, hub method calls bypass it entirely.
+            // This filter closes that gap (see HubRateLimitFilter for details).
+            options.AddFilter<HubRateLimitFilter>();
+        }).AddJsonProtocol(options =>
         {
             options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
 
         services.AddSingleton<IActivitiesHubNotifier, ActivitiesHubNotifier>();
+        services.AddSingleton<HubRateLimitFilter>();
 
         // ---- File services ----
         services.AddScoped<IFileValidationService, FileValidationService>();
