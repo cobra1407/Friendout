@@ -44,6 +44,11 @@ export default function PreferencesPage() {
         savePreferences({ ...preferences, inAppEnabled })
     }
 
+    const handleSoundChange = (notificationSound: string) => {
+        if (!preferences) return
+        savePreferences({ ...preferences, notificationSound })
+    }
+
     return (
         <ActivityLayout
             header={
@@ -80,10 +85,12 @@ export default function PreferencesPage() {
                     <PreferencesNotificationsSection
                         emailEnabled={preferences?.emailEnabled}
                         inAppEnabled={preferences?.inAppEnabled}
+                        notificationSound={preferences?.notificationSound}
                         isLoading={isLoading}
                         disabled={isSaving}
                         onChangeEmail={handleEmailChange}
                         onChangeInApp={handleInAppChange}
+                        onChangeSound={handleSoundChange}
                     />
                 </div>
             </div>

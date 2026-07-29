@@ -7,12 +7,14 @@ namespace Friendout.Domain.DTOs.Preferences;
 public record UserPreferencesDto(
     string Locale,
     bool EmailEnabled,
-    bool InAppEnabled
+    bool InAppEnabled,
+    string NotificationSound
 );
 
 /// <summary>Payload to update a user's own preferences.</summary>
 public record UpdateUserPreferencesDto(
     string Locale,
     bool EmailEnabled,
-    bool InAppEnabled
+    bool InAppEnabled,
+    string NotificationSound
 );

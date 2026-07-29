@@ -4,23 +4,28 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { getTranslation } from "@/i18n"
 import { PreferencesNotificationsSectionSkeleton } from "@/features/preferences/components/PreferencesNotificationsSectionSkeleton"
+import { NotificationSoundField } from "@/features/preferences/components/NotificationSoundField"
 
 interface PreferencesNotificationsSectionProps {
     emailEnabled: boolean | undefined
     inAppEnabled: boolean | undefined
+    notificationSound: string | undefined
     isLoading: boolean
     disabled: boolean
     onChangeEmail: (value: boolean) => void
     onChangeInApp: (value: boolean) => void
+    onChangeSound: (value: string) => void
 }
 
 export const PreferencesNotificationsSection = ({
     emailEnabled,
     inAppEnabled,
+    notificationSound,
     isLoading,
     disabled,
     onChangeEmail,
     onChangeInApp,
+    onChangeSound,
 }: PreferencesNotificationsSectionProps) => {
     return (
         <Card className="border shadow-sm">
@@ -73,6 +78,15 @@ export const PreferencesNotificationsSection = ({
                                 disabled={disabled}
                             />
                         </div>
+
+                        <div className="border-t" />
+
+                        <NotificationSoundField
+                            soundId={notificationSound}
+                            isLoading={isLoading}
+                            disabled={disabled || !(inAppEnabled ?? true)}
+                            onChange={onChangeSound}
+                        />
                     </>
                 )}
             </CardContent>
