@@ -8,12 +8,15 @@ import {
     deleteNotification,
 } from "@/features/notifications/api/notifications.api"
 import { getHubConnection } from "@/lib/signalr/hubConnection"
+import { usePreferences } from "@/features/preferences/hooks/usePreferences"
+import { playNotificationSound } from "@/lib/sound/playNotificationSound"
 
 const NOTIFICATIONS_KEY = ["notifications"]
 const UNREAD_COUNT_KEY  = ["notifications", "unread-count"]
 
 export function useNotifications() {
     const qc = useQueryClient()
+    const { preferences } = usePreferences()
 
     const { data: notifications = [], isLoading } = useQuery({
         queryKey: NOTIFICATIONS_KEY,
@@ -34,19 +37,24 @@ export function useNotifications() {
     // waiting for the next poll. See WebSocketNotificationStrategy on the backend — it fires
     // alongside the persisted in-app notification, not instead of it, so this is purely a
     // delivery-speed improvement, not a new data source.
+    //
+    // No need to check preferences.inAppEnabled before playing the sound: the backend only
+    // pushes "NotificationReceived" at all when InAppEnabled is true (WebSocketNotificationStrategy
+    // shares that same flag), so if this event fires, in-app notifications are already on.
     useEffect(() => {
         const connection = getHubConnection()
 
         const handleNotificationReceived = () => {
             qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY })
             qc.invalidateQueries({ queryKey: UNREAD_COUNT_KEY })
+            playNotificationSound(preferences?.notificationSound)
         }
 
         connection.on("NotificationReceived", handleNotificationReceived)
         return () => {
             connection.off("NotificationReceived", handleNotificationReceived)
         }
-    }, [qc])
+    }, [qc, preferences?.notificationSound])
 
     const { mutate: read } = useMutation({
         mutationFn: markAsRead,

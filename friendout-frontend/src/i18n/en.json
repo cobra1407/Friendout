@@ -241,7 +241,10 @@
       "email_label": "Email notifications",
       "email_description": "Receive an email for activities, invitations and reminders.",
       "in_app_label": "In-app notifications",
-      "in_app_description": "Receive notifications directly inside Friendout."
+      "in_app_description": "Receive notifications directly inside Friendout.",
+      "sound_label": "Notification sound",
+      "sound_description": "Played when a notification arrives while you're using Friendout.",
+      "sound_preview": "Preview sound"
     }
   },
   "activity": {

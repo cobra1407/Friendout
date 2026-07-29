@@ -243,7 +243,10 @@
       "email_label": "Notifications par email",
       "email_description": "Recevez un email pour les activités, invitations et rappels.",
       "in_app_label": "Notifications dans l'application",
-      "in_app_description": "Recevez des notifications directement dans Friendout."
+      "in_app_description": "Recevez des notifications directement dans Friendout.",
+      "sound_label": "Son de notification",
+      "sound_description": "Joué à la réception d'une notification pendant que tu utilises Friendout.",
+      "sound_preview": "Écouter le son"
     }
   },
   "activity": {
