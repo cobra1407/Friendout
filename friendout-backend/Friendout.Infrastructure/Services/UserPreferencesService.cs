@@ -41,7 +41,8 @@ public class UserPreferencesService : IUserPreferencesService
         return new UserPreferencesDto(
             userPrefs?.Locale ?? "en",
             notifPrefs?.EmailEnabled ?? true,
-            notifPrefs?.InAppEnabled ?? true
+            notifPrefs?.InAppEnabled ?? true,
+            notifPrefs?.NotificationSound ?? "default"
         );
     }
 
@@ -73,12 +74,13 @@ public class UserPreferencesService : IUserPreferencesService
 
             notifPrefs.EmailEnabled = dto.EmailEnabled;
             notifPrefs.InAppEnabled = dto.InAppEnabled;
+            notifPrefs.NotificationSound = string.IsNullOrWhiteSpace(dto.NotificationSound) ? "default" : dto.NotificationSound;
             notifPrefs.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 
             return ServiceResult<UserPreferencesDto>.Success(
-                new UserPreferencesDto(dto.Locale, dto.EmailEnabled, dto.InAppEnabled));
+                new UserPreferencesDto(dto.Locale, dto.EmailEnabled, dto.InAppEnabled, notifPrefs.NotificationSound));
         }
         catch (Exception ex)
         {
