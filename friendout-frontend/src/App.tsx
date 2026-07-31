@@ -1,5 +1,5 @@
 import '@/App.css'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router'
 import { Error404Page } from '@/features/error'
 import { ProtectedRoutes } from '@/features/auth'
 import { ThemeProvider } from '@/contexts/ThemeContext'

@@ -5,7 +5,7 @@ import type { Activity } from "@/features/activity/types/activity.type";
 import { ActivityToolbar } from "@/features/activity/components/ActivityToolsBar";
 import { getActivities } from "@/features/activity/api/activity.api";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import ActivityCardSkeleton from "@/features/activity/components/ActivityCardSkeleton";
 import { authApi } from "@/features/auth/api/auth.api";
 import { useAuth } from "@/features/auth/hooks/useAuth";

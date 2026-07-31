@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Settings, Package, Shield, LogOut, ChevronDown } from "lucide-react";
 import { getTranslation } from "@/i18n";
 import { useAuth } from "@/features/auth/hooks/useAuth";

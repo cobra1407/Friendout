@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Plus } from "lucide-react";
 import { ActivityLayout } from "@/features/activity/layout/activityLayout";
 import { Header } from "@/components/header";
