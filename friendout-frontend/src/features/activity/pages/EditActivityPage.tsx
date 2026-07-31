@@ -1,6 +1,6 @@
 import { ActivityLayout } from "../layout/activityLayout";
 import ActivityForm from "../components/ActivityForm";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";

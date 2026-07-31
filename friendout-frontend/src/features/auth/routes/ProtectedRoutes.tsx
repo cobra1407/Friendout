@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "../hooks/useAuth";
 import { RateLimitScreen } from "@/features/error/components/RateLimitScreen";

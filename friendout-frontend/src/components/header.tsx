@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { UserMenu } from "./UserMenu";
 import { getTranslation } from "@/i18n";
 import { getCurrentSeason } from "@/lib/utils/season.utils";

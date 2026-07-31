@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 import { ActivityLayout } from "@/features/activity/layout/activityLayout"
 import { Header } from "@/components/header"
 import { authApi } from "@/features/auth/api/auth.api"

@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { useCallback, useState } from "react";
 import ActivityHeader from "@/features/activity/components/ActivityHeader";
 import { ActivityLayout } from "@/features/activity/layout/activityLayout";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { authApi } from "@/features/auth/api/auth.api";
 import { ActivityLayout } from "@/features/activity/layout/activityLayout";
