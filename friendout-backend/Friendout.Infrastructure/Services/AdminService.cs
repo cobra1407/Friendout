@@ -247,7 +247,7 @@ public class AdminService : IAdminService
                 : NotificationType.AccessRequestDenied;
 
             // Guid.Empty = no account yet, RecipientEmail is used directly by EmailNotificationStrategy.
-            await _notificationDispatcher.DispatchNotificationAsync(
+            _ = _notificationDispatcher.DispatchNotificationAsync(
                 Guid.Empty,
                 notificationType,
                 new Dictionary<string, string>
