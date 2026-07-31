@@ -398,7 +398,7 @@
     }
   },
   "error404": {
-    "message": "Oups ! La page que vous recherchez n'existe pas.",
+    "message": "Oups ! La page que vous recherchez n’existe pas ou l’activité est introuvable. On a dû se perdre en route !",
     "back_home": "Retour à l'accueil",
     "icon_alt": "Erreur 404"
   },
