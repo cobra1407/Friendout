@@ -396,7 +396,7 @@
     }
   },
   "error404": {
-    "message": "Oops! The page you are looking for does not exist.",
+    "message": "Oops! The page you're looking for doesn't exist or the activity couldn't be found. We must have lost our way!",
     "back_home": "Back to Home",
     "icon_alt": "404 Error"
   },
