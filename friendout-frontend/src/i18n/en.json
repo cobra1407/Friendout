@@ -294,7 +294,8 @@
     "description": "Description",
     "necessary_equipment": "Required equipment",
     "main_activity_label": "Main activity:",
-    "sub_activities_count": "sub-activity(s)"
+    "sub_activities_count": "sub-activity(s)",
+    "share_link_error": "Error while generating the share link."
   },
   "comments": {
     "title": "Comments",
@@ -399,6 +400,32 @@
     "message": "Oops! The page you're looking for doesn't exist or the activity couldn't be found. We must have lost our way!",
     "back_home": "Back to Home",
     "icon_alt": "404 Error"
+  },
+  "public_activity_page": {
+    "loading": "Loading activity...",
+    "not_found_title": "Link not found",
+    "not_found_description": "This share link doesn't exist, has expired, or sharing was turned off by the organizer.",
+    "created_by": "Organized by",
+    "footer_text": "Shared via Friendout",
+    "header_tagline_1": "Your next plan starts here!",
+    "header_tagline_2": "Someone lined up something awesome for you!",
+    "header_tagline_3": "Ready for a good time?",
+    "header_tagline_4": "We saved a spot just for you!",
+    "header_tagline_5": "You definitely don't want to miss this!",
+    "header_tagline_6": "Check out what's in store...",
+    "header_tagline_7": "It's always better when you're around!",
+    "header_tagline_8": "The perfect reason to get together!",
+    "footer_cta": "Create an account to join the activity",
+    "sub_activities_title": "Schedule",
+    "login_prompt_title": "Want to join?",
+    "login_prompt_description": "Log in to join this activity and see who else is going.",
+    "login_button": "Log in",
+    "participants_title_count": "Participants ({{count}})",
+    "participants_confirmed_sentence_one": "{{count}} participant",
+    "participants_confirmed_sentence": "{{count}} participants",
+    "participants_maybe_sentence_one": "{{count}} maybe participant",
+    "participants_maybe_sentence": "{{count}} maybe participants",
+    "participants_none": "No participants yet"
   },
   "admin": {
     "settings": {

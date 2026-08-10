@@ -296,7 +296,8 @@
     "description": "Description",
     "necessary_equipment": "Matériel nécessaire",
     "main_activity_label": "Activité principale:",
-    "sub_activities_count": "sous-activité(s)"
+    "sub_activities_count": "sous-activité(s)",
+    "share_link_error": "Erreur lors de la génération du lien de partage."
   },
   "comments": {
     "title": "Commentaires",
@@ -401,6 +402,32 @@
     "message": "Oups ! La page que vous recherchez n’existe pas ou l’activité est introuvable. On a dû se perdre en route !",
     "back_home": "Retour à l'accueil",
     "icon_alt": "Erreur 404"
+  },
+  "public_activity_page": {
+  "loading": "Chargement de l'activité...",
+  "not_found_title": "Lien introuvable",
+  "not_found_description": "Ce lien de partage n'existe pas, a expiré, ou le partage a été désactivé par l'organisateur.",
+  "created_by": "Organisé par",
+  "footer_text": "Partagé via Friendout",
+"header_tagline_1": "Ta prochaine sortie commence ici !",
+  "header_tagline_2": "Quelqu'un a un super plan pour toi !",
+  "header_tagline_3": "Prêt(e) pour un bon moment ?",
+  "header_tagline_4": "On t'a gardé une place au chaud !",
+  "header_tagline_5": "Pas question de rater ça !",
+  "header_tagline_6": "Découvre ce qu'on te prépare...",
+  "header_tagline_7": "C'est toujours mieux quand tu es là !",
+  "header_tagline_8": "Une belle occasion de se retrouver !",
+  "footer_cta": "Créer un compte pour rejoindre l'activité",
+  "sub_activities_title": "Programme",
+    "login_prompt_title": "Envie de participer ?",
+    "login_prompt_description": "Connecte-toi pour rejoindre cette activité et voir qui d'autre participe.",
+    "login_button": "Se connecter",
+    "participants_title_count": "Participants ({{count}})",
+    "participants_confirmed_sentence_one": "{{count}} participant",
+    "participants_confirmed_sentence": "{{count}} participants",
+    "participants_maybe_sentence_one": "{{count}} participant peut-être",
+    "participants_maybe_sentence": "{{count}} participants peut-être",
+    "participants_none": "Aucun participant pour l'instant"
   },
   "admin": {
     "settings": {
