@@ -193,7 +193,7 @@ public class ActivityController : ControllerBase
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized();
-        }   
+        }
 
         try
         {
@@ -211,6 +211,28 @@ public class ActivityController : ControllerBase
             _logger.LogError(ex, "Error while deleting activity {ActivityId}", activityId);
             return StatusCode(500, "An unexpected error occurred while deleting the activity.");
         }
+    }
+
+    /// <summary>
+    /// Returns the activity's public share link, generating one on first use.
+    /// Any participant can call this.
+    /// </summary>
+    [Authorize]
+    [HttpPost("activities/{activityId}/share")]
+    [ProducesResponseType(typeof(ShareLinkDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> GetOrCreateShareLink([FromRoute] string activityId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        var result = await _activityService.GetOrCreateShareLinkAsync(activityId, userId);
+        return result.IsSuccess ? Ok(result.Data) : BadRequest(result.ErrorMessage);
     }
 
 }
