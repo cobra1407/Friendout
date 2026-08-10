@@ -77,6 +77,23 @@ export function ActivityDetailsContent({
         commentsProps
     );
 
+    const pricedSubActivitiesCount = activity.subActivities.filter((s) => s.price).length;
+
+    const mainDetailsProps = {
+        title: activity.title,
+        description: activity.description,
+        startAt: activity.startAt,
+        image: activity.image,
+        localisation: activity.localisation,
+        createdBy: activity.createdBy,
+        price: {
+            totalPrice: activity.totalPrice,
+            estimatedPrice: activity.estimatedPrice,
+            pricedSubActivitiesCount,
+        },
+        equipmentNames: activity.requiredEquipments.map((e) => e.name),
+    };
+
     const mainResponseCard = !isPast(activity.startAt) && (
         <ParticiationResponseCard
             title={getTranslation('activity.response_main_activity')}
@@ -130,7 +147,7 @@ export function ActivityDetailsContent({
         <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_450px]">
             {/* Mobile */}
             <div className="flex flex-col gap-6 lg:hidden">
-                <ActivityMainDetails activity={activity} />
+                <ActivityMainDetails {...mainDetailsProps} />
                 {globalCostSummary}
                 {mainResponseCard}
                 {participantsCard}
@@ -140,8 +157,8 @@ export function ActivityDetailsContent({
             </div>
 
             {/* Desktop left */}
-            <div className="hidden lg:flex flex-col gap-6 min-w-0">
-                <ActivityMainDetails activity={activity} />
+            <div className="hidden lg:flex flex-col gap-6">
+                <ActivityMainDetails {...mainDetailsProps} />
                 {globalCostSummary}
                 {subActivityCards}
                 {commentsSection}

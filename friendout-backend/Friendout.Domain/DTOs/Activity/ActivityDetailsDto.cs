@@ -26,6 +26,9 @@ public class ActivityDetailsDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
+    // === Public sharing ===
+    public string? ShareToken { get; set; }
+
     // === User MainActivity Participation ===
     public UserParticipationDto? UserMainParticipation { get; set; }
     

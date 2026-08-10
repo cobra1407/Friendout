@@ -46,4 +46,19 @@ public interface IActivityService
     /// <param name="userId"></param>
     /// <returns></returns>
     public Task<ServiceResult<ActivityDto>> DeleteActivityAsync(string activityId, string userId);
+
+    /// <summary>
+    /// Returns the activity's public share link, generating one on first use.
+    /// Idempotent: once a token exists it's reused, so a link already handed out
+    /// keeps working no matter who else clicks "Share" afterwards.
+    /// Any participant (or the creator) can call this — anyone who can already see
+    /// the activity can share it.
+    /// </summary>
+    public Task<ServiceResult<ShareLinkDto>> GetOrCreateShareLinkAsync(string activityId, string userId);
+
+    /// <summary>
+    /// Returns the read-only public view of an activity for the given share token.
+    /// No authentication required — used by the anonymous /share/{token} page.
+    /// </summary>
+    public Task<ServiceResult<PublicActivityDto>> GetPublicActivityAsync(string shareToken);
 }

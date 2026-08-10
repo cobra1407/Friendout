@@ -89,6 +89,13 @@ builder.Services.AddRateLimiter(options =>
         policy.Window = TimeSpan.FromMinutes(1);
         policy.SegmentsPerWindow = 6;
     });
+
+    options.AddSlidingWindowLimiter("public-share", policy =>
+    {
+        policy.PermitLimit = 30;
+        policy.Window = TimeSpan.FromMinutes(1);
+        policy.SegmentsPerWindow = 6;
+    });
 });
 
 // -------------------------------------------------------

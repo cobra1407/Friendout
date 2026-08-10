@@ -57,6 +57,15 @@ namespace Friendout.Domain.Models
         [Column("reminder_sent_at", TypeName = "datetime(3)")]
         public DateTime? ReminderSentAt { get; set; }
 
+        /// <summary>
+        /// Opaque, unguessable token used in the public share URL (/share/{ShareToken}).
+        /// Null until the activity is shared for the first time (any participant or the
+        /// creator can trigger that from the "Share" button); non-null forever after,
+        /// so previously shared links keep working.
+        /// </summary>
+        [Column("share_token", TypeName = "varchar(64)")]
+        public string? ShareToken { get; set; }
+
         // Relations
         [ForeignKey(nameof(CreatedBy))]
         public User Creator { get; set; } = null!;

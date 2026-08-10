@@ -12,6 +12,7 @@ namespace friendout_backend.Controller;
 [EnableRateLimiting("auth")]
 public class AccessRequestController : ControllerBase
 {
+    
     private readonly IAdminService _adminService;
 
     public AccessRequestController(IAdminService adminService)

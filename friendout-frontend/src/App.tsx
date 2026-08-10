@@ -14,6 +14,7 @@ import EditActivityPage from '@/features/activity/pages/EditActivityPage'
 import AdminPage from '@/features/admin/pages/AdminPage'
 import PreferencesPage from '@/features/preferences/pages/PreferencesPage'
 import EquipmentListsPage from '@/features/equipmentList/pages/EquipmentListsPage'
+import PublicActivityPage from '@/features/activity/pages/PublicActivityPage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useLocaleStore } from '@/i18n/locale.store'
 import { useRealtimeConnection } from '@/features/realtime/hooks/useRealtimeConnection'
@@ -22,8 +23,15 @@ const queryClient = new QueryClient()
 
 function App() {
     const { fetchMe } = useAuth();
+    const isPublicSharePage = window.location.pathname.startsWith('/share/');
+
     useEffect(() => {
-        fetchMe();
+        // The public share page is meant to work for anonymous visitors — skip fetchMe()
+        // there so a guaranteed 401 (no session) doesn't trigger the global "session
+        // expired, redirect to /login" flow in the axios interceptor (see lib/api/api.ts).
+        if (!isPublicSharePage) {
+            fetchMe();
+        }
     }, []);
 
     // Starts/stops the shared SignalR connection
@@ -41,6 +49,7 @@ function App() {
                 <BrowserRouter>
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
+                        <Route path="/share/:shareToken" element={<PublicActivityPage />} />
                         <Route element={<ProtectedRoutes />}>
                             <Route path="/" element={<ActivitiesPage />} />
                             <Route path="/activities" element={<ActivitiesPage />} />

@@ -212,6 +212,7 @@ public class ActivityService : IActivityService
                     CreatedBy = a.Creator.Name,
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt,
+                    ShareToken = a.ShareToken,
                     Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.AltText },
                     Localisation = a.Localisation == null ? null : new LocalisationDto
                     {
@@ -779,5 +780,113 @@ public class ActivityService : IActivityService
     {
         data["Locale"] = locale;
         return data;
+    }
+
+    public async Task<ServiceResult<ShareLinkDto>> GetOrCreateShareLinkAsync(string activityId, string userId)
+    {
+        try
+        {
+            var activity = await _friendoutDbContext.Activities
+                .FirstOrDefaultAsync(a => a.Id == activityId);
+
+            if (activity is null)
+                return ServiceResult<ShareLinkDto>.Failure("Activity not found");
+
+            // Check if token already exists, if not generate a new one and save it to the database
+            if (string.IsNullOrEmpty(activity.ShareToken))
+            {
+                activity.ShareToken = GenerateShareToken();
+                await _friendoutDbContext.SaveChangesAsync();
+            }
+
+            return ServiceResult<ShareLinkDto>.Success(new ShareLinkDto { ShareToken = activity.ShareToken });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get or create share link for activity {ActivityId}", activityId);
+            return ServiceResult<ShareLinkDto>.Failure("An error occurred while generating the share link");
+        }
+    }
+
+    public async Task<ServiceResult<PublicActivityDto>> GetPublicActivityAsync(string shareToken)
+    {
+        if (string.IsNullOrWhiteSpace(shareToken))
+            return ServiceResult<PublicActivityDto>.Failure("Activity not found");
+
+        try
+        {
+            var activity = await _friendoutDbContext.Activities
+                .AsNoTracking()
+                .Where(a => a.ShareToken == shareToken)
+                .Select(a => new PublicActivityDto
+                {
+                    ActivityId = a.Id,
+                    Title = a.Title,
+                    Description = a.Description,
+                    StartAt = a.StartAt,
+                    EndAt = a.EndAt,
+                    EstimatedPrice = a.EstimatedPrice,
+                    CreatedBy = a.Creator.Name,
+                    ParticipantsCount = new PublicParticipantsCountDto
+                    {
+                        Participating = a.UserParticipations.Count(up => up.SubActivityId == null && up.Status == ParticipationStatus.Participating),
+                        Maybe = a.UserParticipations.Count(up => up.SubActivityId == null && up.Status == ParticipationStatus.Maybe),
+                        NotParticipating = a.UserParticipations.Count(up => up.SubActivityId == null && up.Status == ParticipationStatus.NotParticipating)
+                    },
+                    Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.Name },
+                    Localisation = a.Localisation == null ? null : new LocalisationDto
+                    {
+                        Type = a.Localisation.Type,
+                        Address = a.Localisation.Address,
+                        MapLink = a.Localisation.MapLink,
+                        VirtualUrl = a.Localisation.VirtualUrl,
+                        DisplayName = a.Localisation.DisplayName
+                    },
+                    SubActivities = a.SubActivities.Select(sa => new PublicSubActivityDto
+                    {
+                        Name = sa.Name,
+                        StartTime = sa.StartTime,
+                        EndTime = sa.EndTime,
+                        Description = sa.Description,
+                        Price = sa.Price,
+                        Localisation = sa.Localisation == null ? null : new LocalisationDto
+                        {
+                            Type = sa.Localisation.Type,
+                            Address = sa.Localisation.Address,
+                            MapLink = sa.Localisation.MapLink,
+                            VirtualUrl = sa.Localisation.VirtualUrl,
+                            DisplayName = sa.Localisation.DisplayName
+                        }
+                    }).ToList(),
+                    RequiredEquipmentNames = a.ActivityEquipments == null
+                        ? new List<string>()
+                        : a.ActivityEquipments.Select(ae => ae.Equipment.Name).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (activity is null)
+                return ServiceResult<PublicActivityDto>.Failure("Activity not found");
+
+            return ServiceResult<PublicActivityDto>.Success(activity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve public activity for share token");
+            return ServiceResult<PublicActivityDto>.Failure("An error occurred while retrieving the activity");
+        }
+    }
+
+    /// <summary>
+    /// Generates a random, URL-safe share token. Not a GUID on purpose: this keeps the
+    /// token generation independent from the entity's id scheme and easy to widen later
+    /// (e.g. more bytes) without touching anything else.
+    /// </summary>
+    private static string GenerateShareToken()
+    {
+        var bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(24); // 192 bits of entropy
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
     }
 }

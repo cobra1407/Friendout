@@ -21,16 +21,18 @@ api.interceptors.response.use(
     const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh");
     const alreadyRetried = originalRequest?._retry === true;
     const isOnLoginPage = window.location.pathname === "/login";
+    const isOnPublicSharePage = window.location.pathname.startsWith("/share/");
 
     // Don't attempt refresh if:
     // - Already on the login page (avoids redirect loop — /auth/me returns 401 on login page intentionally)
+    // - On a public share page (anonymous visitors are expected to get 401s there)
     // - The failing request is /auth/refresh itself
     // - We already retried once
-    if (is401 && !isRefreshEndpoint && !alreadyRetried && !isOnLoginPage) {
+    if (is401 && !isRefreshEndpoint && !alreadyRetried && !isOnLoginPage && !isOnPublicSharePage) {
       originalRequest._retry = true;
 
       try {
-            if (!refreshPromise) {
+        if (!refreshPromise) {
           refreshPromise = api.post("/auth/refresh").finally(() => {
             refreshPromise = null;
           });
