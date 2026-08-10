@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { getTranslation } from '@/i18n';
 import { downloadIcs, getGoogleCalendarUrl, getOutlookCalendarUrl } from '@/lib/utils/calendar.utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { getOrCreateShareLink } from '@/features/activity/api/activityShare.api';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -57,26 +58,32 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
             toast.success(getTranslation('activity.link_copied'));
         };
 
-        const doShare = () => {
+        const doShare = (publicUrl: string) => {
             if (navigator.share) {
                 navigator.share({
                     title: activity.title,
                     text: activity.description,
-                    url: window.location.href,
+                    url: publicUrl,
                 }).catch((err) => {
                     if (err?.name !== 'AbortError') {
-                        copyToClipboard(window.location.href);
+                        copyToClipboard(publicUrl);
                     }
                 });
             } else {
-                copyToClipboard(window.location.href);
+                copyToClipboard(publicUrl);
             }
         };
 
-        // Defer slightly so the dropdown has time to close before the
-        // native share sheet opens — otherwise the user gesture is consumed
-        // by the dropdown and navigator.share() may be blocked.
-        setTimeout(doShare, 0);
+        // The public link is what gets shared (anyone can view it without an account,
+        // Komoot-style) — generated on first use, then reused every time after.
+        getOrCreateShareLink(activity.id)
+            .then(({ shareToken }) => {
+                const publicUrl = `${window.location.origin}/share/${shareToken}`;
+                setTimeout(() => doShare(publicUrl), 0);
+            })
+            .catch(() => {
+                toast.error(getTranslation('activity.share_link_error'));
+            });
     };
 
     const calendarEvent = {
