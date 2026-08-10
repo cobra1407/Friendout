@@ -214,7 +214,7 @@ export default function ActivityMainDetails({
                         {getTranslation("activity.description")}
                     </h3>
                     <Linkify options={linkifyOptions}>
-                        <p className="text-foreground whitespace-pre-wrap">
+                        <p className="text-foreground whitespace-pre-wrap break-words">
                             {activity.description}
                         </p>
                     </Linkify>
