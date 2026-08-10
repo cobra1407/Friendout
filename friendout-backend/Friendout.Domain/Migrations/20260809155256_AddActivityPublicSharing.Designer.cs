@@ -4,6 +4,7 @@ using Friendout.Domain.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Friendout.Domain.Migrations
 {
     [DbContext(typeof(FriendoutDbContext))]
-    partial class FriendoutDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809155256_AddActivityPublicSharing")]
+    partial class AddActivityPublicSharing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -197,6 +200,10 @@ namespace Friendout.Domain.Migrations
                     b.Property<string>("ImageId")
                         .HasColumnType("varchar(191)")
                         .HasColumnName("image_id");
+
+                    b.Property<bool>("IsPubliclyShared")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_publicly_shared");
 
                     b.Property<string>("LocalisationId")
                         .HasColumnType("varchar(191)")

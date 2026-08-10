@@ -118,6 +118,10 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.StartAt);
                 entity.HasIndex(e => new { e.StartAt, e.ReminderSentAt });
 
+                entity.HasIndex(e => e.ShareToken)
+                    .IsUnique()
+                    .HasFilter("`share_token` IS NOT NULL");
+
                 entity.HasOne(e => e.Image)
                     .WithMany()
                     .HasForeignKey(e => e.ImageId)
