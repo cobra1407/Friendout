@@ -78,7 +78,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new SlidingWindowRateLimiterOptions
             {
-                PermitLimit = 60,
+                PermitLimit = 120,
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
             }));
@@ -92,7 +92,7 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddSlidingWindowLimiter("public-share", policy =>
     {
-        policy.PermitLimit = 30;
+        policy.PermitLimit = 60;
         policy.Window = TimeSpan.FromMinutes(1);
         policy.SegmentsPerWindow = 6;
     });
