@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Eye, PartyPopper, Compass, Heart, Sparkles, Search, ThumbsUp, Gift } from "lucide-react";
 import { UserMenu } from "./UserMenu";
@@ -12,6 +12,8 @@ import CreateActivityButton from "@/features/activity/components/CreateActivityB
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
+const TAGLINE_ICONS = [Eye, PartyPopper, Compass, Heart, Sparkles, Search, ThumbsUp, Gift];
+
 interface HeaderProps {
     onCreateActivity?: () => void;
     onLogout?: () => void;
@@ -22,8 +24,7 @@ export const Header = ({ onCreateActivity, onLogout, isPublicPage = false }: Hea
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    const TAGLINE_ICONS = [Eye, PartyPopper, Compass, Heart, Sparkles, Search, ThumbsUp, Gift];
-    const taglineIndex = useMemo(() => Math.floor(Math.random() * TAGLINE_ICONS.length), []);
+    const [taglineIndex] = useState(() => Math.floor(Math.random() * TAGLINE_ICONS.length));
     const tagline = getTranslation(`public_activity_page.header_tagline_${taglineIndex + 1}`);
     const TaglineIcon = TAGLINE_ICONS[taglineIndex];
 
