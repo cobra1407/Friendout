@@ -157,7 +157,7 @@ export function ActivityDetailsContent({
             </div>
 
             {/* Desktop left */}
-            <div className="hidden lg:flex flex-col gap-6">
+            <div className="hidden lg:flex flex-col gap-6 min-w-0">
                 <ActivityMainDetails {...mainDetailsProps} />
                 {globalCostSummary}
                 {subActivityCards}
