@@ -62,7 +62,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
             if (navigator.share) {
                 navigator.share({
                     title: activity.title,
-                    text: activity.description,
+                    text: `${activity.title}\n${publicUrl}`,
                     url: publicUrl,
                 }).catch((err) => {
                     if (err?.name !== 'AbortError') {
