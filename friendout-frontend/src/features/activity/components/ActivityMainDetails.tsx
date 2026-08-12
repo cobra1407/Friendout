@@ -130,8 +130,8 @@ export default function ActivityMainDetails({
                             )}
                         </div>
 
-                        <span className="flex-1" title={localisation?.address ?? ""}>
-                            {localisation?.address ?? "-"}
+                        <span className="flex-1" title={localisation?.displayName ?? localisation?.address ?? ""}>
+                            {localisation?.displayName ?? localisation?.address ?? "-"}
                         </span>
 
                         {localisation?.type === LocalisationType.Virtual ? (
