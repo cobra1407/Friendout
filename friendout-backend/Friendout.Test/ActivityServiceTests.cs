@@ -614,6 +614,119 @@ public class ActivityServiceTests
         result.Data!.StartAt.Hour.Should().Be(10, because: "the updated hour must exactly match what the frontend sent in UTC");
     }
 
+    [Test]
+    public async Task CreateActivityAsync_WhenMapLinkHasNamedPlace_DoesNotCallGeocoding()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateActivityAsync_WhenMapLinkHasNamedPlace_DoesNotCallGeocoding));
+        var user = new User { Id = "user-geo-1", Name = "Geo User", Email = "geo1@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var geocoding = new FakeGeocodingService { ResponseName = "Should not be used" };
+        var service = CreateService(context, geocoding);
+        var start = DateTime.UtcNow.AddHours(2);
+
+        var result = await service.CreateActivityAsync(new CreateActivityDto
+        {
+            Title = "Cinéma", Description = "Soirée ciné", Time = "20:00",
+            StartAt = start, EndAt = start.AddHours(2),
+            MapLink = "https://www.google.com/maps/place/Cinema+Gaumont/@48.8738,2.2950,17z",
+            RequiredEquipmentNames = [], SubActivities = []
+        }, user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var localisation = await context.Localisations.SingleAsync(l => l.Id == context.Activities.Single().LocalisationId);
+        localisation.DisplayName.Should().Be("Cinema Gaumont");
+        geocoding.CallCount.Should().Be(0, because: "a named place is already usable, geocoding should never be triggered");
+    }
+
+    [Test]
+    public async Task CreateActivityAsync_WhenMapLinkHasOnlyCoordinates_CallsGeocodingAndUsesResult()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateActivityAsync_WhenMapLinkHasOnlyCoordinates_CallsGeocodingAndUsesResult));
+        var user = new User { Id = "user-geo-2", Name = "Geo User 2", Email = "geo2@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var geocoding = new FakeGeocodingService { ResponseName = "Profondeville" };
+        var service = CreateService(context, geocoding);
+        var start = DateTime.UtcNow.AddHours(2);
+
+        var result = await service.CreateActivityAsync(new CreateActivityDto
+        {
+            Title = "Balade", Description = "Balade au bord de l'eau", Time = "14:00",
+            StartAt = start, EndAt = start.AddHours(2),
+            MapLink = "https://www.google.com/maps/place/50%C2%B022'51.2%22N+4%C2%B051'58.7%22E/@50.3808774,4.8637241,17z/data=!3m1!4b1!4m4!3m3!8m2!3d50.380874!4d4.866299",
+            RequiredEquipmentNames = [], SubActivities = []
+        }, user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var localisation = await context.Localisations.SingleAsync(l => l.Id == context.Activities.Single().LocalisationId);
+        localisation.DisplayName.Should().Be("Profondeville");
+        geocoding.CallCount.Should().Be(1, because: "the /place/ segment is raw coordinates, not a name, so a lookup is required");
+        geocoding.LastCall!.Value.Lat.Should().BeApproximately(50.3808774, 0.0001);
+        geocoding.LastCall!.Value.Lng.Should().BeApproximately(4.8637241, 0.0001);
+    }
+
+    [Test]
+    public async Task CreateActivityAsync_WhenGeocodingFails_FallsBackToGenericLabel()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateActivityAsync_WhenGeocodingFails_FallsBackToGenericLabel));
+        var user = new User { Id = "user-geo-3", Name = "Geo User 3", Email = "geo3@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var geocoding = new FakeGeocodingService { ResponseName = null };
+        var service = CreateService(context, geocoding);
+        var start = DateTime.UtcNow.AddHours(2);
+
+        var result = await service.CreateActivityAsync(new CreateActivityDto
+        {
+            Title = "Balade", Description = "Balade au bord de l'eau", Time = "14:00",
+            StartAt = start, EndAt = start.AddHours(2),
+            MapLink = "https://www.google.com/maps/place/50%C2%B022'51.2%22N+4%C2%B051'58.7%22E/@50.3808774,4.8637241,17z/data=!3m1!4b1!4m4!3m3!8m2!3d50.380874!4d4.866299",
+            RequiredEquipmentNames = [], SubActivities = []
+        }, user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var localisation = await context.Localisations.SingleAsync(l => l.Id == context.Activities.Single().LocalisationId);
+        localisation.DisplayName.Should().Be("Lieu depuis Google Maps", because: "activity creation must never be blocked by a failed geocoding lookup");
+        result.Data!.Title.Should().Be("Balade", because: "a geocoding failure must not fail the whole activity creation");
+    }
+
+    [Test]
+    public async Task CreateActivityAsync_WhenMapLinkHasMultipleCoordinatePairs_PrefersAtSegmentOverDataSegment()
+    {
+        // Regression test: "distance measurement" style Maps links embed *several*
+        // "!3d{lat}!4d{lng}" pairs (one per waypoint) plus a single "@{lat},{lng}"
+        // segment for the actually-shared point. Matching the first "!3d!4d"
+        // occurrence previously grabbed the wrong (reference) point instead of the
+        // one the user actually shared.
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(CreateActivityAsync_WhenMapLinkHasMultipleCoordinatePairs_PrefersAtSegmentOverDataSegment));
+        var user = new User { Id = "user-geo-4", Name = "Geo User 4", Email = "geo4@example.com" };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var geocoding = new FakeGeocodingService { ResponseName = "Herve" };
+        var service = CreateService(context, geocoding);
+        var start = DateTime.UtcNow.AddHours(2);
+
+        var result = await service.CreateActivityAsync(new CreateActivityDto
+        {
+            Title = "Rando", Description = "Rando dans les Fagnes", Time = "09:00",
+            StartAt = start, EndAt = start.AddHours(4),
+            MapLink = "https://www.google.com/maps/place/50%C2%B037'38.2%22N+5%C2%B037'53.8%22E/@50.6272884,5.6290291,17z/data=!3m1!4b1!4m10!1m5!3m4!2zNTDCsDIyJzUxLjIiTiA0wrA1MSc1OC43IkU!8m2!3d50.3808889!4d4.8663056!3m3!8m2!3d50.627285!4d5.631604",
+            RequiredEquipmentNames = [], SubActivities = []
+        }, user.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var localisation = await context.Localisations.SingleAsync(l => l.Id == context.Activities.Single().LocalisationId);
+        localisation.DisplayName.Should().Be("Herve");
+        geocoding.LastCall!.Value.Lat.Should().BeApproximately(50.6272884, 0.0001,
+            because: "must use the @lat,lng segment, not the first (unrelated) !3d!4d pair embedded earlier in the link");
+        geocoding.LastCall!.Value.Lng.Should().BeApproximately(5.6290291, 0.0001);
+    }
+
     private static CreateActivityDto BuildMinimalCreateDto(DateTime startAt) => new()
     {
         Title = "UTC Test Activity", Description = "Testing UTC hour preservation",
@@ -622,7 +735,7 @@ public class ActivityServiceTests
         RequiredEquipmentNames = [], SubActivities = []
     };
 
-    private static ActivityService CreateService(FriendoutDbContext context)
+    private static ActivityService CreateService(FriendoutDbContext context, IGeocodingService? geocodingService = null)
     {
         return new ActivityService(
             context,
@@ -631,13 +744,44 @@ public class ActivityServiceTests
             new NoopNotificationDispatcher(),
             new NoopActivitiesHubNotifier(),
             new NoopScopeFactory(),
-            Options.Create(new AppOptions { Url = "http://localhost" }));
+            Options.Create(new AppOptions { Url = "http://localhost" }),
+            geocodingService ?? new NoopGeocodingService());
     }
 
     private sealed class NoopNotificationDispatcher : INotificationDispatcher
     {
         public Task DispatchNotificationAsync(Guid userId, NotificationType type, Dictionary<string, string> data)
             => Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Always returns null (no name resolved), simulating an unreachable/failed
+    /// geocoding provider. Used as the default for tests that never exercise the
+    /// Maps-link-with-coordinates path — they don't care about geocoding at all.
+    /// </summary>
+    private sealed class NoopGeocodingService : IGeocodingService
+    {
+        public Task<string?> ReverseGeocodeAsync(double latitude, double longitude, CancellationToken cancellationToken = default)
+            => Task.FromResult<string?>(null);
+    }
+
+    /// <summary>
+    /// Records the coordinates it was called with (so tests can assert exactly
+    /// which lat/lng ActivityService extracted from a Maps link) and returns a
+    /// configurable canned response.
+    /// </summary>
+    private sealed class FakeGeocodingService : IGeocodingService
+    {
+        public (double Lat, double Lng)? LastCall { get; private set; }
+        public int CallCount { get; private set; }
+        public string? ResponseName { get; set; }
+
+        public Task<string?> ReverseGeocodeAsync(double latitude, double longitude, CancellationToken cancellationToken = default)
+        {
+            LastCall = (latitude, longitude);
+            CallCount++;
+            return Task.FromResult(ResponseName);
+        }
     }
 
     private sealed class NoopScopeFactory : IServiceScopeFactory

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Activity;
@@ -34,6 +36,7 @@ public class ActivityService : IActivityService
     private readonly IActivitiesHubNotifier _hubNotifier;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly AppOptions _appOptions;
+    private readonly IGeocodingService _geocodingService;
 
     public ActivityService(
         FriendoutDbContext friendoutDbContext,
@@ -42,7 +45,8 @@ public class ActivityService : IActivityService
         INotificationDispatcher notificationDispatcher,
         IActivitiesHubNotifier hubNotifier,
         IServiceScopeFactory scopeFactory,
-        IOptions<AppOptions> appOptions)
+        IOptions<AppOptions> appOptions,
+        IGeocodingService geocodingService)
     {
         _friendoutDbContext = friendoutDbContext;
         _logger = logger;
@@ -51,17 +55,88 @@ public class ActivityService : IActivityService
         _hubNotifier = hubNotifier;
         _scopeFactory = scopeFactory;
         _appOptions = appOptions.Value;
+        _geocodingService = geocodingService;
     }
 
-    private static string BuildLocalisationDisplayName(LocalisationType type, string? address, string? mapLink, string? virtualUrl)
+    /// <summary>
+    /// Builds the human-readable display name for a localisation.
+    /// For MapLink locations that only contain raw coordinates (e.g. a dropped pin
+    /// rather than a named place — see LooksLikeCoordinates), attempts a reverse
+    /// geocoding lookup to resolve a city/town name. Falls back to a generic label
+    /// if that lookup fails or isn't applicable — this must never throw or block
+    /// activity creation/update.
+    /// </summary>
+    private async Task<string> BuildLocalisationDisplayNameAsync(LocalisationType type, string? address, string? mapLink, string? virtualUrl, CancellationToken cancellationToken = default)
     {
-        return type switch
+        switch (type)
         {
-            LocalisationType.Address => address ?? "Adresse",
-            LocalisationType.MapLink => ExtractLocalisationNameFromMapLink(mapLink) ?? "Lieu depuis Google Maps",
-            LocalisationType.Virtual => !string.IsNullOrWhiteSpace(virtualUrl) ? virtualUrl : "Lieu virtuel",
-            _ => "Lieu"
-        };
+            case LocalisationType.Address:
+                return address ?? "Adresse";
+
+            case LocalisationType.MapLink:
+                var extracted = ExtractLocalisationNameFromMapLink(mapLink);
+                if (extracted is not null && !LooksLikeCoordinates(extracted))
+                    return extracted;
+
+                var coordinates = ExtractCoordinatesFromMapLink(mapLink);
+                if (coordinates is not null)
+                {
+                    var geocoded = await _geocodingService.ReverseGeocodeAsync(coordinates.Value.Lat, coordinates.Value.Lng, cancellationToken);
+                    if (!string.IsNullOrWhiteSpace(geocoded))
+                        return geocoded;
+                }
+
+                return "Lieu depuis Google Maps";
+
+            case LocalisationType.Virtual:
+                return !string.IsNullOrWhiteSpace(virtualUrl) ? virtualUrl : "Lieu virtuel";
+
+            default:
+                return "Lieu";
+        }
+    }
+
+    /// <summary>
+    /// True when a string extracted from a Maps link's /place/ segment is actually
+    /// raw coordinates (DMS like 50°22'51.2"N, or a decimal "lat,lng" pair) rather
+    /// than a real place name — happens when someone shares a dropped-pin location
+    /// instead of a searched address/business.
+    /// </summary>
+    private static bool LooksLikeCoordinates(string text)
+    {
+        if (Regex.IsMatch(text, @"^-?\d+°"))
+            return true;
+        if (Regex.IsMatch(text, @"^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$"))
+            return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Extracts decimal latitude/longitude from a Google Maps URL. Prefers the
+    /// "@{lat},{lng},{zoom}" map-center segment — there's only ever one per link,
+    /// and it reflects the point actually being shared. The "!3d{lat}!4d{lng}"
+    /// pattern is used as a fallback only: some links (e.g. distance-measurement
+    /// links) embed *several* "!3d!4d" pairs, one per waypoint, so matching the
+    /// first occurrence isn't reliable for those.
+    /// </summary>
+    private static (double Lat, double Lng)? ExtractCoordinatesFromMapLink(string? mapLink)
+    {
+        if (string.IsNullOrWhiteSpace(mapLink))
+            return null;
+
+        var atMatch = Regex.Match(mapLink, @"@(-?\d+\.\d+),(-?\d+\.\d+)");
+        if (atMatch.Success &&
+            double.TryParse(atMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat1) &&
+            double.TryParse(atMatch.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lng1))
+            return (lat1, lng1);
+
+        var dataMatch = Regex.Match(mapLink, @"!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)");
+        if (dataMatch.Success &&
+            double.TryParse(dataMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat2) &&
+            double.TryParse(dataMatch.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lng2))
+            return (lat2, lng2);
+
+        return null;
     }
 
     private static string? ExtractLocalisationNameFromMapLink(string? mapLink)
@@ -366,7 +441,7 @@ public class ActivityService : IActivityService
                 {
                     Id = Guid.NewGuid().ToString(), Type = type,
                     Address = createActivityDto.Address, MapLink = createActivityDto.MapLink, VirtualUrl = createActivityDto.VirtualUrl,
-                    DisplayName = BuildLocalisationDisplayName(type, createActivityDto.Address, createActivityDto.MapLink, createActivityDto.VirtualUrl)
+                    DisplayName = await BuildLocalisationDisplayNameAsync(type, createActivityDto.Address, createActivityDto.MapLink, createActivityDto.VirtualUrl)
                 };
                 _friendoutDbContext.Localisations.Add(localisation);
             }
@@ -389,7 +464,8 @@ public class ActivityService : IActivityService
 
             if (normalizedSubActivities.Count > 0)
             {
-                var subActivities = normalizedSubActivities.Select(sa =>
+                var subActivities = new List<SubActivity>();
+                foreach (var sa in normalizedSubActivities)
                 {
                     var subLocalisation = localisation;
                     if (!string.IsNullOrWhiteSpace(sa.Address) || !string.IsNullOrWhiteSpace(sa.MapLink) || !string.IsNullOrWhiteSpace(sa.VirtualUrl))
@@ -400,11 +476,11 @@ public class ActivityService : IActivityService
                         {
                             Id = Guid.NewGuid().ToString(), Type = subType,
                             Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl,
-                            DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl)
+                            DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl)
                         };
                         _friendoutDbContext.Localisations.Add(subLocalisation);
                     }
-                    return new SubActivity
+                    subActivities.Add(new SubActivity
                     {
                         Id = Guid.NewGuid().ToString(), Name = sa.Name,
                         StartTime = sa.StartTime, EndTime = sa.EndTime,
@@ -412,8 +488,8 @@ public class ActivityService : IActivityService
                         ActivityId = activity.Id, Localisation = subLocalisation,
                         LocalisationId = subLocalisation.Id,
                         CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
-                    };
-                }).ToList();
+                    });
+                }
                 _friendoutDbContext.SubActivities.AddRange(subActivities);
             }
 
@@ -553,7 +629,7 @@ public class ActivityService : IActivityService
                 localisation.Address = activityDto.Address;
                 localisation.MapLink = activityDto.MapLink;
                 localisation.VirtualUrl = activityDto.VirtualUrl;
-                localisation.DisplayName = BuildLocalisationDisplayName(type, activityDto.Address, activityDto.MapLink, activityDto.VirtualUrl);
+                localisation.DisplayName = await BuildLocalisationDisplayNameAsync(type, activityDto.Address, activityDto.MapLink, activityDto.VirtualUrl);
             }
             else
             {
@@ -578,7 +654,8 @@ public class ActivityService : IActivityService
 
             if (normalizedSubActivities.Count > 0)
             {
-                var newSubActivities = normalizedSubActivities.Select(sa =>
+                var newSubActivities = new List<SubActivity>();
+                foreach (var sa in normalizedSubActivities)
                 {
                     var hasOwnLocalisation = !string.IsNullOrWhiteSpace(sa.Address) || !string.IsNullOrWhiteSpace(sa.MapLink) || !string.IsNullOrWhiteSpace(sa.VirtualUrl);
                     if (!string.IsNullOrWhiteSpace(sa.Id) && existingSubActivitiesById.TryGetValue(sa.Id, out var existingSubActivity))
@@ -592,7 +669,7 @@ public class ActivityService : IActivityService
                                 : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
                             if (existingSubActivity.Localisation is null || existingSubActivity.LocalisationId == localisation.Id)
                             {
-                                var ownLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
+                                var ownLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
                                 _friendoutDbContext.Localisations.Add(ownLoc);
                                 existingSubActivity.Localisation = ownLoc;
                                 existingSubActivity.LocalisationId = ownLoc.Id;
@@ -603,26 +680,26 @@ public class ActivityService : IActivityService
                                 existingSubActivity.Localisation.Address = sa.Address;
                                 existingSubActivity.Localisation.MapLink = sa.MapLink;
                                 existingSubActivity.Localisation.VirtualUrl = sa.VirtualUrl;
-                                existingSubActivity.Localisation.DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl);
+                                existingSubActivity.Localisation.DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl);
                             }
                         }
                         else { existingSubActivity.Localisation = localisation; existingSubActivity.LocalisationId = localisation.Id; }
                         keptSubActivityIds.Add(existingSubActivity.Id);
-                        return null;
+                        continue;
                     }
                     var subLoc = localisation;
                     if (hasOwnLocalisation)
                     {
                         var subType = !string.IsNullOrWhiteSpace(sa.Address) ? LocalisationType.Address
                             : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
-                        subLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = BuildLocalisationDisplayName(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
+                        subLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
                         _friendoutDbContext.Localisations.Add(subLoc);
                     }
                     var newSub = new SubActivity { Id = Guid.NewGuid().ToString(), Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Description = sa.Description, Price = sa.Price, ActivityId = activity.Id, Localisation = subLoc, LocalisationId = subLoc.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
                     keptSubActivityIds.Add(newSub.Id);
-                    return newSub;
-                }).Where(sa => sa is not null).ToList();
-                if (newSubActivities.Count > 0) _friendoutDbContext.SubActivities.AddRange(newSubActivities!);
+                    newSubActivities.Add(newSub);
+                }
+                if (newSubActivities.Count > 0) _friendoutDbContext.SubActivities.AddRange(newSubActivities);
             }
 
             var deletedSubActivities = existingSubActivities.Where(sa => !keptSubActivityIds.Contains(sa.Id)).ToList();
