@@ -33,6 +33,20 @@ export const isGoogleMapsLink = (url: string): boolean => {
   return mapsPatterns.some((pattern) => pattern.test(url.trim()));
 };
 
+/**
+ * True when a string extracted from a Maps link's /place/ segment is actually raw
+ * coordinates (DMS like 50°22'51.2"N, or a decimal "lat,lng" pair) rather than a
+ * real place name — happens when someone shares a dropped-pin location instead of
+ * a searched address/business. In that case the backend will resolve a real city
+ * name via reverse geocoding on save; this is just the client-side live preview,
+ * so it falls back to the generic label instead of showing raw coordinates.
+ */
+const looksLikeCoordinates = (text: string): boolean => {
+  if (/^-?\d+°/.test(text)) return true;
+  if (/^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(text)) return true;
+  return false;
+};
+
 export const extractLocationNameFromMapsUrl = (url: string): string => {
   try {
     const urlObj = new URL(url);
@@ -40,11 +54,12 @@ export const extractLocationNameFromMapsUrl = (url: string): string => {
 
     const pathMatch = urlObj.pathname.match(/\/maps\/place\/([^/]+)/);
     if (pathMatch) {
-      return decodeURIComponent(pathMatch[1].replace(/\+/g, " "));
+      const extracted = decodeURIComponent(pathMatch[1].replace(/\+/g, " "));
+      if (!looksLikeCoordinates(extracted)) return extracted;
     }
 
     const qParam = searchParams.get("q");
-    if (qParam) {
+    if (qParam) { 
       return decodeURIComponent(qParam.replace(/\+/g, " "));
     }
 
