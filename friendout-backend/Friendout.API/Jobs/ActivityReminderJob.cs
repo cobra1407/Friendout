@@ -113,7 +113,7 @@ public class ActivityReminderJob : IJob
                                 ["ActivityId"]       = activity.Id,
                                 ["ActivityName"]     = activity.Title,
                                 ["Date"]             = LocaleHelper.FormatDate(activity.StartAt, "dddd d MMMM yyyy à HH:mm", locale),
-                                ["Location"]         = activity.Localisation?.Address ?? "",
+                                ["Location"]         = activity.Localisation?.DisplayName ?? activity.Localisation?.Address ?? "",
                                 ["OrganizerName"]    = activity.Creator?.Name ?? "",
                                 ["ActivityImageUrl"] = ToAbsoluteUrl(activity.Image?.Url, $"{_appUrl}/email-assets/default-activity-card.webp"),
                             });
