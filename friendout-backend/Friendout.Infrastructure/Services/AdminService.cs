@@ -306,6 +306,35 @@ public class AdminService : IAdminService
         {
             await _db.SaveChangesAsync();
             await _appLog.LogInfoAsync("AccessRequest", $"New access request from {email}");
+
+            // Notify admins who explicitly opted in to access request alerts
+            var adminIds = await _db.Users
+                .Where(u => u.Role == UserRole.Admin)
+                .Select(u => new
+                {
+                    u.Id,
+                    AlertsEnabled = _db.UserNotificationPreferences
+                        .Where(p => p.UserId == u.Id)
+                        .Select(p => p.AccessRequestAlertsEnabled)
+                        .FirstOrDefault()
+                })
+                .Where(u => u.AlertsEnabled)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var adminId in adminIds)
+            {
+                _ = _notificationDispatcher.DispatchNotificationAsync(
+                    Guid.Parse(adminId),
+                    NotificationType.AccessRequestReceived,
+                    new Dictionary<string, string>
+                    {
+                        { "RequesterEmail", email },
+                        { "AppUrl",         _appOptions.Url }
+                    }
+                );
+            }
+
             return ServiceResult<bool>.Success(true);
         }
         catch (Exception ex)
