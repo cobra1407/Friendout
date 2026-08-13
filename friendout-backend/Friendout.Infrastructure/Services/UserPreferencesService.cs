@@ -42,7 +42,8 @@ public class UserPreferencesService : IUserPreferencesService
             userPrefs?.Locale ?? "en",
             notifPrefs?.EmailEnabled ?? true,
             notifPrefs?.InAppEnabled ?? true,
-            notifPrefs?.NotificationSound ?? "default"
+            notifPrefs?.NotificationSound ?? "default",
+            notifPrefs?.AccessRequestAlertsEnabled ?? false
         );
     }
 
@@ -75,12 +76,13 @@ public class UserPreferencesService : IUserPreferencesService
             notifPrefs.EmailEnabled = dto.EmailEnabled;
             notifPrefs.InAppEnabled = dto.InAppEnabled;
             notifPrefs.NotificationSound = string.IsNullOrWhiteSpace(dto.NotificationSound) ? "default" : dto.NotificationSound;
+            notifPrefs.AccessRequestAlertsEnabled = dto.AccessRequestAlertsEnabled;
             notifPrefs.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 
             return ServiceResult<UserPreferencesDto>.Success(
-                new UserPreferencesDto(dto.Locale, dto.EmailEnabled, dto.InAppEnabled, notifPrefs.NotificationSound));
+                new UserPreferencesDto(dto.Locale, dto.EmailEnabled, dto.InAppEnabled, notifPrefs.NotificationSound, notifPrefs.AccessRequestAlertsEnabled));
         }
         catch (Exception ex)
         {

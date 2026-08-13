@@ -34,6 +34,14 @@ public class UserNotificationPreferences
     [MaxLength(50)]
     public string NotificationSound { get; set; } = "default";
 
+    /// <summary>
+    /// Admin-only preference: whether this user wants to be alerted (email/in-app, subject to
+    /// the flags above) when a new access request is submitted. Meaningless for non-admins.
+    /// Opt-in by design — off by default so newly promoted admins aren't alerted unexpectedly.
+    /// </summary>
+    [Column("access_request_alerts_enabled")]
+    public bool AccessRequestAlertsEnabled { get; set; } = false;
+
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
