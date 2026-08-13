@@ -116,6 +116,7 @@ public class EmailNotificationStrategy : INotificationStrategy
             {
                 NotificationType.AccessRequestApproved => "Votre accès à Friendout a été approuvé",
                 NotificationType.AccessRequestDenied   => "Mise à jour de votre demande d'accès à Friendout",
+                NotificationType.AccessRequestReceived => "Nouvelle demande d'accès à Friendout",
                 NotificationType.ActivityModified      => "Une activité à laquelle vous avez participé a été mise à jour",
                 NotificationType.ActivityCanceled      => "Une activité a été annulée",
                 NotificationType.ActivityReminder      => "Rappel : activité à venir",
@@ -129,6 +130,7 @@ public class EmailNotificationStrategy : INotificationStrategy
         {
             NotificationType.AccessRequestApproved => "Your Friendout access has been approved",
             NotificationType.AccessRequestDenied   => "Update on your Friendout access request",
+            NotificationType.AccessRequestReceived => "New Friendout access request",
             NotificationType.ActivityModified      => "An activity you joined has been updated",
             NotificationType.ActivityCanceled      => "An activity has been canceled",
             NotificationType.ActivityReminder      => "Reminder: upcoming activity",

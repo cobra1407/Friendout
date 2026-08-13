@@ -27,6 +27,9 @@ public enum NotificationType
     /// <summary>Triggered when an access request is denied by an admin.</summary>
     AccessRequestDenied,
 
+    /// <summary>Triggered for admins when a new access request is submitted.</summary>
+    AccessRequestReceived,
+
     /// <summary>General-purpose fallback notification.</summary>
     General
 }
