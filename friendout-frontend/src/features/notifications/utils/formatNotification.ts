@@ -18,6 +18,7 @@ export function formatNotification(
         "InvitationReceived",
         "AccessRequestApproved",
         "AccessRequestDenied",
+        "AccessRequestReceived",
         "AccountDeleted",
     ]
 

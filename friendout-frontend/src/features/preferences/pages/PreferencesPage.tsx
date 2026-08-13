@@ -3,6 +3,8 @@ import { ActivityLayout } from "@/features/activity/layout/activityLayout"
 import { Header } from "@/components/header"
 import { authApi } from "@/features/auth/api/auth.api"
 import { getTranslation } from "@/i18n"
+import { useAuth } from "@/features/auth/hooks/useAuth"
+import { UserRole } from "@/features/user/enum/userRole.enum"
 import { usePreferences } from "@/features/preferences/hooks/usePreferences"
 import { useProfile } from "@/features/preferences/hooks/useProfile"
 import { PreferencesProfileSection } from "@/features/preferences/components/PreferencesProfileSection"
@@ -12,6 +14,8 @@ import type { SupportedLocale } from "@/features/preferences/types/preferences.t
 
 export default function PreferencesPage() {
     const navigate = useNavigate()
+    const { user } = useAuth()
+    const isAdmin = user?.role === UserRole.Admin
     const { preferences, isLoading, savePreferences, isSaving } = usePreferences()
     const {
         profile,
@@ -47,6 +51,11 @@ export default function PreferencesPage() {
     const handleSoundChange = (notificationSound: string) => {
         if (!preferences) return
         savePreferences({ ...preferences, notificationSound })
+    }
+
+    const handleAccessRequestAlertsChange = (accessRequestAlertsEnabled: boolean) => {
+        if (!preferences) return
+        savePreferences({ ...preferences, accessRequestAlertsEnabled })
     }
 
     return (
@@ -86,11 +95,14 @@ export default function PreferencesPage() {
                         emailEnabled={preferences?.emailEnabled}
                         inAppEnabled={preferences?.inAppEnabled}
                         notificationSound={preferences?.notificationSound}
+                        accessRequestAlertsEnabled={preferences?.accessRequestAlertsEnabled}
+                        isAdmin={isAdmin}
                         isLoading={isLoading}
                         disabled={isSaving}
                         onChangeEmail={handleEmailChange}
                         onChangeInApp={handleInAppChange}
                         onChangeSound={handleSoundChange}
+                        onChangeAccessRequestAlerts={handleAccessRequestAlertsChange}
                     />
                 </div>
             </div>

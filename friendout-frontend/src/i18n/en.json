@@ -244,7 +244,10 @@
       "in_app_description": "Receive notifications directly inside Friendout.",
       "sound_label": "Notification sound",
       "sound_description": "Played when a notification arrives while you're using Friendout.",
-      "sound_preview": "Preview sound"
+      "sound_preview": "Preview sound",
+      "access_request_alerts_label": "New access request alerts",
+      "access_request_alerts_description": "Get notified when someone requests access to Friendout.",
+      "admin_badge": "Admin"
     }
   },
   "activity": {
@@ -576,6 +579,10 @@
       "AccessRequestDenied": {
         "title": "Request denied",
         "message": "Your Friendout access request has been denied."
+      },
+      "AccessRequestReceived": {
+        "title": "New access request",
+        "message": "{{RequesterEmail}} requested access to Friendout."
       },
       "AccountDeleted": {
         "title": "Account deleted",
