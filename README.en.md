@@ -223,4 +223,4 @@ Issues and pull requests are welcome! This is primarily a learning project, so d
 
 ## 📄 License
 
-This project is licensed under the [GPLv2](LICENSE).
+This project is licensed under the [GPLv3](LICENSE).
