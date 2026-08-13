@@ -8,7 +8,8 @@ public record UserPreferencesDto(
     string Locale,
     bool EmailEnabled,
     bool InAppEnabled,
-    string NotificationSound
+    string NotificationSound,
+    bool AccessRequestAlertsEnabled
 );
 
 /// <summary>Payload to update a user's own preferences.</summary>
@@ -16,5 +17,6 @@ public record UpdateUserPreferencesDto(
     string Locale,
     bool EmailEnabled,
     bool InAppEnabled,
-    string NotificationSound
+    string NotificationSound,
+    bool AccessRequestAlertsEnabled
 );

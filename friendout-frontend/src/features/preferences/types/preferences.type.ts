@@ -5,6 +5,7 @@ export interface UserPreferences {
     emailEnabled: boolean
     inAppEnabled: boolean
     notificationSound: string
+    accessRequestAlertsEnabled: boolean
 }
 
 export type UpdateUserPreferencesPayload = UserPreferences
