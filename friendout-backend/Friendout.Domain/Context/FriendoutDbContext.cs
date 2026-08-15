@@ -8,7 +8,6 @@ namespace Friendout.Domain.Context
         // DbSets
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
-        public DbSet<Session> Sessions { get; set; }
         public DbSet<Activity> Activities { get; set; }
         public DbSet<SubActivity> SubActivities { get; set; }
         public DbSet<UserParticipation> UserParticipation { get; set; }
@@ -21,7 +20,6 @@ namespace Friendout.Domain.Context
         public DbSet<EquipmentListItem> EquipmentListItems { get; set; }
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
-        public DbSet<VerificationToken> VerificationTokens { get; set; }
         public DbSet<Localisation> Localisations { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<AllowedGuild> AllowedGuilds { get; set; }
@@ -42,11 +40,6 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.Email).IsUnique();
 
                 entity.HasMany(e => e.Accounts)
-                    .WithOne(e => e.User)
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasMany(e => e.Sessions)
                     .WithOne(e => e.User)
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
@@ -103,12 +96,6 @@ namespace Friendout.Domain.Context
             modelBuilder.Entity<Account>(entity =>
             {
                 entity.HasIndex(e => new { e.Provider, e.ProviderAccountId }).IsUnique();
-                entity.HasIndex(e => e.UserId);
-            });
-
-            modelBuilder.Entity<Session>(entity =>
-            {
-                entity.HasIndex(e => e.SessionToken).IsUnique();
                 entity.HasIndex(e => e.UserId);
             });
 
@@ -262,13 +249,6 @@ namespace Friendout.Domain.Context
                     .WithMany(e => e.UserAchievements)
                     .HasForeignKey(e => e.AchievementId)
                     .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            modelBuilder.Entity<VerificationToken>(entity =>
-            {
-                entity.HasKey(e => e.Token);
-                entity.HasIndex(e => e.Identifier);
-                entity.HasIndex(e => e.Expires);
             });
 
             modelBuilder.Entity<RefreshToken>(entity =>

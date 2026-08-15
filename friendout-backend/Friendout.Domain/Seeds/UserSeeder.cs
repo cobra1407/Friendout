@@ -16,7 +16,6 @@ public static class UserSeeder
                 .RuleFor(u => u.Id, f => Guid.NewGuid().ToString())
                 .RuleFor(u => u.Name, f => f.Person.FullName)
                 .RuleFor(u => u.Email, f => f.Internet.Email())
-                .RuleFor(u => u.EmailVerified, DateTime.Now)
                 .RuleFor(u => u.CreatedAt, DateTime.Now)
                 .RuleFor(u => u.UpdatedAt, DateTime.Now);
 
