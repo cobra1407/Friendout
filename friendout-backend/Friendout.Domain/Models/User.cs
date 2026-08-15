@@ -21,9 +21,6 @@ namespace Friendout.Domain.Models
         [MaxLength(191)]
         public string? Email { get; set; }
 
-        [Column("email_verified")]
-        public DateTime? EmailVerified { get; set; }
-
         [Required]
         [Column("role")]
         public UserRole Role { get; set; } = UserRole.User;
@@ -40,7 +37,6 @@ namespace Friendout.Domain.Models
 
         // Relations
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
-        public ICollection<Session> Sessions { get; set; } = new List<Session>();
         public ICollection<Activity> CreatedActivities { get; set; } = new List<Activity>();
         public ICollection<UserParticipation> UserParticipation { get; set; } = new List<UserParticipation>();
         public ICollection<ActivityComment> Comments { get; set; } = new List<ActivityComment>();
