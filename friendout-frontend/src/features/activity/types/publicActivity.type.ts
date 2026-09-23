@@ -25,7 +25,7 @@ export interface PublicActivity {
     estimatedPrice?: number | null;
     image?: Image | null;
     localisation?: Localisation | null;
-    createdBy: string;
+    createdBy?: string;
     participantsCount: PublicParticipantsCount;
     subActivities: PublicSubActivity[];
     requiredEquipmentNames: string[];
