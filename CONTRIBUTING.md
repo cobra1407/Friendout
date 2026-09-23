@@ -23,7 +23,7 @@ You don't need to write code to contribute:
 ## Development Setup
 
 The stack:
-- Backend: .NET 9, Clean Architecture, Entity Framework Core
+- Backend: .NET 10, Clean Architecture, Entity Framework Core
 - Frontend: React + TypeScript, Tailwind CSS v4
 - Deployment: Docker Compose
 

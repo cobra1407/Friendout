@@ -20,7 +20,7 @@
       retries: 10
       start_period: 30s
 
-  # ASP.NET Core 9 Backend
+  # ASP.NET Core 10 Backend
   backend:
     build:
       context: ./friendout-backend

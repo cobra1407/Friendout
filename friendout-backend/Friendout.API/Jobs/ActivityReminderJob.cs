@@ -55,7 +55,7 @@ public class ActivityReminderJob : IJob
         return $"{_appUrl}{relativeOrAbsolute}";
     }
 
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -80,7 +80,7 @@ public class ActivityReminderJob : IJob
                     a.StartAt >  now       &&
                     a.StartAt <= windowEnd &&
                     a.ReminderSentAt == null)
-                .ToListAsync(context.CancellationToken);
+                .ToListAsync(cancellationToken);
 
             if (activities.Count == 0)
             {
@@ -135,7 +135,7 @@ public class ActivityReminderJob : IJob
                 activity.ReminderSentAt = DateTime.UtcNow;
             }
 
-            await db.SaveChangesAsync(context.CancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "ActivityReminderJob: reminders sent for {Count} activities.", activities.Count);

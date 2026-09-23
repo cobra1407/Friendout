@@ -25,7 +25,7 @@ public class OrphanedActivityCleanupJob : IJob
         _logger = logger;
     }
 
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -36,7 +36,7 @@ public class OrphanedActivityCleanupJob : IJob
 
             var toDelete = await db.Activities
                 .Where(a => a.CreatedBy == null && a.StartAt < cutoff)
-                .ToListAsync(context.CancellationToken);
+                .ToListAsync(cancellationToken);
 
             if (toDelete.Count == 0)
             {
@@ -45,7 +45,7 @@ public class OrphanedActivityCleanupJob : IJob
             }
 
             db.Activities.RemoveRange(toDelete);
-            await db.SaveChangesAsync(context.CancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
 
             _logger.LogWarning(
                 "OrphanedActivityCleanupJob removed {Count} orphaned activities older than {Cutoff:yyyy-MM-dd}",

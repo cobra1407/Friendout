@@ -32,7 +32,7 @@ Friendout already supports:
 - File & image uploads
 - Localization (i18n)
 - Health checks
-- Self-hosted deployment via Docker Compose (Clean Architecture, .NET 9 + React/TypeScript)
+- Self-hosted deployment via Docker Compose (Clean Architecture, .NET 10 + React/TypeScript)
 
 ---
 
