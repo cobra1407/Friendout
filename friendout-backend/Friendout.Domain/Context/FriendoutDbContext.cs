@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 
 namespace Friendout.Domain.Context
@@ -97,6 +98,14 @@ namespace Friendout.Domain.Context
             {
                 entity.HasIndex(e => new { e.Provider, e.ProviderAccountId }).IsUnique();
                 entity.HasIndex(e => e.UserId);
+
+                // Stored as the DB has always stored it ("DISCORD", "GOOGLE", per ProviderEnum's
+                // [EnumMember] values) rather than EF's default enum-to-string ("Discord"),
+                // so existing rows keep working without a data migration.
+                entity.Property(e => e.Provider)
+                    .HasConversion(
+                        v => v.GetEnumMemberValue(),
+                        v => v.ParseEnumMemberValue<ProviderEnum>());
             });
 
             modelBuilder.Entity<Activity>(entity =>
