@@ -41,7 +41,7 @@ public class UserServiceTests
         var account = new Account
         {
             UserId = user.Id,
-            Provider = ProviderEnum.Discord.GetEnumMemberValue(),
+            Provider = ProviderEnum.Discord,
             ProviderAccountId = "provider-123"
         };
 

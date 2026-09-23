@@ -23,7 +23,7 @@ public class AdminService : IAdminService
     private readonly INotificationDispatcher _notificationDispatcher;
     private readonly AppOptions _appOptions;
     private readonly ISettingsService _settingsService;
-    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IAccountDeletionService _accountDeletionService;
 
     public AdminService(
         FriendoutDbContext db,
@@ -31,7 +31,7 @@ public class AdminService : IAdminService
         IHttpContextAccessor httpContextAccessor,
         INotificationDispatcher notificationDispatcher,
         ISettingsService settingsService,
-        IRefreshTokenService refreshTokenService,
+        IAccountDeletionService accountDeletionService,
         IOptions<AppOptions> appOptions)
     {
         _db = db;
@@ -39,7 +39,7 @@ public class AdminService : IAdminService
         _httpContextAccessor = httpContextAccessor;
         _notificationDispatcher = notificationDispatcher;
         _settingsService = settingsService;
-        _refreshTokenService = refreshTokenService;
+        _accountDeletionService = accountDeletionService;
         _appOptions = appOptions.Value;
     }
 
@@ -412,38 +412,38 @@ public class AdminService : IAdminService
         if (actorId == id)
             return ServiceResult<bool>.Failure("cannot_delete_self");
 
-        // Revoke refresh tokens so they can't be used to get a new access token later.
-        await _refreshTokenService.RevokeAllAsync(id);
+        // Capture these before the shared cleanup runs — the row will be gone after.
+        var userEmail = user.Email;
+        var userName = user.Name;
+        var locale = user.Preferences?.Locale ?? "en";
 
-        // Notify the user before deletion — the account will no longer exist after.
-        // Fire-and-forget — notification failure must never block the deletion.
-        if (!string.IsNullOrEmpty(user.Email))
+        // Admin-initiated deletion never deletes the user's created activities outright
+        // (no consent was given for that) — shared ones are orphaned instead, same as
+        // the self-service flow's default.
+        var result = await _accountDeletionService.DeleteUserDataAsync(id, deleteCreatedActivities: false);
+        if (!result.IsSuccess)
+            return result;
+
+        // Notify the user before they lose access entirely — fire-and-forget,
+        // notification failure must never block the deletion having already happened.
+        if (!string.IsNullOrEmpty(userEmail))
         {
             _ = _notificationDispatcher.DispatchNotificationAsync(
-                Guid.Parse(user.Id),
+                Guid.Empty,
                 NotificationType.AccountDeleted,
                 new Dictionary<string, string>
                 {
-                    { "UserName",  user.Name },
-                    { "UserEmail", user.Email },
+                    { "RecipientEmail", userEmail },
+                    { "UserName",  userName },
+                    { "UserEmail", userEmail },
                     { "AppUrl",    _appOptions.Url },
-                    { "Locale",    user.Preferences?.Locale ?? "en" }
+                    { "Locale",    locale }
                 }
             );
         }
 
-        _db.Users.Remove(user);
+        await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) deleted user {userName} ({id})");
 
-        try
-        {
-            await _db.SaveChangesAsync();
-            await _appLog.LogWarningAsync("Admin", $"{actorName} ({actorId}) deleted user {user.Name} ({id})");
-            return ServiceResult<bool>.Success(true);
-        }
-        catch (Exception ex)
-        {
-            await _appLog.LogErrorAsync("Admin", $"Failed to delete user {id}", ex);
-            return ServiceResult<bool>.Failure("unexpected_error");
-        }
+        return ServiceResult<bool>.Success(true);
     }
 }

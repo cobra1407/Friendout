@@ -20,7 +20,7 @@ type ActivityHeaderModel = {
     startAt: string;
     endAt?: string | null;
     location?: string | null;
-    createdBy: string;
+    createdBy?: string;
 };
 
 interface ActivityHeaderProps {

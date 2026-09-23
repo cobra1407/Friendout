@@ -242,7 +242,7 @@ public class ActivityService : IActivityService
                         DisplayName = a.Localisation.DisplayName
                     },
                     Image = a.Image != null ? new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.AltText } : null,
-                    CreatedBy = a.Creator.Name,
+                    CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt
                 })
@@ -284,7 +284,7 @@ public class ActivityService : IActivityService
                     EndAt = a.EndAt,
                     EstimatedPrice = a.EstimatedPrice,
                     TotalPrice = (a.EstimatedPrice ?? 0) + (a.SubActivities.Any() ? a.SubActivities.Sum(sa => sa.Price ?? 0) : 0),
-                    CreatedBy = a.Creator.Name,
+                    CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt,
                     ShareToken = a.ShareToken,
@@ -516,7 +516,7 @@ public class ActivityService : IActivityService
                 {
                     Id = a.Id, Title = a.Title, Description = a.Description,
                     StartAt = a.StartAt, EndAt = a.EndAt, EstimatedPrice = a.EstimatedPrice,
-                    CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator.Name,
+                    CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
                         Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Price = sa.Price,
@@ -753,7 +753,7 @@ public class ActivityService : IActivityService
                 {
                     Id = a.Id, Title = a.Title, Description = a.Description,
                     StartAt = a.StartAt, EndAt = a.EndAt, EstimatedPrice = a.EstimatedPrice,
-                    CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator.Name,
+                    CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
                         Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Price = sa.Price,
@@ -777,7 +777,7 @@ public class ActivityService : IActivityService
     {
         var activity = await _friendoutDbContext.Activities
             .Include(a => a.SubActivities).Include(a => a.Creator).Include(a => a.Localisation)
-            .FirstOrDefaultAsync(a => a.Id == activityId && a.Creator.Id == userId);
+            .FirstOrDefaultAsync(a => a.Id == activityId && a.Creator != null && a.Creator.Id == userId);
 
         if (activity == null)
             return ServiceResult<ActivityDto>.Failure("Activity not found");
@@ -786,7 +786,7 @@ public class ActivityService : IActivityService
         {
             Id = activity.Id, Title = activity.Title, Description = activity.Description,
             StartAt = activity.StartAt, EndAt = activity.EndAt,
-            CreatedBy = activity.Creator.Id, CreatedAt = activity.CreatedAt, UpdatedAt = activity.UpdatedAt,
+            CreatedBy = activity.Creator?.Id ?? "", CreatedAt = activity.CreatedAt, UpdatedAt = activity.UpdatedAt,
             SubActivities = activity.SubActivities?.Select(sa => new SubActivityDto { Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime }).ToList()
         };
 
@@ -800,7 +800,7 @@ public class ActivityService : IActivityService
                 { "ActivityName",     activity.Title },
                 { "Date",             LocaleHelper.FormatDate(activity.StartAt, "f", locale) },
                 { "Location",         activity.Localisation?.DisplayName ?? "" },
-                { "OrganizerName",    activity.Creator.Name },
+                { "OrganizerName",    activity.Creator?.Name ?? "" },
                 { "CancelReason",     "N/A" },
                 { "AppUrl",           _appOptions.Url },
                 { "ActivityImageUrl", activity.Image?.Url ?? $"{_appOptions.Url}/email-assets/default-activity-card.webp" }
@@ -903,7 +903,7 @@ public class ActivityService : IActivityService
                     StartAt = a.StartAt,
                     EndAt = a.EndAt,
                     EstimatedPrice = a.EstimatedPrice,
-                    CreatedBy = a.Creator.Name,
+                    CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     ParticipantsCount = new PublicParticipantsCountDto
                     {
                         Participating = a.UserParticipations.Count(up => up.SubActivityId == null && up.Status == ParticipationStatus.Participating),

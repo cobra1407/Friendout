@@ -37,9 +37,8 @@ namespace Friendout.Domain.Models
         [Column("image_id", TypeName = "varchar(191)")]
         public string? ImageId { get; set; }
 
-        [Required]
         [Column("created_by", TypeName = "varchar(191)")]
-        public string CreatedBy { get; set; } = null!;
+        public string? CreatedBy { get; set; }
 
         [Required]
         [Column("created_at", TypeName = "datetime(3)")]
@@ -68,7 +67,7 @@ namespace Friendout.Domain.Models
 
         // Relations
         [ForeignKey(nameof(CreatedBy))]
-        public User Creator { get; set; } = null!;
+        public User? Creator { get; set; }
 
         [ForeignKey(nameof(ImageId))]
         public Image? Image { get; set; }

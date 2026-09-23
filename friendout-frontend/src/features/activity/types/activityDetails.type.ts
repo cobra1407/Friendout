@@ -22,7 +22,7 @@ export interface ActivityDetails {
     localisation?: Localisation | null;
 
     // === Meta ===
-    createdBy: string;
+    createdBy?: string;
     createdAt: string;
     updatedAt: string;
 

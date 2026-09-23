@@ -34,12 +34,10 @@ public class UserService : IUserService
         ProviderEnum provider,
         string providerAccountId)
     {
-        var providerValue = provider.GetEnumMemberValue();
-
         var account = await _friendoutDbContext.Accounts
             .Include(a => a.User)
             .FirstOrDefaultAsync(a =>
-                a.Provider == providerValue &&
+                a.Provider == provider &&
                 a.ProviderAccountId == providerAccountId);
 
         if (account == null)
@@ -71,13 +69,11 @@ public class UserService : IUserService
             await using var transaction =
                 await _friendoutDbContext.Database.BeginTransactionAsync();
 
-            var providerValue = provider.GetEnumMemberValue();
-
-            // 1. The OAuth account already exists → return its user directly.
+            // The OAuth account already exists → return its user directly.
             var existingAccount = await _friendoutDbContext.Accounts
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a =>
-                    a.Provider == providerValue &&
+                    a.Provider == provider &&
                     a.ProviderAccountId == providerId);
 
             if (existingAccount != null)
@@ -86,7 +82,7 @@ public class UserService : IUserService
                 return ServiceResult<User>.Success(existingAccount.User);
             }
 
-            // 2. Different provider but same email → link to existing user.
+            // Different provider but same email → link to existing user.
             User? user = null;
 
             if (!string.IsNullOrEmpty(email))
@@ -100,7 +96,7 @@ public class UserService : IUserService
                 // Link the new OAuth provider to the existing account.
                 var linkedAccount = new Account
                 {
-                    Provider = providerValue,
+                    Provider = provider,
                     ProviderAccountId = providerId,
                     UserId = user.Id
                 };
@@ -112,7 +108,7 @@ public class UserService : IUserService
                 return ServiceResult<User>.Success(user);
             }
 
-            // 3. Brand-new user: create user then account.
+            // Brand-new user: create user then account.
             var isFirstUser = await IsFirstUserAsync();
 
             user = new User
@@ -128,7 +124,7 @@ public class UserService : IUserService
 
             var account = new Account
             {
-                Provider = providerValue,
+                Provider = provider,
                 ProviderAccountId = providerId,
                 UserId = user.Id
             };

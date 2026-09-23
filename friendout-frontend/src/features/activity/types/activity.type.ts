@@ -13,7 +13,7 @@ export interface Activity {
     localisation: Localisation;
     estimatedPrice: number;
     image?: Image;
-    createdBy: string;
+    createdBy?: string;
     createdAt: string;
     updatedAt: string;
     hasEquipment: boolean;

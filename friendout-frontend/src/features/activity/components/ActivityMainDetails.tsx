@@ -43,7 +43,7 @@ export type ActivityMainDetailsProps = {
     startAt: string;
     image?: Image | null;
     localisation?: Localisation | null;
-    createdBy: string;
+    createdBy?: string;
     price: ActivityPriceInfo;
     equipmentNames?: string[];
     maxEquipmentVisible?: number;
@@ -207,7 +207,9 @@ export default function ActivityMainDetails({
                             <Users className="w-3 h-3 text-muted-foreground mt-1" />
                             <span className="text-xs text-muted-foreground mt-1">
                                 {getTranslation("activity.created_by")}{" "}
-                                <span className="font-medium">{createdBy}</span>
+                                <span className="font-medium">
+                                    {createdBy || getTranslation("activity.deleted_organizer")}
+                                </span>
                             </span>
                         </div>
                     </div>

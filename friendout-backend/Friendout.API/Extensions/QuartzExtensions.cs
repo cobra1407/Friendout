@@ -19,6 +19,16 @@ public static class QuartzExtensions
                     .WithIdentity("ActivityReminder-trigger")
                     .WithCronSchedule("0 0 * * * ?") // every hour on the hour
                 );
+
+                var orphanCleanupJobKey = new JobKey("OrphanedActivityCleanup");
+
+                q.AddJob<OrphanedActivityCleanupJob>(opts => opts.WithIdentity(orphanCleanupJobKey));
+
+                q.AddTrigger(opts => opts
+                    .ForJob(orphanCleanupJobKey)
+                    .WithIdentity("OrphanedActivityCleanup-trigger")
+                    .WithCronSchedule("0 30 3 * * ?") // once a day at 3:30 AM
+                );
             })
             .AddQuartzHostedService(options =>
             {

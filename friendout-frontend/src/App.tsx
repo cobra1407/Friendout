@@ -5,6 +5,7 @@ import { ProtectedRoutes } from '@/features/auth'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { ActivitiesPage } from '@/features/activity/pages/ActivitiesPage'
 import { LoginPage } from '@/features/auth/pages/loginpage'
+import { AccountDeletionConfirmPage } from '@/features/auth/pages/AccountDeletionConfirmPage'
 import { Toaster } from 'sonner'
 import { useAuth } from "@/features/auth/hooks/useAuth"
 import { useEffect } from 'react'
@@ -24,12 +25,14 @@ const queryClient = new QueryClient()
 function App() {
     const { fetchMe } = useAuth();
     const isPublicSharePage = window.location.pathname.startsWith('/share/');
+    const isAccountDeletionPage = window.location.pathname.startsWith('/account-deletion');
 
     useEffect(() => {
-        // The public share page is meant to work for anonymous visitors — skip fetchMe()
-        // there so a guaranteed 401 (no session) doesn't trigger the global "session
-        // expired, redirect to /login" flow in the axios interceptor (see lib/api/api.ts).
-        if (!isPublicSharePage) {
+        // The public share page and the account-deletion confirmation page are meant to
+        // work for anonymous visitors — skip fetchMe() there so a guaranteed 401 (no
+        // session) doesn't trigger the global "session expired, redirect to /login" flow
+        // in the axios interceptor (see lib/api/api.ts).
+        if (!isPublicSharePage && !isAccountDeletionPage) {
             fetchMe();
         }
     }, []);
@@ -49,6 +52,7 @@ function App() {
                 <BrowserRouter>
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
+                        <Route path="/account-deletion/confirm" element={<AccountDeletionConfirmPage />} />
                         <Route path="/share/:shareToken" element={<PublicActivityPage />} />
                         <Route element={<ProtectedRoutes />}>
                             <Route path="/" element={<ActivitiesPage />} />

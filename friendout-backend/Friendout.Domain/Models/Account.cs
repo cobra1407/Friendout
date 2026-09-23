@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Friendout.Domain.Enums;
 
 namespace Friendout.Domain.Models
 {
@@ -19,7 +20,7 @@ namespace Friendout.Domain.Models
         [Required]
         [Column("provider")]
         [MaxLength(191)]
-        public string Provider { get; set; } = null!;
+        public ProviderEnum Provider { get; set; }
 
         [Required]
         [Column("provider_account_id")]

@@ -4,6 +4,7 @@ using Friendout.Domain.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Friendout.Domain.Migrations
 {
     [DbContext(typeof(FriendoutDbContext))]
-    partial class FriendoutDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260828111412_ConvertProviderToEnum")]
+    partial class ConvertProviderToEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,10 +111,6 @@ namespace Friendout.Domain.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
-
-                    b.Property<bool>("DeleteCreatedActivities")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("delete_created_activities");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime(6)")

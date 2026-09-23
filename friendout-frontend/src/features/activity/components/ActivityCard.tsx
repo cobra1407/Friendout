@@ -159,7 +159,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                                 <Users className="w-3 h-3" />
                             </span>
                             <span className="text-xs text-muted-foreground mt-1">
-                                {getTranslation('activity.created_by')} <span className="font-medium">{activity.createdBy}</span>
+                                {getTranslation('activity.created_by')} <span className="font-medium">{activity.createdBy || getTranslation('activity.deleted_organizer')}</span>
                             </span>
                         </div>
                     </div>
