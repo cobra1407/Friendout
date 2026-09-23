@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Friendout.Domain.Context;
+using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Authentication;
@@ -311,8 +312,25 @@ public static class AuthenticationExtensions
             if (!guilds.Any(g => allowedGuildIds.Contains(g.Id)))
             {
                 var appLog = context.HttpContext.RequestServices.GetRequiredService<IAppLogService>();
-                await appLog.LogWarningAsync("Auth", "Login refused — no matching allowed guild.");
-                context.Response.Redirect($"{loginUrl}?error_code=discord_access_denied");
+
+                // Distinguish two very different situations behind the same guild check:
+                // - This Discord identity has never had a Friendout account -> normal
+                //   "not authorized yet" case, the frontend should show the access-request form.
+                // - This Discord identity already has a Friendout account, meaning they used
+                //   to be a member of an allowed guild and the admin has since revoked it ->
+                //   the access-request form makes no sense here; the frontend should instead
+                //   offer the account-deletion flow, since the user can never log back in.
+                var discordId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var hadAccountBefore = discordId != null && await db.Accounts.AnyAsync(a =>
+                    a.Provider == ProviderEnum.Discord && a.ProviderAccountId == discordId);
+
+                var errorCode = hadAccountBefore ? "discord_guild_access_revoked" : "discord_access_denied";
+
+                await appLog.LogWarningAsync("Auth",
+                    hadAccountBefore
+                        ? "Login refused — guild access was revoked for an existing account."
+                        : "Login refused — no matching allowed guild.");
+                context.Response.Redirect($"{loginUrl}?error_code={errorCode}");
                 context.HandleResponse();
                 return;
             }
