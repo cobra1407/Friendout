@@ -1,8 +1,9 @@
-import { AlertCircle, Check, User2Icon, X } from "lucide-react";
+import { AlertCircle, Check, Info, User2Icon, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalHeader, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getTranslation } from "@/i18n";
 import { useAdminAccessRequests } from "../hooks/useAdmin";
 
@@ -50,6 +51,23 @@ export const AdminAccessRequestsModal = ({ open, onClose }: AdminAccessRequestsM
 
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium truncate">{r.email}</p>
+                                        {r.hasAccount && (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Badge
+                                                        variant="outline"
+                                                        tabIndex={0}
+                                                        className="mt-1 gap-1 text-xs font-medium bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30"
+                                                    >
+                                                        {getTranslation('admin.requests.has_account')}
+                                                        <Info className="w-3 h-3" aria-hidden="true" />
+                                                    </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top" sideOffset={6} className="max-w-xs">
+                                                    {getTranslation('admin.requests.has_account_hint')}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
                                         {r.message && (
                                             /* break-all safely splits long continuous strings like code logs or unspaced URLs */
                                             <p className="text-xs text-muted-foreground italic mt-0.5 break-all whitespace-pre-line block w-full">

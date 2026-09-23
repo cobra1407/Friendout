@@ -31,6 +31,8 @@ export interface AccessRequestDto {
     status: "Pending" | "Approved" | "Denied";
     createdAt: string;
     resolvedAt: string | null;
+    /** An account with the same email already exists (informational for the admin). */
+    hasAccount: boolean;
 }
 
 export interface AccessSettingsDto {

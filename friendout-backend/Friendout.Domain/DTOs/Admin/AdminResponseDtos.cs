@@ -6,7 +6,9 @@ namespace Friendout.Domain.DTOs.Admin;
 public record GuildDto(int Id, string GuildId, string? Label, DateTime CreatedAt);
 public record EmailDto(int Id, string Email, DateTime CreatedAt);
 public record UserAdminDto(string Id, string Name, string? Email, string? AvatarUrl, UserRole Role, DateTime CreatedAt);
-public record AccessRequestDto(int Id, string Email, string? Message, AccessRequestStatus Status, DateTime CreatedAt, DateTime? ResolvedAt);
+// HasAccount: an account with the same email already exists (e.g. the requester signed up through
+// Discord and now wants to sign in with Google). Purely informational for the admin reviewing the request.
+public record AccessRequestDto(int Id, string Email, string? Message, AccessRequestStatus Status, DateTime CreatedAt, DateTime? ResolvedAt, bool HasAccount = false);
 
 // Access mode DTO with summary counts for admin dashboard.
 // IsDiscordOpenMode: Discord restriction toggle is off — anyone with a Discord account can log in.
