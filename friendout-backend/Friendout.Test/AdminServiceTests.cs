@@ -7,6 +7,7 @@ using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Options;
 using Friendout.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Friendout.Test;
@@ -72,8 +73,21 @@ public class AdminServiceTests
         public string AppUrl => "https://localhost";
     }
 
+    /// <summary>
+    /// Builds a real AccountDeletionService wired to the same in-memory db and test doubles,
+    /// so AdminService.DeleteUserAsync exercises the actual anonymize-or-delete logic
+    /// rather than a fake stand-in.
+    /// </summary>
+    private static IAccountDeletionService CreateAccountDeletionService(FriendoutDbContext db)
+        => new AccountDeletionService(
+            db,
+            NullNotificationDispatcher.Instance,
+            NullAppLogService.Instance,
+            Options.Create(new AppOptions { Url = "https://localhost" }),
+            new ConfigurationBuilder().Build());
+
     private static AdminService CreateService(FriendoutDbContext db)
-        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, FakeSettingsService.Instance, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        => new(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, FakeSettingsService.Instance, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
     // -------------------------
     // GetLogsAsync
@@ -634,7 +648,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = self.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(self.Id);
 
@@ -654,8 +668,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var refreshTokenService = new FakeRefreshTokenService();
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, refreshTokenService, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(user.Id);
 
@@ -665,23 +678,23 @@ public class AdminServiceTests
     }
 
     [Test]
-    public async Task DeleteUser_RevokesAllRefreshTokens_ForTheDeletedUser()
+    public async Task DeleteUser_RemovesRefreshTokens_ForTheDeletedUser()
     {
-        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_RevokesAllRefreshTokens_ForTheDeletedUser));
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(DeleteUser_RemovesRefreshTokens_ForTheDeletedUser));
         var admin = new User { Name = "Admin",    Role = UserRole.Admin };
         var user  = new User { Name = "ToDelete", Role = UserRole.User };
         db.Users.AddRange(admin, user);
+        db.RefreshTokens.Add(new RefreshToken { Token = "tok-1", UserId = user.Id, ExpiresAt = DateTime.UtcNow.AddDays(30) });
         await db.SaveChangesAsync();
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var refreshTokenService = new FakeRefreshTokenService();
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, refreshTokenService, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(user.Id);
 
         result.IsSuccess.Should().BeTrue();
-        refreshTokenService.RevokedAllForUserIds.Should().ContainSingle().Which.Should().Be(user.Id);
+        db.RefreshTokens.Where(t => t.UserId == user.Id).Should().BeEmpty();
     }
 
     [Test]
@@ -695,7 +708,7 @@ public class AdminServiceTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = actor.Id;
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.DeleteUserAsync(target.Id);
 
@@ -716,7 +729,7 @@ public class AdminServiceTests
         var logSpy = new LogSpy();
         var httpContext = new DefaultHttpContext();
         httpContext.Items["UserId"] = admin.Id;
-        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, logSpy, new HttpContextAccessor { HttpContext = httpContext }, NullNotificationDispatcher.Instance, FakeSettingsService.Instance, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         await service.DeleteUserAsync(user.Id);
 
@@ -733,7 +746,7 @@ public class AdminServiceTests
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsDiscordOpenMode_WhenDiscordRestrictionDisabled));
         var settings = new FakeSettingsService { DiscordRestricted = false };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -746,7 +759,7 @@ public class AdminServiceTests
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsDiscordRestrictionLocksEveryone_WhenRestrictedButNoGuildConfigured));
         var settings = new FakeSettingsService { DiscordRestricted = true };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -761,7 +774,7 @@ public class AdminServiceTests
         db.AllowedGuilds.Add(new AllowedGuild { GuildId = "123" });
         await db.SaveChangesAsync();
         var settings = new FakeSettingsService { DiscordRestricted = true };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -774,7 +787,7 @@ public class AdminServiceTests
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsGoogleOpenMode_WhenGoogleRestrictionDisabled));
         var settings = new FakeSettingsService { GoogleRestricted = false };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -787,7 +800,7 @@ public class AdminServiceTests
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_IsGoogleRestrictionLocksEveryone_WhenRestrictedButNoEmailConfigured));
         var settings = new FakeSettingsService { GoogleRestricted = true };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -802,7 +815,7 @@ public class AdminServiceTests
         db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
         await db.SaveChangesAsync();
         var settings = new FakeSettingsService { GoogleRestricted = true };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -815,7 +828,7 @@ public class AdminServiceTests
     {
         await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetAccessMode_NoLoginMethodAvailable_WhenBothRestrictedWithEmptyAllowlists));
         var settings = new FakeSettingsService { DiscordRestricted = true, GoogleRestricted = true };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
@@ -829,7 +842,7 @@ public class AdminServiceTests
         db.AllowedEmails.Add(new AllowedEmail { Email = "thomas@gmail.com" });
         await db.SaveChangesAsync();
         var settings = new FakeSettingsService { DiscordRestricted = true, GoogleRestricted = true };
-        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, FakeRefreshTokenService.Instance, Options.Create(new AppOptions { Url = "https://localhost" }));
+        var service = new AdminService(db, NullAppLogService.Instance, new HttpContextAccessor(), NullNotificationDispatcher.Instance, settings, CreateAccountDeletionService(db), Options.Create(new AppOptions { Url = "https://localhost" }));
 
         var result = await service.GetAccessModeAsync();
 
