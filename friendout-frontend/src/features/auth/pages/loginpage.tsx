@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { DiscordLoginButton } from "../components/DiscordLoginButton";
 import { GoogleLoginButton } from "../components/GoogleLoginButton";
 import { RequestAccessModal } from "../components/RequestAccessModal";
+import { AccountDeletionRequestModal } from "../components/AccountDeletionRequestModal";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import defaultImage1 from "@/assets/images/default-1.webp";
 import defaultImage2 from "@/assets/images/default-2.webp";
@@ -14,9 +15,15 @@ import { faCalendarDay, faUsers, faGlassCheers } from "@fortawesome/free-solid-s
 import { authApi } from "@/features/auth/api/auth.api";
 
 const ACCESS_DENIED_CODES = ["discord_access_denied", "google_access_denied"];
+// Distinct from ACCESS_DENIED_CODES: this means the person USED to have access
+// (an account already exists) but it was revoked (e.g. admin removed their Discord
+// guild). The "request access" form makes no sense here — they need to delete their
+// data instead, since they can never log back in to do it from their account settings.
+const GUILD_ACCESS_REVOKED_CODE = "discord_guild_access_revoked";
 
 export const LoginPage = () => {
     const [requestModalOpen, setRequestModalOpen] = useState(false);
+    const [deletionModalOpen, setDeletionModalOpen] = useState(false);
     const [deniedEmail, setDeniedEmail] = useState("");
 
     // Defaults to both available while loading, so the buttons aren't both hidden during
@@ -35,8 +42,11 @@ export const LoginPage = () => {
             const message = getTranslation(`errors.${errorCode}`);
             toast.error(message !== `errors.${errorCode}` ? message : getTranslation("errors.unknown_error"));
 
-            // Auto-open the request modal when the user was denied access.
-            if (ACCESS_DENIED_CODES.includes(errorCode)) {
+            // Auto-open the request modal when the user was denied access, or the
+            // account-deletion modal when they used to have access but it was revoked.
+            if (errorCode === GUILD_ACCESS_REVOKED_CODE) {
+                setDeletionModalOpen(true);
+            } else if (ACCESS_DENIED_CODES.includes(errorCode)) {
                 // Pre-fill the access request form with the email the user just tried to
                 // sign in with (sent back by the backend after a Google whitelist rejection),
                 const email = params.get("email");
@@ -122,6 +132,11 @@ export const LoginPage = () => {
                 open={requestModalOpen}
                 onClose={() => setRequestModalOpen(false)}
                 defaultEmail={deniedEmail}
+            />
+
+            <AccountDeletionRequestModal
+                open={deletionModalOpen}
+                onClose={() => setDeletionModalOpen(false)}
             />
         </>
     );

@@ -22,13 +22,16 @@ api.interceptors.response.use(
     const alreadyRetried = originalRequest?._retry === true;
     const isOnLoginPage = window.location.pathname === "/login";
     const isOnPublicSharePage = window.location.pathname.startsWith("/share/");
+    const isOnAccountDeletionPage = window.location.pathname.startsWith("/account-deletion");
 
     // Don't attempt refresh if:
     // - Already on the login page (avoids redirect loop — /auth/me returns 401 on login page intentionally)
     // - On a public share page (anonymous visitors are expected to get 401s there)
+    // - On the account-deletion confirmation page (also anonymous by design — the
+    //   whole point of that flow is that the user can no longer log in)
     // - The failing request is /auth/refresh itself
     // - We already retried once
-    if (is401 && !isRefreshEndpoint && !alreadyRetried && !isOnLoginPage && !isOnPublicSharePage) {
+    if (is401 && !isRefreshEndpoint && !alreadyRetried && !isOnLoginPage && !isOnPublicSharePage && !isOnAccountDeletionPage) {
       originalRequest._retry = true;
 
       try {
