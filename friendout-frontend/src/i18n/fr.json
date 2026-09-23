@@ -500,7 +500,9 @@
       "empty": "Aucune demande en attente",
       "unknown_name": "Inconnu",
       "deny": "Refuser",
-      "approve": "Approuver"
+      "approve": "Approuver",
+      "has_account": "Compte existant",
+      "has_account_hint": "Un compte existe déjà avec cet email (par exemple créé via Discord). L'approuver lui permettra aussi de se connecter avec Google."
     },
     "users": {
       "title": "Membres",
@@ -532,7 +534,7 @@
     },
     "emails": {
       "title": "Emails autorisés",
-      "description": "Whitelist Gmail OAuth",
+      "description": "Whitelist Google OAuth",
       "empty": "Aucun email configuré",
       "open_mode_warning": "La restriction de connexion Google est désactivée — l'accès est ouvert à tous ceux qui ont un compte Google.",
       "disabled_as_login_method_info": "Google est désactivé comme moyen de connexion — la restriction est activée mais aucun email n'est configuré. Les utilisateurs peuvent toujours se connecter avec Discord.",

@@ -498,7 +498,9 @@
       "empty": "No pending requests",
       "unknown_name": "Unknown",
       "deny": "Deny",
-      "approve": "Approve"
+      "approve": "Approve",
+      "has_account": "Existing account",
+      "has_account_hint": "An account already exists with this email (for example created through Discord). Approving it will also let them sign in with Google."
     },
     "users": {
       "title": "Members",
@@ -530,7 +532,7 @@
     },
     "emails": {
       "title": "Allowed emails",
-      "description": "Gmail OAuth whitelist",
+      "description": "Google OAuth whitelist",
       "empty": "No email configured",
       "open_mode_warning": "Google login restriction is disabled — access is open to everyone with a Google account.",
       "disabled_as_login_method_info": "Google is disabled as a login method — the restriction is enabled but no email is configured. People can still sign in with Discord.",

@@ -98,14 +98,12 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Issues a new access token using a valid refresh token.
-    ///
-    /// Flow:
-    /// 1. Client sends the refresh_token cookie (automatically by the browser).
-    /// 2. We validate it against the database.
-    /// 3. If valid, we rotate it (revoke old, create new) and issue a new JWT.
-    /// 4. Both new cookies are set on the response.
+    /// Issues a new access token from the <c>refresh_token</c> cookie.
+    /// The refresh token is single-use: it is rotated on every call (old one revoked, new one issued),
+    /// so a stolen token stops working as soon as the legitimate user refreshes their session.
+    /// Both the <c>auth_token</c> and <c>refresh_token</c> cookies are re-set on the response.
     /// </summary>
+    /// <returns>200 with fresh cookies, or 401 if the cookie is missing or the token is invalid, expired or revoked.</returns>
     [HttpPost("auth/refresh")]
     [EnableRateLimiting("auth")]
     public async Task<IActionResult> Refresh()

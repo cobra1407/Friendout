@@ -213,7 +213,9 @@ public class AdminService : IAdminService
 
         return await query
             .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new AccessRequestDto(r.Id, r.Email, r.Message, r.Status, r.CreatedAt, r.ResolvedAt))
+            .Select(r => new AccessRequestDto(
+                r.Id, r.Email, r.Message, r.Status, r.CreatedAt, r.ResolvedAt,
+                _db.Users.Any(u => u.Email == r.Email)))
             .ToListAsync();
     }
 
@@ -265,9 +267,10 @@ public class AdminService : IAdminService
                 await _appLog.LogWarningAsync("Admin",
                     $"{actorName} ({actorId}) rejected access request for {request.Email}");
 
+            var hasAccount = await _db.Users.AnyAsync(u => u.Email == request.Email);
             return ServiceResult<AccessRequestDto>.Success(
                 new AccessRequestDto(request.Id, request.Email, request.Message, request.Status, request.CreatedAt,
-                    request.ResolvedAt));
+                    request.ResolvedAt, hasAccount));
         }
         catch (Exception ex)
         {
