@@ -44,7 +44,7 @@ Concrètement, tu peux :
 | Couche | Technologie |
 |---|---|
 | Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, shadcn/ui |
-| Backend | ASP.NET Core 9 (C#), Entity Framework Core 9 |
+| Backend | ASP.NET Core 10 (C#), Entity Framework Core 9 |
 | Base de données | MySQL 8.4 |
 | Authentification | Discord OAuth 2.0, Google OAuth 2.0 + JWT |
 | Infrastructure | Docker + Docker Compose, Nginx |
@@ -87,6 +87,8 @@ L'application sera disponible sur `http://localhost`.
 
 ### Backend
 
+> Nécessite le [SDK .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0).
+
 ```bash
 cd friendout-backend/Friendout.API
 cp .env.example .env
@@ -116,7 +118,7 @@ Application disponible sur `http://localhost:5173`.
 friendout/
 ├── docker-compose.yml
 ├── .env.example                 # Template variables Docker
-├── friendout-backend/           # API ASP.NET Core 9
+├── friendout-backend/           # API ASP.NET Core 10
 │   ├── Friendout.API/           # Controllers, config, point d'entrée
 │   ├── Friendout.Domain/        # Entités, DbContext, seeds
 │   ├── Friendout.Infrastructure/# Services, repositories
