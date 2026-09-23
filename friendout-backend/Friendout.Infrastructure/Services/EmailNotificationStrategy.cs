@@ -122,6 +122,7 @@ public class EmailNotificationStrategy : INotificationStrategy
                 NotificationType.ActivityReminder      => "Rappel : activité à venir",
                 NotificationType.InvitationReceived    => "Vous avez été invité à une activité",
                 NotificationType.AccountDeleted        => "Votre compte Friendout a été supprimé",
+                NotificationType.AccountDeletionRequested => "Confirmez la suppression de votre compte Friendout",
                 _                                      => "Notification de Friendout"
             };
         }
@@ -136,6 +137,7 @@ public class EmailNotificationStrategy : INotificationStrategy
             NotificationType.ActivityReminder      => "Reminder: upcoming activity",
             NotificationType.InvitationReceived    => "You've been invited to an activity",
             NotificationType.AccountDeleted        => "Your Friendout account has been deleted",
+            NotificationType.AccountDeletionRequested => "Confirm deletion of your Friendout account",
             _                                      => "Notification from Friendout"
         };
     }

@@ -21,6 +21,10 @@ public enum NotificationType
     /// <summary>Triggered when a user account is deleted.</summary>
     AccountDeleted,
 
+    /// <summary>Triggered when a user requests deletion of their personal data via the
+    /// out-of-band (no-login-required) account deletion flow. Carries the confirmation link.</summary>
+    AccountDeletionRequested,
+
     /// <summary>Triggered when an access request is approved by an admin.</summary>
     AccessRequestApproved,
 

@@ -16,7 +16,7 @@ public class ActivityDto
 
     public double? EstimatedPrice { get; set; }
     public ImageDto? Image { get; set; }
-    public string CreatedBy { get; set; } = null!;
+    public string? CreatedBy { get; set; }
     
     public int NbParticipants { get; set; }
     public bool HasEquipment { get; set; }

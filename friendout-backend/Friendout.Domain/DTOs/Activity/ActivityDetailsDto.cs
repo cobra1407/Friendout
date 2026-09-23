@@ -22,7 +22,7 @@ public class ActivityDetailsDto
     public LocalisationDto? Localisation { get; set; }
 
     // === Meta ===
-    public string CreatedBy { get; set; } = null!;
+    public string? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

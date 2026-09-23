@@ -31,6 +31,7 @@ namespace Friendout.Domain.Context
         public DbSet<UserPreferences> UserPreferences { get; set; }
         public DbSet<UserNotificationPreferences> UserNotificationPreferences { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
+        public DbSet<AccountDeletionRequest> AccountDeletionRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,10 +46,16 @@ namespace Friendout.Domain.Context
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                // SetNull rather than Cascade: deleting a user should orphan the
+                // activities they created (CreatedBy → null), never silently delete
+                // activities other participants are counting on. The account-deletion
+                // service handles the actual orphan-vs-delete decision explicitly before
+                // removing the user row; this DB-level default is a safety net for any
+                // other code path that might delete a user.
                 entity.HasMany(e => e.CreatedActivities)
                     .WithOne(e => e.Creator)
                     .HasForeignKey(e => e.CreatedBy)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasMany(e => e.UserParticipation)
                     .WithOne(e => e.User)
@@ -287,6 +294,18 @@ namespace Friendout.Domain.Context
                 entity.HasIndex(e => e.Level);
                 entity.HasIndex(e => e.CreatedAt);
                 entity.Property(e => e.Level).HasConversion<string>();
+            });
+
+            modelBuilder.Entity<AccountDeletionRequest>(entity =>
+            {
+                entity.HasKey(e => e.Token);
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ExpiresAt);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<AccessRequest>(entity =>

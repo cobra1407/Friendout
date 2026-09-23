@@ -29,8 +29,9 @@ public class PublicActivityDto
 
     /// <summary>
     /// Display name of the organizer only — no id, email, or other user data.
+    /// Null if the activity is orphaned (its creator's account was deleted).
     /// </summary>
-    public string CreatedBy { get; set; } = null!;
+    public string? CreatedBy { get; set; }
 
     public PublicParticipantsCountDto ParticipantsCount { get; set; } = new();
 

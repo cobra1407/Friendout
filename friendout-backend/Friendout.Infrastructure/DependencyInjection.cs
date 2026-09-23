@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IEquipmentListService, EquipmentListService>();
         services.AddScoped<IParticipantService, ParticipantService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<IAccountDeletionService, AccountDeletionService>();
 
         // ---- Geocoding (reverse geocoding for Maps links with raw coordinates) ----
         services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();
