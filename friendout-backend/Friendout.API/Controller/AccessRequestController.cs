@@ -22,11 +22,12 @@ public class AccessRequestController : ControllerBase
 
     /// <summary>
     /// Submits a new access request.
-    /// Returns 201 on success, 409 if a pending request or approved email already exists.
+    /// Always returns 201 on a well-formed request, even if the email already has a pending
+    /// request or is already approved — the response is intentionally identical in every case
+    /// so this public endpoint cannot be used to enumerate which emails are known to the system.
     /// </summary>
     [HttpPost("access-requests")]
     [ProducesResponseType(201)]
-    [ProducesResponseType(409)]
     public async Task<IActionResult> Submit([FromBody] SubmitAccessRequestDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Email))
@@ -42,8 +43,7 @@ public class AccessRequestController : ControllerBase
         {
             return result.ErrorMessage switch
             {
-            "already_pending"  => Conflict(new { error = "already_pending" }),
-            "already_approved" => Conflict(new { error = "already_approved" }),
+            "message_too_long" => BadRequest(new { error = "message_too_long" }),
             "too_many_pending" => StatusCode(503, new { error = "too_many_pending" }),
                 _                  => StatusCode(500, new { error = result.ErrorMessage })
             };

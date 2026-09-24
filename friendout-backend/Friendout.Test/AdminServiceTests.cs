@@ -484,6 +484,88 @@ public class AdminServiceTests
     }
 
     // -------------------------
+    // SubmitAccessRequestAsync
+    // -------------------------
+
+    [Test]
+    public async Task SubmitAccessRequest_ReturnsSuccess_AndCreatesRequest_WhenEmailIsNew()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(SubmitAccessRequest_ReturnsSuccess_AndCreatesRequest_WhenEmailIsNew));
+
+        var result = await CreateService(db).SubmitAccessRequestAsync(new SubmitAccessRequestDto("new@gmail.com", "Salut !"));
+
+        result.IsSuccess.Should().BeTrue();
+        db.AccessRequests.Should().ContainSingle(r => r.Email == "new@gmail.com");
+    }
+
+    [Test]
+    public async Task SubmitAccessRequest_ReturnsSuccess_ButDoesNotDuplicate_WhenAlreadyPending()
+    {
+        // Security: an attacker submitting the same email twice must see an identical
+        // success response both times — no distinguishable "already_pending" outcome —
+        // to prevent using this public endpoint to enumerate emails.
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(SubmitAccessRequest_ReturnsSuccess_ButDoesNotDuplicate_WhenAlreadyPending));
+        db.AccessRequests.Add(new AccessRequest { Email = "pending@gmail.com", Status = AccessRequestStatus.Pending });
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).SubmitAccessRequestAsync(new SubmitAccessRequestDto("pending@gmail.com", null));
+
+        result.IsSuccess.Should().BeTrue();
+        db.AccessRequests.Should().HaveCount(1);
+    }
+
+    [Test]
+    public async Task SubmitAccessRequest_ReturnsSuccess_ButDoesNotCreateRequest_WhenEmailAlreadyApproved()
+    {
+        // Security: same reasoning as above — an already-allowed email must not produce
+        // a different (and thus enumerable) response from a brand-new email.
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(SubmitAccessRequest_ReturnsSuccess_ButDoesNotCreateRequest_WhenEmailAlreadyApproved));
+        db.AllowedEmails.Add(new AllowedEmail { Email = "approved@gmail.com" });
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).SubmitAccessRequestAsync(new SubmitAccessRequestDto("approved@gmail.com", null));
+
+        result.IsSuccess.Should().BeTrue();
+        db.AccessRequests.Should().BeEmpty();
+    }
+
+    [Test]
+    public async Task SubmitAccessRequest_ReturnsFailure_WhenMessageTooLong()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(SubmitAccessRequest_ReturnsFailure_WhenMessageTooLong));
+
+        var result = await CreateService(db).SubmitAccessRequestAsync(new SubmitAccessRequestDto("new@gmail.com", new string('a', 501)));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("message_too_long");
+        db.AccessRequests.Should().BeEmpty();
+    }
+
+    [Test]
+    public async Task SubmitAccessRequest_ReturnsFailure_WhenTooManyPendingRequests()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(SubmitAccessRequest_ReturnsFailure_WhenTooManyPendingRequests));
+        for (var i = 0; i < 50; i++)
+            db.AccessRequests.Add(new AccessRequest { Email = $"user{i}@gmail.com", Status = AccessRequestStatus.Pending });
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).SubmitAccessRequestAsync(new SubmitAccessRequestDto("overflow@gmail.com", null));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("too_many_pending");
+    }
+
+    [Test]
+    public async Task SubmitAccessRequest_NormalizesEmailToLowercase()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(SubmitAccessRequest_NormalizesEmailToLowercase));
+
+        await CreateService(db).SubmitAccessRequestAsync(new SubmitAccessRequestDto("Thomas@Gmail.com", null));
+
+        db.AccessRequests.First().Email.Should().Be("thomas@gmail.com");
+    }
+
+    // -------------------------
     // GetUsersAsync
     // -------------------------
 

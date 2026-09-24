@@ -75,13 +75,12 @@ export const RequestAccessModal = ({ open, onClose, defaultEmail = "" }: Request
             await adminApi.submitAccessRequest(parsed.data);
             setSubmitted(true);
         } catch (err: unknown) {
+            // Note: the backend intentionally responds with the same outcome whether the
+            // email is new, already pending, or already approved (to prevent email
+            // enumeration), so we must not surface email-specific error states here.
             if (axios.isAxiosError(err)) {
                 const code = err.response?.data?.error as string | undefined;
-                if (code === "already_pending") {
-                    setErrors({ email: getTranslation("access_request.error_already_pending") });
-                } else if (code === "already_approved") {
-                    setErrors({ email: getTranslation("access_request.error_already_approved") });
-                } else if (code === "message_too_long") {
+                if (code === "message_too_long") {
                     setErrors({ message: getTranslation("access_request.error_message_too_long") });
                 } else if (code === "too_many_pending") {
                     setErrors({ api: getTranslation("access_request.error_too_many_pending") });

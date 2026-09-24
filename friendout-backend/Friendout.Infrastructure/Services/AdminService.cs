@@ -287,16 +287,19 @@ public class AdminService : IAdminService
         if (dto.Message != null && dto.Message.Trim().Length > maxMessageLength)
             return ServiceResult<bool>.Failure("message_too_long");
 
-        if (await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending))
-            return ServiceResult<bool>.Failure("already_pending");
-
-        if (await _db.AllowedEmails.AnyAsync(e => e.Email == email))
-            return ServiceResult<bool>.Failure("already_approved");
-
         const int maxPendingRequests = 50;
 
         if (await _db.AccessRequests.CountAsync(r => r.Status == AccessRequestStatus.Pending) >= maxPendingRequests)
             return ServiceResult<bool>.Failure("too_many_pending");
+
+        // Security: don't reveal whether this email already has a pending request or is
+        // already approved (AllowedEmails) — doing so via a distinct response would let
+        // an attacker enumerate valid/registered emails against this public endpoint.
+        // We silently no-op and report success, exactly as if a new request was created.
+        var alreadyPending = await _db.AccessRequests.AnyAsync(r => r.Email == email && r.Status == AccessRequestStatus.Pending);
+        var alreadyApproved = await _db.AllowedEmails.AnyAsync(e => e.Email == email);
+        if (alreadyPending || alreadyApproved)
+            return ServiceResult<bool>.Success(true);
 
         _db.AccessRequests.Add(new AccessRequest
         {
