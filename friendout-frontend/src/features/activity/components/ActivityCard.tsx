@@ -96,14 +96,26 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                         <span>{formatTime(activity.startAt)}</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                         {localisationData?.type === LocalisationType.Virtual ? (
-                            <MessageCircle className="w-4 h-4 text-blue-600" />
+                            <MessageCircle className="w-4 h-4 text-blue-600 shrink-0" />
                         ) : (
-                            <MapPin className="w-4 h-4 text-red-700" />
+                            <MapPin className="w-4 h-4 text-red-700 shrink-0" />
                         )}
-                        <span className="line-clamp-1 flex-1" title={localisationDisplayText}>
-                            {localisationDisplayText}
+                        <span className="truncate flex-1 min-w-0" title={localisationDisplayText}>
+                            {localisationData?.type === LocalisationType.Virtual && localisationData.virtualUrl ? (
+                                <a
+                                    href={localisationData.virtualUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-blue-700 dark:text-blue-400 hover:underline"
+                                >
+                                    {localisationDisplayText}
+                                </a>
+                            ) : (
+                                localisationDisplayText
+                            )}
                         </span>
                         {localisationData?.type === LocalisationType.Virtual && (
                             <Badge variant="outline" className="text-xs">

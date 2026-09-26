@@ -123,19 +123,33 @@ const SubActivityDetailsCard = ({ subActivity, maxVisibleParticipants, onRespons
                 <div className="relative">
                     <div className="absolute -left-6 top-0 bottom-0 w-1 bg-primary/10 rounded-r-full -my-2" />
                     {localisationData && (
-                        <div className="flex items-center gap-1.5 font-medium text-foreground/80">
+                        <div className="flex items-center gap-1.5 font-medium text-foreground/80 min-w-0">
                             {localisationData.type === LocalisationType.Virtual ? (
-                                <MessageCircle className="h-4 w-4 text-blue-600" />
+                                <MessageCircle className="h-4 w-4 text-blue-600 shrink-0" />
                             ) : (
-                                <MapPin className="h-4 w-4 text-red-700 -translate-x-1" />
+                                <MapPin className="h-4 w-4 text-red-700 -translate-x-1 shrink-0" />
                             )}
-                            <span className="line-clamp-1 flex-1" title={localisationDisplayText}>
-                                {localisationDisplayText}
+                            <span className="truncate flex-1 min-w-0" title={localisationDisplayText}>
+                                {localisationData.type === LocalisationType.Virtual && localisationData.virtualUrl ? (
+                                    <a
+                                        href={localisationData.virtualUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-700 dark:text-blue-400 hover:underline"
+                                    >
+                                        {localisationDisplayText}
+                                    </a>
+                                ) : (
+                                    localisationDisplayText
+                                )}
                             </span>
                             {localisationData.type === LocalisationType.Virtual && (
                                 <Badge variant="outline" className="text-xs">
                                     {getTranslation('activity.virtual_place')}
                                 </Badge>
+                            )}
+                            {localisationData.type === LocalisationType.Virtual && localisationData.virtualUrl && (
+                                <ExternalLink className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 shrink-0" />
                             )}
                             {isGoogleMapsLink && (
                                 <Button

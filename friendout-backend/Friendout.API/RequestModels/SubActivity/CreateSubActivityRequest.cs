@@ -27,4 +27,7 @@ public class CreateSubActivityRequest
 
     [MaxLength(500)]
     public string? VirtualUrl { get; set; }
+
+    [MaxLength(100)]
+    public string? VirtualChannelName { get; set; }
 }

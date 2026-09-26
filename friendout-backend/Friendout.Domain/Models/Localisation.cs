@@ -24,6 +24,14 @@ namespace Friendout.Domain.Models
         [Column("virtual_url", TypeName = "varchar(500)")]
         public string? VirtualUrl { get; set; }
 
+        /// <summary>
+        /// Optional room/channel name shown instead of the raw virtual URL (e.g. "#Général").
+        /// Only meaningful when Type is Virtual; the platform (Discord, TeamSpeak, Zoom, etc.)
+        /// doesn't matter here — it's a free-text label the user provides manually.
+        /// </summary>
+        [Column("channel_name", TypeName = "varchar(100)")]
+        public string? ChannelName { get; set; }
+
         [Column("display_name", TypeName = "varchar(100)")]
         public string? DisplayName { get; set; }
         

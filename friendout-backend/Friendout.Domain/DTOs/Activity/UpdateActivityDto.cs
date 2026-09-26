@@ -13,6 +13,7 @@ public class UpdateActivityDto
     public string? Address { get; set; }
     public string? MapLink { get; set; }
     public string? VirtualUrl { get; set; }
+    public string? ChannelName { get; set; }
     public double? EstimatedPrice { get; set; }
     public List<string> RequiredEquipmentNames { get; set; } = new();
     public List<CreateSubActivityDto> SubActivities { get; set; } = new();

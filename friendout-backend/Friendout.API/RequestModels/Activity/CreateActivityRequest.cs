@@ -66,6 +66,12 @@ public class CreateActivityRequest : IValidatableObject
         [MaxLength(500)]
         public string? VirtualUrl { get; set; }
 
+        /// <summary>
+        /// Optional room/channel name shown instead of the raw virtual URL (e.g. "#Activity"). Virtual only.
+        /// </summary>
+        [MaxLength(100)]
+        public string? VirtualChannelName { get; set; }
+
         #endregion
 
         /// <summary>
@@ -89,7 +95,7 @@ public class CreateActivityRequest : IValidatableObject
         public string? SubActivitiesJson { get; set; }
 
         /// <summary>
-        /// Image file of the activity (optional). 
+        /// Image file of the activity (optional).
         /// If not provided, a default image can be used.
         /// </summary>
         public IFormFile? ActivityImage { get; set; }

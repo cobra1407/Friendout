@@ -96,6 +96,23 @@ export const validateGoogleMapsUrl = (url: string): { isValid: boolean; error?: 
   }
 };
 
+export const validateOptionalUrl = (url: string): { isValid: boolean; error?: string } => {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return { isValid: true }; // Optional field — empty is fine.
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return { isValid: false, error: "Le lien doit commencer par http:// ou https://" };
+    }
+    return { isValid: true };
+  } catch {
+    return { isValid: false, error: "Le lien n'est pas une URL valide" };
+  }
+};
+
 export const getLocalisationDisplayText = (localisation: Localisation | null | undefined): string => {
   if (!localisation) {
     return "Lieu non specifie";
