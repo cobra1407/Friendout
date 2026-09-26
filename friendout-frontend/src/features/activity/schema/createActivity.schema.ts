@@ -8,6 +8,7 @@ const localisationSchema = z.object({
   mapLink: z.string().url().trim().nullish(),
   virtualUrl: z.string().trim().nullish(),
   serverInfo: z.string().trim().nullish(),
+  channelName: z.string().trim().nullish(),
 }).refine((data) => {
   if (data.type === LocalisationType.Address) return !!data.address?.trim();
   if (data.type === LocalisationType.MapLink) return !!data.mapLink?.trim();
