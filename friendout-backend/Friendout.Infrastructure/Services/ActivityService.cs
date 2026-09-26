@@ -66,7 +66,7 @@ public class ActivityService : IActivityService
     /// if that lookup fails or isn't applicable — this must never throw or block
     /// activity creation/update.
     /// </summary>
-    private async Task<string> BuildLocalisationDisplayNameAsync(LocalisationType type, string? address, string? mapLink, string? virtualUrl, CancellationToken cancellationToken = default)
+    private async Task<string> BuildLocalisationDisplayNameAsync(LocalisationType type, string? address, string? mapLink, string? virtualUrl, string? channelName = null, CancellationToken cancellationToken = default)
     {
         switch (type)
         {
@@ -89,6 +89,10 @@ public class ActivityService : IActivityService
                 return "Lieu depuis Google Maps";
 
             case LocalisationType.Virtual:
+                // Prefer the human-provided channel/room name (e.g. "#Général") over the raw link,
+                // which can be very long and isn't meant to be read by a person.
+                if (!string.IsNullOrWhiteSpace(channelName))
+                    return channelName;
                 return !string.IsNullOrWhiteSpace(virtualUrl) ? virtualUrl : "Lieu virtuel";
 
             default:
@@ -229,6 +233,7 @@ public class ActivityService : IActivityService
                             Address = sa.Localisation.Address,
                             MapLink = sa.Localisation.MapLink,
                             VirtualUrl = sa.Localisation.VirtualUrl,
+                            ChannelName = sa.Localisation.ChannelName,
                             DisplayName = sa.Localisation.DisplayName
                         }
                     }).ToList(),
@@ -239,6 +244,7 @@ public class ActivityService : IActivityService
                         Address = a.Localisation.Address,
                         MapLink = a.Localisation.MapLink,
                         VirtualUrl = a.Localisation.VirtualUrl,
+                        ChannelName = a.Localisation.ChannelName,
                         DisplayName = a.Localisation.DisplayName
                     },
                     Image = a.Image != null ? new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.AltText } : null,
@@ -295,6 +301,7 @@ public class ActivityService : IActivityService
                         Address = a.Localisation.Address,
                         MapLink = a.Localisation.MapLink,
                         VirtualUrl = a.Localisation.VirtualUrl,
+                        ChannelName = a.Localisation.ChannelName,
                         DisplayName = a.Localisation.DisplayName
                     },
                     UserMainParticipation = a.UserParticipations
@@ -336,6 +343,7 @@ public class ActivityService : IActivityService
                                 Address = sa.Localisation.Address,
                                 MapLink = sa.Localisation.MapLink,
                                 VirtualUrl = sa.Localisation.VirtualUrl,
+                                ChannelName = sa.Localisation.ChannelName,
                                 DisplayName = sa.Localisation.DisplayName
                             },
                             Participants = sa.UserParticipations
@@ -409,7 +417,7 @@ public class ActivityService : IActivityService
 
             var normalizedSubActivities = createActivityDto.SubActivities
                 .Where(sa => !string.IsNullOrWhiteSpace(sa.Name))
-                .Select(sa => new { Name = sa.Name.Trim(), sa.StartTime, sa.EndTime, sa.Description, sa.Price, sa.Address, sa.MapLink, sa.VirtualUrl })
+                .Select(sa => new { Name = sa.Name.Trim(), sa.StartTime, sa.EndTime, sa.Description, sa.Price, sa.Address, sa.MapLink, sa.VirtualUrl, sa.ChannelName })
                 .ToList();
 
             string? imageId = null;
@@ -441,7 +449,8 @@ public class ActivityService : IActivityService
                 {
                     Id = Guid.NewGuid().ToString(), Type = type,
                     Address = createActivityDto.Address, MapLink = createActivityDto.MapLink, VirtualUrl = createActivityDto.VirtualUrl,
-                    DisplayName = await BuildLocalisationDisplayNameAsync(type, createActivityDto.Address, createActivityDto.MapLink, createActivityDto.VirtualUrl)
+                    ChannelName = createActivityDto.ChannelName,
+                    DisplayName = await BuildLocalisationDisplayNameAsync(type, createActivityDto.Address, createActivityDto.MapLink, createActivityDto.VirtualUrl, createActivityDto.ChannelName)
                 };
                 _friendoutDbContext.Localisations.Add(localisation);
             }
@@ -476,7 +485,8 @@ public class ActivityService : IActivityService
                         {
                             Id = Guid.NewGuid().ToString(), Type = subType,
                             Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl,
-                            DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl)
+                            ChannelName = sa.ChannelName,
+                            DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl, sa.ChannelName)
                         };
                         _friendoutDbContext.Localisations.Add(subLocalisation);
                     }
@@ -524,6 +534,7 @@ public class ActivityService : IActivityService
                         {
                             Type = sa.Localisation.Type, Address = sa.Localisation.Address,
                             MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl,
+                            ChannelName = sa.Localisation.ChannelName,
                             DisplayName = sa.Localisation.DisplayName
                         }
                     }).ToList(),
@@ -532,6 +543,7 @@ public class ActivityService : IActivityService
                     {
                         Type = a.Localisation.Type, Address = a.Localisation.Address,
                         MapLink = a.Localisation.MapLink, VirtualUrl = a.Localisation.VirtualUrl,
+                        ChannelName = a.Localisation.ChannelName,
                         DisplayName = a.Localisation.DisplayName
                     },
                     Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.Name }
@@ -577,7 +589,7 @@ public class ActivityService : IActivityService
                 .Select(sa => new
                 {
                     Id = string.IsNullOrWhiteSpace(sa.Id) ? null : sa.Id.Trim(),
-                    Name = sa.Name.Trim(), sa.StartTime, sa.EndTime, sa.Description, sa.Price, sa.Address, sa.MapLink, sa.VirtualUrl
+                    Name = sa.Name.Trim(), sa.StartTime, sa.EndTime, sa.Description, sa.Price, sa.Address, sa.MapLink, sa.VirtualUrl, sa.ChannelName
                 }).ToList();
 
             if (activityDto.RemoveImage && activity.Image != null)
@@ -629,13 +641,14 @@ public class ActivityService : IActivityService
                 localisation.Address = activityDto.Address;
                 localisation.MapLink = activityDto.MapLink;
                 localisation.VirtualUrl = activityDto.VirtualUrl;
-                localisation.DisplayName = await BuildLocalisationDisplayNameAsync(type, activityDto.Address, activityDto.MapLink, activityDto.VirtualUrl);
+                localisation.ChannelName = activityDto.ChannelName;
+                localisation.DisplayName = await BuildLocalisationDisplayNameAsync(type, activityDto.Address, activityDto.MapLink, activityDto.VirtualUrl, activityDto.ChannelName);
             }
             else
             {
                 localisation = activity.Localisation ?? new Localisation { Id = Guid.NewGuid().ToString() };
                 localisation.Type = LocalisationType.Address;
-                localisation.Address = null; localisation.MapLink = null; localisation.VirtualUrl = null;
+                localisation.Address = null; localisation.MapLink = null; localisation.VirtualUrl = null; localisation.ChannelName = null;
                 localisation.DisplayName = "Lieu non specifie";
                 if (activity.Localisation is null) _friendoutDbContext.Localisations.Add(localisation);
             }
@@ -669,7 +682,7 @@ public class ActivityService : IActivityService
                                 : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
                             if (existingSubActivity.Localisation is null || existingSubActivity.LocalisationId == localisation.Id)
                             {
-                                var ownLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
+                                var ownLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, ChannelName = sa.ChannelName, DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl, sa.ChannelName) };
                                 _friendoutDbContext.Localisations.Add(ownLoc);
                                 existingSubActivity.Localisation = ownLoc;
                                 existingSubActivity.LocalisationId = ownLoc.Id;
@@ -680,7 +693,8 @@ public class ActivityService : IActivityService
                                 existingSubActivity.Localisation.Address = sa.Address;
                                 existingSubActivity.Localisation.MapLink = sa.MapLink;
                                 existingSubActivity.Localisation.VirtualUrl = sa.VirtualUrl;
-                                existingSubActivity.Localisation.DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl);
+                                existingSubActivity.Localisation.ChannelName = sa.ChannelName;
+                                existingSubActivity.Localisation.DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl, sa.ChannelName);
                             }
                         }
                         else { existingSubActivity.Localisation = localisation; existingSubActivity.LocalisationId = localisation.Id; }
@@ -692,7 +706,7 @@ public class ActivityService : IActivityService
                     {
                         var subType = !string.IsNullOrWhiteSpace(sa.Address) ? LocalisationType.Address
                             : !string.IsNullOrWhiteSpace(sa.MapLink) ? LocalisationType.MapLink : LocalisationType.Virtual;
-                        subLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl) };
+                        subLoc = new Localisation { Id = Guid.NewGuid().ToString(), Type = subType, Address = sa.Address, MapLink = sa.MapLink, VirtualUrl = sa.VirtualUrl, ChannelName = sa.ChannelName, DisplayName = await BuildLocalisationDisplayNameAsync(subType, sa.Address, sa.MapLink, sa.VirtualUrl, sa.ChannelName) };
                         _friendoutDbContext.Localisations.Add(subLoc);
                     }
                     var newSub = new SubActivity { Id = Guid.NewGuid().ToString(), Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Description = sa.Description, Price = sa.Price, ActivityId = activity.Id, Localisation = subLoc, LocalisationId = subLoc.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
@@ -757,10 +771,10 @@ public class ActivityService : IActivityService
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
                         Id = sa.Id, Name = sa.Name, StartTime = sa.StartTime, EndTime = sa.EndTime, Price = sa.Price,
-                        Localisation = new LocalisationDto { Type = sa.Localisation.Type, Address = sa.Localisation.Address, MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl, DisplayName = sa.Localisation.DisplayName }
+                        Localisation = new LocalisationDto { Type = sa.Localisation.Type, Address = sa.Localisation.Address, MapLink = sa.Localisation.MapLink, VirtualUrl = sa.Localisation.VirtualUrl, ChannelName = sa.Localisation.ChannelName, DisplayName = sa.Localisation.DisplayName }
                     }).ToList(),
                     HasEquipment = a.ActivityEquipments != null && a.ActivityEquipments.Any(),
-                    Localisation = new LocalisationDto { Type = a.Localisation.Type, Address = a.Localisation.Address, MapLink = a.Localisation.MapLink, VirtualUrl = a.Localisation.VirtualUrl, DisplayName = a.Localisation.DisplayName },
+                    Localisation = new LocalisationDto { Type = a.Localisation.Type, Address = a.Localisation.Address, MapLink = a.Localisation.MapLink, VirtualUrl = a.Localisation.VirtualUrl, ChannelName = a.Localisation.ChannelName, DisplayName = a.Localisation.DisplayName },
                     Image = a.Image == null ? null : new ImageDto { Id = a.Image.Id, Url = a.Image.Url, AltText = a.Image.Name }
                 }).FirstAsync();
 
@@ -917,6 +931,7 @@ public class ActivityService : IActivityService
                         Address = a.Localisation.Address,
                         MapLink = a.Localisation.MapLink,
                         VirtualUrl = a.Localisation.VirtualUrl,
+                        ChannelName = a.Localisation.ChannelName,
                         DisplayName = a.Localisation.DisplayName
                     },
                     SubActivities = a.SubActivities.Select(sa => new PublicSubActivityDto
@@ -932,6 +947,7 @@ public class ActivityService : IActivityService
                             Address = sa.Localisation.Address,
                             MapLink = sa.Localisation.MapLink,
                             VirtualUrl = sa.Localisation.VirtualUrl,
+                            ChannelName = sa.Localisation.ChannelName,
                             DisplayName = sa.Localisation.DisplayName
                         }
                     }).ToList(),

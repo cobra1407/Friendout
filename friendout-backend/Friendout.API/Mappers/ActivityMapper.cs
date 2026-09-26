@@ -77,7 +77,8 @@ namespace friendout_backend.Mappers
                         Price = v.Price,
                         Address = NormalizeOptional(v.Address),
                         MapLink = NormalizeOptional(v.MapLink),
-                        VirtualUrl = NormalizeOptional(v.VirtualUrl)
+                        VirtualUrl = NormalizeOptional(v.VirtualUrl),
+                        ChannelName = NormalizeOptional(v.VirtualChannelName)
                     };
                 })
                 .ToList();
@@ -106,6 +107,7 @@ namespace friendout_backend.Mappers
                 Address = NormalizeOptional(request.Address),
                 MapLink = NormalizeOptional(request.MapLink),
                 VirtualUrl = NormalizeOptional(request.VirtualUrl),
+                ChannelName = NormalizeOptional(request.VirtualChannelName),
 
                 EstimatedPrice = request.EstimatedPrice,
                 RequiredEquipmentNames = NormalizeEquipmentNames(request.ResolveRequiredEquipmentNames()),
@@ -127,6 +129,7 @@ namespace friendout_backend.Mappers
                 Address = NormalizeOptional(request.Address),
                 MapLink = NormalizeOptional(request.MapLink),
                 VirtualUrl = NormalizeOptional(request.VirtualUrl),
+                ChannelName = NormalizeOptional(request.VirtualChannelName),
 
                 EstimatedPrice = request.EstimatedPrice,
                 RequiredEquipmentNames = NormalizeEquipmentNames(request.ResolveRequiredEquipmentNames()),

@@ -33,6 +33,9 @@ namespace Friendout.Domain.DTOs.Activity
 
         [MaxLength(500)]
         public string? VirtualUrl { get; set; }
+
+        [MaxLength(100)]
+        public string? ChannelName { get; set; }
         
         public double? EstimatedPrice { get; set; }
 

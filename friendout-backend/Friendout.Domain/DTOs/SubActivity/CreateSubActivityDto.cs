@@ -25,4 +25,6 @@ public class CreateSubActivityDto
     public string? MapLink { get; set; }
 
     public string? VirtualUrl { get; set; }
+
+    public string? ChannelName { get; set; }
 }

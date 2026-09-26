@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, ExternalLink, Pencil, X } from "lucide-react";
+import { MessageCircle, ExternalLink, Pencil, X, AlertCircle } from "lucide-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
+import { validateOptionalUrl } from "@/lib/maps";
 import { getTranslation } from "@/i18n";
 
 interface VirtualLocationInputProps {
@@ -37,36 +39,50 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
     const [isEditing, setIsEditing] = useState(true);
     const [platform, setPlatform] = useState("");
     const [serverName, setServerName] = useState("");
-    const [serverInfo, setServerInfo] = useState("");
+    const [invitationLink, setInvitationLink] = useState("");
+    const [invitationLinkError, setInvitationLinkError] = useState("");
+    const [channelName, setChannelName] = useState("");
 
     useEffect(() => {
         if (!value || value.type !== LocalisationType.Virtual) {
             setIsEditing(true);
             setPlatform("");
             setServerName("");
-            setServerInfo("");
+            setInvitationLink("");
+            setInvitationLinkError("");
+            setChannelName("");
             return;
         }
 
         setPlatform(value.platform || "");
         setServerName(value.address || "");
-        setServerInfo(value.serverInfo || value.virtualUrl || "");
+        setInvitationLink(value.serverInfo || value.virtualUrl || "");
+        setInvitationLinkError("");
+        setChannelName(value.channelName || "");
         setIsEditing(!(value.platform && value.address));
     }, [value]);
 
-    const canSave = platform.length > 0 && serverName.trim().length > 0;
+    const canSave = platform.length > 0 && serverName.trim().length > 0 && !invitationLinkError;
 
     const localisationPayload = useMemo<Localisation>(
         () => ({
             type: LocalisationType.Virtual,
             address: serverName.trim(),
-            displayName: `${getPlatformLabel(platform)} - ${serverName.trim()}`,
+            displayName: channelName.trim() || `${getPlatformLabel(platform)} - ${serverName.trim()}`,
             platform,
-            serverInfo: serverInfo.trim() || undefined,
-            virtualUrl: serverInfo.trim() || undefined,
+            serverInfo: invitationLink.trim() || undefined,
+            virtualUrl: invitationLink.trim() || undefined,
+            channelName: channelName.trim() || undefined,
         }),
-        [platform, serverInfo, serverName],
+        [platform, invitationLink, serverName, channelName],
     );
+
+    const handleInvitationLinkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const nextValue = event.target.value;
+        setInvitationLink(nextValue);
+        const validation = validateOptionalUrl(nextValue);
+        setInvitationLinkError(validation.isValid ? "" : validation.error || "");
+    };
 
     const handleSave = () => {
         if (!canSave) return;
@@ -79,7 +95,9 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
         setIsEditing(true);
         setPlatform("");
         setServerName("");
-        setServerInfo("");
+        setInvitationLink("");
+        setInvitationLinkError("");
+        setChannelName("");
     };
 
     if (!isEditing && canSave) {
@@ -97,10 +115,20 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                             <div className={`w-6 h-6 rounded flex items-center justify-center ${VIRTUAL_PLATFORMS.find((item) => item.value === platform)?.color || "bg-gray-500"}`}>
                                 <ExternalLink className="w-4 h-4 text-white" />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                                 <p className="text-sm font-medium">{getPlatformLabel(platform)}</p>
-                                <p className="text-sm text-muted-foreground">{serverName}</p>
-                                {serverInfo && <p className="text-xs text-muted-foreground">{serverInfo}</p>}
+                                <p className="text-sm text-muted-foreground truncate">{channelName || serverName}</p>
+                                {invitationLink && (
+                                    <a
+                                        href={invitationLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-700 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                                    >
+                                        <ExternalLink className="w-3 h-3 shrink-0" />
+                                        {getTranslation("virtual_location_input.invitation_link_open")}
+                                    </a>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -165,13 +193,44 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="virtual-server-info">{getTranslation("virtual_location_input.server_info_label")}</Label>
+                    <Label htmlFor="virtual-channel-name">{getTranslation("virtual_location_input.channel_name_label")}</Label>
                     <Input
-                        id="virtual-server-info"
-                        value={serverInfo}
-                        onChange={(event) => setServerInfo(event.target.value)}
-                        placeholder={getTranslation("virtual_location_input.server_info_placeholder")}
+                        id="virtual-channel-name"
+                        value={channelName}
+                        onChange={(event) => setChannelName(event.target.value)}
+                        placeholder={getTranslation("virtual_location_input.channel_name_placeholder")}
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="virtual-invitation-link">{getTranslation("virtual_location_input.invitation_link_label")}</Label>
+                    <div className="flex gap-2">
+                        <Input
+                            id="virtual-invitation-link"
+                            value={invitationLink}
+                            onChange={handleInvitationLinkChange}
+                            placeholder={getTranslation("virtual_location_input.invitation_link_placeholder")}
+                            className="flex-1"
+                        />
+                        {invitationLink.trim().length > 0 && !invitationLinkError && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(invitationLink, "_blank", "noopener,noreferrer")}
+                                className="flex items-center gap-1 px-2 sm:px-3"
+                                title={getTranslation("virtual_location_input.invitation_link_test_title")}
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                            </Button>
+                        )}
+                    </div>
+                    {invitationLinkError && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{invitationLinkError}</AlertDescription>
+                        </Alert>
+                    )}
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -186,7 +245,9 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                             if (value?.type === LocalisationType.Virtual) {
                                 setPlatform(value.platform || "");
                                 setServerName(value.address || "");
-                                setServerInfo(value.serverInfo || value.virtualUrl || "");
+                                setInvitationLink(value.serverInfo || value.virtualUrl || "");
+                                setInvitationLinkError("");
+                                setChannelName(value.channelName || "");
                                 setIsEditing(!(value.platform && value.address));
                             } else {
                                 handleRemove();

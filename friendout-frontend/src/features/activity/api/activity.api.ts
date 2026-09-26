@@ -86,6 +86,7 @@ const appendLocalisationFields = (formData: FormData, localisation: Localisation
   if (localisation.type === LocalisationType.Virtual) {
     const virtualUrl = localisation.virtualUrl?.trim() || localisation.serverInfo?.trim();
     if (virtualUrl) formData.append("VirtualUrl", virtualUrl);
+    if (localisation.channelName?.trim()) formData.append("VirtualChannelName", localisation.channelName.trim());
   }
 };
 
@@ -128,6 +129,9 @@ const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
         : null,
       virtualUrl: subActivity.localisation?.type === LocalisationType.Virtual
         ? (subActivity.localisation.virtualUrl?.trim() || subActivity.localisation.serverInfo?.trim() || null)
+        : null,
+      virtualChannelName: subActivity.localisation?.type === LocalisationType.Virtual
+        ? subActivity.localisation.channelName?.trim() || null
         : null,
     }));
 

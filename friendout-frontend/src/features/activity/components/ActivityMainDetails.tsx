@@ -115,29 +115,48 @@ export default function ActivityMainDetails({
                         <span>{formatTime(startAt)}</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                            {localisation?.type === LocalisationType.Virtual ? (
-                                <>
-                                    <MessageCircle className="w-5 h-5 text-blue-600" />
-                                    <span>{localisation?.displayName}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <MapPin className="w-5 h-5 text-red-600" />
-                                    {isGoogleMapsLink && <Link className="w-4 h-4 text-blue-600" />}
-                                </>
-                            )}
-                        </div>
+                    <div className="flex items-center gap-2 min-w-0">
+                        {localisation?.type === LocalisationType.Virtual ? (
+                            <MessageCircle className="w-5 h-5 text-blue-600 shrink-0" />
+                        ) : (
+                            <div className="flex items-center gap-1 shrink-0">
+                                <MapPin className="w-5 h-5 text-red-600" />
+                                {isGoogleMapsLink && <Link className="w-4 h-4 text-blue-600" />}
+                            </div>
+                        )}
 
-                        <span className="flex-1" title={localisation?.displayName ?? localisation?.address ?? ""}>
-                            {localisation?.displayName ?? localisation?.address ?? "-"}
+                        <span className="flex-1 min-w-0 truncate" title={localisation?.displayName ?? localisation?.address ?? ""}>
+                            {localisation?.type === LocalisationType.Virtual && localisation.virtualUrl ? (
+                                <a
+                                    href={localisation.virtualUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-700 dark:text-blue-400 hover:underline"
+                                >
+                                    {localisation?.displayName ?? localisation?.address ?? "-"}
+                                </a>
+                            ) : (
+                                localisation?.displayName ?? localisation?.address ?? "-"
+                            )}
                         </span>
 
                         {localisation?.type === LocalisationType.Virtual ? (
-                            <Badge variant="outline">
-                                {getTranslation("activity.virtual_place")}
-                            </Badge>
+                            localisation.virtualUrl ? (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(localisation.virtualUrl, "_blank", "noopener,noreferrer")}
+                                    className="flex items-center gap-1 shrink-0"
+                                    title={getTranslation("activity.join_virtual_place")}
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    {getTranslation("activity.join")}
+                                </Button>
+                            ) : (
+                                <Badge variant="outline">
+                                    {getTranslation("activity.virtual_place")}
+                                </Badge>
+                            )
                         ) : (
                             <Button
                                 variant="ghost"

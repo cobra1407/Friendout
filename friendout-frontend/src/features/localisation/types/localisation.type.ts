@@ -11,6 +11,7 @@ export interface Localisation {
     address?: string;
     mapLink?: string;
     virtualUrl?: string;
+    channelName?: string;
     displayName?: string;
     platform?: string;
     serverInfo?: string;
