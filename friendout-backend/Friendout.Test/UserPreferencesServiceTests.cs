@@ -227,7 +227,7 @@ public class UserPreferencesServiceTests
     [TestCase(null)]
     public async Task UpdateUserPreferences_FallsBackToDefaultSound_WhenSoundIsBlankOrNull(string? blankSound)
     {
-        await using var db = TestDbContextFactory.CreateInMemoryContext($"{nameof(UpdateUserPreferences_FallsBackToDefaultSound_WhenSoundIsBlankOrNull)}_{blankSound}");
+        await using var db = TestDbContextFactory.CreateInMemoryContext($"{nameof(UpdateUserPreferences_FallsBackToDefaultSound_WhenSoundIsBlankOrNull)}_{blankSound ?? "null"}");
         var userId = await SeedUserAsync(db);
         var service = CreateService(db);
 
