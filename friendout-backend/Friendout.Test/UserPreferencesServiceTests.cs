@@ -133,4 +133,136 @@ public class UserPreferencesServiceTests
         db.UserPreferences.Count(p => p.UserId == userId).Should().Be(1);
         (await db.UserPreferences.FindAsync(userId))!.Locale.Should().Be("fr");
     }
+
+    // -------------------------
+    // GetMyPreferencesAsync — notification channels
+    // -------------------------
+
+    [Test]
+    public async Task GetMyPreferences_ReturnsDefaultNotificationPrefs_WhenNoRowStored()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetMyPreferences_ReturnsDefaultNotificationPrefs_WhenNoRowStored));
+        var userId = await SeedUserAsync(db);
+        var service = CreateService(db);
+
+        var result = await service.GetMyPreferencesAsync(userId);
+
+        result.EmailEnabled.Should().BeTrue();
+        result.InAppEnabled.Should().BeTrue();
+        result.NotificationSound.Should().Be("default");
+        result.AccessRequestAlertsEnabled.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task GetMyPreferences_ReturnsStoredNotificationPrefs()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(GetMyPreferences_ReturnsStoredNotificationPrefs));
+        var userId = await SeedUserAsync(db);
+        db.UserNotificationPreferences.Add(new UserNotificationPreferences
+        {
+            UserId = userId,
+            EmailEnabled = false,
+            InAppEnabled = true,
+            NotificationSound = "chime",
+            AccessRequestAlertsEnabled = true
+        });
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        var result = await service.GetMyPreferencesAsync(userId);
+
+        result.EmailEnabled.Should().BeFalse();
+        result.InAppEnabled.Should().BeTrue();
+        result.NotificationSound.Should().Be("chime");
+        result.AccessRequestAlertsEnabled.Should().BeTrue();
+    }
+
+    // -------------------------
+    // UpdateUserPreferencesAsync — notification channels
+    // -------------------------
+
+    [Test]
+    public async Task UpdateUserPreferences_PersistsNotificationChannels()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserPreferences_PersistsNotificationChannels));
+        var userId = await SeedUserAsync(db);
+        var service = CreateService(db);
+
+        var result = await service.UpdateUserPreferencesAsync(
+            userId,
+            new UpdateUserPreferencesDto("en", false, true, "chime", true));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.EmailEnabled.Should().BeFalse();
+        result.Data!.InAppEnabled.Should().BeTrue();
+        result.Data!.NotificationSound.Should().Be("chime");
+        result.Data!.AccessRequestAlertsEnabled.Should().BeTrue();
+
+        var stored = await db.UserNotificationPreferences.FindAsync(userId);
+        stored!.EmailEnabled.Should().BeFalse();
+        stored.InAppEnabled.Should().BeTrue();
+        stored.NotificationSound.Should().Be("chime");
+        stored.AccessRequestAlertsEnabled.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task UpdateUserPreferences_UpdatesExistingNotificationRow_InsteadOfDuplicating()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserPreferences_UpdatesExistingNotificationRow_InsteadOfDuplicating));
+        var userId = await SeedUserAsync(db);
+        db.UserNotificationPreferences.Add(new UserNotificationPreferences { UserId = userId, EmailEnabled = true, InAppEnabled = true });
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        await service.UpdateUserPreferencesAsync(
+            userId,
+            new UpdateUserPreferencesDto("en", false, false, "default", false));
+
+        db.UserNotificationPreferences.Count(p => p.UserId == userId).Should().Be(1);
+        (await db.UserNotificationPreferences.FindAsync(userId))!.EmailEnabled.Should().BeFalse();
+    }
+
+    [TestCase("")]
+    [TestCase("   ")]
+    [TestCase(null)]
+    public async Task UpdateUserPreferences_FallsBackToDefaultSound_WhenSoundIsBlankOrNull(string? blankSound)
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext($"{nameof(UpdateUserPreferences_FallsBackToDefaultSound_WhenSoundIsBlankOrNull)}_{blankSound}");
+        var userId = await SeedUserAsync(db);
+        var service = CreateService(db);
+
+        var result = await service.UpdateUserPreferencesAsync(
+            userId,
+            new UpdateUserPreferencesDto("en", true, true, blankSound!, false));
+
+        result.Data!.NotificationSound.Should().Be("default");
+    }
+
+    [Test]
+    public async Task UpdateUserPreferences_KeepsCustomSound_WhenNotBlank()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserPreferences_KeepsCustomSound_WhenNotBlank));
+        var userId = await SeedUserAsync(db);
+        var service = CreateService(db);
+
+        var result = await service.UpdateUserPreferencesAsync(
+            userId,
+            new UpdateUserPreferencesDto("en", true, true, "chime", false));
+
+        result.Data!.NotificationSound.Should().Be("chime");
+    }
+
+    [Test]
+    public async Task UpdateUserPreferences_AllowsOptingIntoAccessRequestAlerts()
+    {
+        await using var db = TestDbContextFactory.CreateInMemoryContext(nameof(UpdateUserPreferences_AllowsOptingIntoAccessRequestAlerts));
+        var userId = await SeedUserAsync(db);
+        var service = CreateService(db);
+
+        var result = await service.UpdateUserPreferencesAsync(
+            userId,
+            new UpdateUserPreferencesDto("en", true, true, "default", true));
+
+        result.Data!.AccessRequestAlertsEnabled.Should().BeTrue();
+    }
 }
