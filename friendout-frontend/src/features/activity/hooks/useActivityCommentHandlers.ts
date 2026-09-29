@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import type { ActivityDetails } from "@/features/activity/types/activityDetails.type";
 import {
     createComment,
@@ -18,9 +19,36 @@ export function useActivityCommentHandlers({
     onCommentDeleted,
 }: UseActivityCommentHandlersParams = {}) {
     const [newComment, setNewComment] = useState("");
-    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState<string | undefined>();
     const [editedCommentContent, setEditedCommentContent] = useState("");
+
+    const createMutation = useMutation({
+        mutationFn: (vars: { activityId: string; content: string }) => createComment(vars),
+        onSuccess: (createdComment) => {
+            onCommentCreated?.(createdComment);
+            setNewComment("");
+        },
+        onError: (error) => console.error("Error creating comment", { error }),
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: (vars: { activityId: string; commentId: string; content: string }) => updateComment(vars),
+        onSuccess: (updatedComment) => {
+            onCommentUpdated?.(updatedComment);
+            setEditingCommentId(undefined);
+            setEditedCommentContent("");
+        },
+        onError: (error) => console.error("Error updating comment", { error }),
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (vars: { activityId: string; commentId: string }) => deleteComment(vars),
+        onSuccess: (_data, vars) => {
+            onCommentDeleted?.(vars.commentId);
+            setEditingCommentId((current) => (current === vars.commentId ? undefined : current));
+        },
+        onError: (error) => console.error("Error deleting comment", { error }),
+    });
 
     const handleEditComment = useCallback(
         (comment: ActivityDetails["comments"][number]) => {
@@ -31,59 +59,30 @@ export function useActivityCommentHandlers({
     );
 
     const handleUpdateComment = useCallback(
-        async (activityId: string, commentId: string) => {
+        (activityId: string, commentId: string) => {
             if (editingCommentId && editingCommentId !== commentId) return;
 
             const trimmedContent = editedCommentContent.trim();
             if (!trimmedContent) return;
 
-            try {
-                const updatedComment = await updateComment({
-                    activityId,
-                    commentId,
-                    content: trimmedContent,
-                });
-                onCommentUpdated?.(updatedComment);
-                setEditingCommentId(undefined);
-                setEditedCommentContent("");
-            } catch (error) {
-                console.error("Error updating comment", { error });
-            }
+            updateMutation.mutate({ activityId, commentId, content: trimmedContent });
         },
-        [editedCommentContent, editingCommentId, onCommentUpdated]
+        [editedCommentContent, editingCommentId, updateMutation]
     );
 
     const handleDeleteComment = useCallback(
-        async (activityId: string, commentId: string) => {
-            try {
-                await deleteComment({ activityId, commentId });
-                onCommentDeleted?.(commentId);
-                if (editingCommentId === commentId) {
-                    setEditingCommentId(undefined);
-                    setEditedCommentContent("");
-                }
-            } catch (error) {
-                console.error("Error deleting comment", { error });
-            }
+        (activityId: string, commentId: string) => {
+            deleteMutation.mutate({ activityId, commentId });
         },
-        [editingCommentId, onCommentDeleted]
+        [deleteMutation]
     );
 
-    const handleSubmitComment = useCallback(async (activityId: string, content: string) => {
+    const handleSubmitComment = useCallback((activityId: string, content: string) => {
         const trimmedContent = content.trim();
         if (!trimmedContent) return;
 
-        try {
-            setIsSubmittingComment(true);
-            const createdComment = await createComment({ activityId, content: trimmedContent });
-            onCommentCreated?.(createdComment);
-            setNewComment("");
-        } catch (error) {
-            console.error("Error creating comment", { error });
-        } finally {
-            setIsSubmittingComment(false);
-        }
-    }, [onCommentCreated]);
+        createMutation.mutate({ activityId, content: trimmedContent });
+    }, [createMutation]);
 
     const cancelEdit = useCallback(() => {
         setEditingCommentId(undefined);
@@ -93,7 +92,7 @@ export function useActivityCommentHandlers({
     return {
         newComment,
         setNewComment,
-        isSubmittingComment,
+        isSubmittingComment: createMutation.isPending,
         editingCommentId,
         editedCommentContent,
         setEditedCommentContent,
