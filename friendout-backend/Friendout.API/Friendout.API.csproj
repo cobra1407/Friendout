@@ -11,12 +11,12 @@
         <PackageReference Include="AspNet.Security.OAuth.Discord" Version="10.0.0" />
         <PackageReference Include="DotNetEnv" Version="3.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.12" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20">
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.20" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+        <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.12" />
         <PackageReference Include="Quartz" Version="4.2.2" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.2.3" />
