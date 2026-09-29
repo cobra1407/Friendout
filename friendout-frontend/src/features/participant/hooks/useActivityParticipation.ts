@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ParticipationStatus } from "@/features/participant/enum/participationStatus.enum";
 import { UpsertParticipation } from "@/features/participant/api/participant.api";
@@ -19,43 +19,23 @@ export function useActivityParticipation({
     onMainParticipationSuccess,
     onSubActivitiesParticipationSuccess,
 }: UseActivityParticipationParams) {
-    const handleMainParticipationChange = useCallback(
-        async (status: ParticipationStatus) => {
-            try {
-                const updated = await UpsertParticipation({
-                    activityId,
-                    status,
-                    subActivityIds: null,
-                });
-                onMainParticipationSuccess(updated);
-            } catch {
-                toast.error("Impossible de mettre à jour la participation");
-            }
-        },
-        [
-            activityId,
-            onMainParticipationSuccess,
-        ]
-    );
+    const mainMutation = useMutation({
+        mutationFn: (status: ParticipationStatus) =>
+            UpsertParticipation({ activityId, status, subActivityIds: null }),
+        onSuccess: onMainParticipationSuccess,
+        onError: () => toast.error("Impossible de mettre à jour la participation"),
+    });
 
-    const handleSubActivitiesParticipationChange = useCallback(
-        async (status: ParticipationStatus, ids?: string[]) => {
-            try {
-                const updated = await UpsertParticipation({
-                    activityId,
-                    status,
-                    subActivityIds: ids ?? subActivityIds,
-                });
-                onSubActivitiesParticipationSuccess(updated);
-            } catch {
-                toast.error("Impossible de mettre à jour la participation");
-            }
-        },
-        [activityId, subActivityIds, onSubActivitiesParticipationSuccess]
-    );
+    const subMutation = useMutation({
+        mutationFn: ({ status, ids }: { status: ParticipationStatus; ids?: string[] }) =>
+            UpsertParticipation({ activityId, status, subActivityIds: ids ?? subActivityIds }),
+        onSuccess: onSubActivitiesParticipationSuccess,
+        onError: () => toast.error("Impossible de mettre à jour la participation"),
+    });
 
     return {
-        handleMainParticipationChange,
-        handleSubActivitiesParticipationChange,
+        handleMainParticipationChange: (status: ParticipationStatus) => mainMutation.mutate(status),
+        handleSubActivitiesParticipationChange: (status: ParticipationStatus, ids?: string[]) =>
+            subMutation.mutate({ status, ids }),
     };
 }
