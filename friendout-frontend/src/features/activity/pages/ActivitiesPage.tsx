@@ -4,8 +4,9 @@ import { ActivityLayout } from "@/features/activity/layout/activityLayout";
 import type { Activity } from "@/features/activity/types/activity.type";
 import { ActivityToolbar } from "@/features/activity/components/ActivityToolsBar";
 import { getActivities } from "@/features/activity/api/activity.api";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { type InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import ActivityCardSkeleton from "@/features/activity/components/ActivityCardSkeleton";
 import { authApi } from "@/features/auth/api/auth.api";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -13,57 +14,67 @@ import type { ActivityFilter, TimeFilter } from "@/features/activity/types/activ
 import { useRealtimeActivitiesFeed } from "@/features/realtime/hooks/useRealtimeActivitiesFeed";
 import EmptyActivity from "../components/EmptyActivity";
 
+const TAKE = 12;
+
 export const ActivitiesPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const [activities, setActivities] = useState<Activity[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [skip, setSkip] = useState(0);
-    const take = 12;
-    const [hasMore, setHasMore] = useState(true);
+    const queryClient = useQueryClient();
 
     const [search, setSearch] = useState("");
     const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
     const [onlyMine, setOnlyMine] = useState(false);
-    const [observerEnabled, setObserverEnabled] = useState(true);
 
     const loaderRef = useRef<HTMLDivElement>(null);
+    const observerRef = useRef<IntersectionObserver | null>(null);
 
-    const loadActivities = async (reset = false, opts?: {
-        search?: string;
-        timeFilter?: TimeFilter;
-        onlyOwnActivity?: boolean;
-    }) => {
-        const currentSearch = opts?.search ?? search;
-        const currentTimeFilter = opts?.timeFilter ?? timeFilter;
-        const currentOnlyMine = opts?.onlyOwnActivity ?? onlyMine;
+    // Each distinct combination of filters/search gets its own cache entry — switching back
+    const queryKey = useMemo(
+        () => ["activities", { search, timeFilter, onlyMine }] as const,
+        [search, timeFilter, onlyMine]
+    );
 
-        if (!hasMore && !reset) return;
+    const {
+        data,
+        isLoading,
+        isFetchingNextPage,
+        fetchNextPage,
+        hasNextPage,
+    } = useInfiniteQuery({
+        queryKey,
+        queryFn: ({ pageParam }) =>
+            getActivities({
+                skip: pageParam,
+                take: TAKE,
+                search,
+                timeFilter,
+                onlyOwnActivity: onlyMine,
+            }),
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length === TAKE ? allPages.flat().length : undefined,
+    });
 
-        if (reset) {
-            setIsLoading(true);
-        }
+    const activities = data?.pages.flat() ?? [];
 
-        try {
-            const data = await getActivities({
-                skip: reset ? 0 : skip,
-                take,
-                search: currentSearch,
-                timeFilter: currentTimeFilter,
-                onlyOwnActivity: currentOnlyMine
-            });
+    const loaderCallbackRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            loaderRef.current = node;
+            if (observerRef.current) observerRef.current.disconnect();
+            if (!node) return;
 
-            setActivities(prev => reset ? data : [...prev, ...data]);
-            setSkip(prev => reset ? data.length : prev + data.length);
-            setHasMore(data.length === take);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadActivities(true);
-    }, []);
+            observerRef.current = new IntersectionObserver(
+                (entries) => {
+                    if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                        fetchNextPage();
+                    }
+                },
+                { threshold: 0.1 }
+            );
+            observerRef.current.observe(node);
+        },
+        [hasNextPage, isFetchingNextPage, fetchNextPage]
+    );
 
     // Prepend a newly created activity to the top of the list — but only when it would
     // actually belong there given the current view. A blind insert could show a "past"
@@ -76,39 +87,27 @@ export const ActivitiesPage = () => {
         if (timeFilter === "past") return;
         if (onlyMine && activity.createdBy !== user?.userId) return;
 
-        setActivities(prev => {
-            if (prev.some(a => a.id === activity.id)) return prev;
-            return [activity, ...prev];
+        queryClient.setQueryData<InfiniteData<Activity[], number>>(queryKey, (old) => {
+            if (!old) return old;
+            const alreadyExists = old.pages.some((page) => page.some((a) => a.id === activity.id));
+            if (alreadyExists) return old;
+
+            const [firstPage = [], ...restPages] = old.pages;
+            return { ...old, pages: [[activity, ...firstPage], ...restPages] };
         });
-    }, [search, timeFilter, onlyMine, user?.userId]);
+    }, [search, timeFilter, onlyMine, user?.userId, queryClient, queryKey]);
 
     const handleDeleteActivity = useCallback((activityId: string) => {
-        setActivities(prev => prev.filter(a => a.id !== activityId));
-    }, []);
+        queryClient.setQueryData<InfiniteData<Activity[], number>>(queryKey, (old) => {
+            if (!old) return old;
+            return { ...old, pages: old.pages.map((page) => page.filter((a) => a.id !== activityId)) };
+        });
+    }, [queryClient, queryKey]);
 
     useRealtimeActivitiesFeed({
         onNewActivity: handleNewActivity,
         onDeletedActivity: handleDeleteActivity
     });
-
-    // infinite scroll observer
-    useEffect(() => {
-        if (!observerEnabled) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !isLoading && hasMore) {
-                    loadActivities();
-                }
-            },
-            { threshold: 0.1 }
-        );
-
-        if (loaderRef.current) observer.observe(loaderRef.current);
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [isLoading, hasMore, skip, search, timeFilter, onlyMine, observerEnabled]);
 
     const handleViewDetails = (activityId: string) => {
         navigate(`/activities/${activityId}`);
@@ -123,33 +122,12 @@ export const ActivitiesPage = () => {
         }
     };
 
-    const handleSearchChange = (val: string) => {
-        setObserverEnabled(false); // disable observer while loading
-        setSearch(val);
-        setSkip(0);
-        setActivities([]);
-        setHasMore(true);
-
-        // reload activities with new search
-        loadActivities(true, { search: val }).then(() => setObserverEnabled(true));
-    };
-
+    const handleSearchChange = (val: string) => setSearch(val);
 
     const handleFilterChange = (filter: ActivityFilter) => {
-        setObserverEnabled(false);
         setTimeFilter(filter.timeFilter);
         setOnlyMine(filter.onlyOwnActivity);
-        setSkip(0);
-        setActivities([]);
-        setHasMore(true);
-
-        // reload activities with new filter
-        loadActivities(true, { timeFilter: filter.timeFilter, onlyOwnActivity: filter.onlyOwnActivity }).then(() =>
-            setObserverEnabled(true)
-        );
     };
-
-
 
     return (
         <ActivityLayout
@@ -185,7 +163,7 @@ export const ActivitiesPage = () => {
             </div>
 
             {/* invisible div to trigger intersection observer */}
-            <div ref={loaderRef} className="h-10"></div>
+            <div ref={loaderCallbackRef} className="h-10"></div>
         </ActivityLayout>
     );
 };
