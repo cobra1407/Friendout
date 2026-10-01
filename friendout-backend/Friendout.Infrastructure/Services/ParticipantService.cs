@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Friendout.Domain.Context;
 using Friendout.Domain.DTOs.Participant;
+using Friendout.Domain.Enums;
 using Friendout.Domain.Models;
 using Friendout.Infrastructure.Command.Participant;
 using Friendout.Infrastructure.Interfaces;
@@ -94,6 +95,21 @@ public class ParticipantService : IParticipantService
 
         try
         {
+            // For a capped activity, serialize concurrent joins by locking the activity row until
+            // we commit. Without this, two people taking the last spot at the same time would both
+            // pass the capacity check below. Only relational providers support row locks (the
+            // InMemory provider used in tests doesn't), and uncapped activities need no lock.
+            await using var transaction = activity.MaxParticipants.HasValue && _friendoutDbContext.Database.IsRelational()
+                ? await _friendoutDbContext.Database.BeginTransactionAsync()
+                : null;
+
+            if (transaction is not null)
+            {
+                await _friendoutDbContext.Database
+                    .SqlQuery<string>($"SELECT `id` AS `Value` FROM `activities` WHERE `id` = {command.ActivityId} FOR UPDATE")
+                    .ToListAsync();
+            }
+
             // Load existing participations for this user and activity
             var existingParticipations = await _friendoutDbContext.UserParticipation
                 .Where(up => up.UserId == userId && up.ActivityId == command.ActivityId)
@@ -104,6 +120,26 @@ public class ParticipantService : IParticipantService
                 .Where(id => !string.IsNullOrEmpty(id))
                 .Distinct()
                 .ToList() ?? new List<string>();
+
+            // ----------------
+            // CAPACITY CHECK
+            // ----------------
+            // Only main-activity participations with status Participating count toward the cap.
+            // Someone who is already Participating can always re-save (e.g. no-op); switching to
+            // Maybe / NotParticipating is always allowed since it frees a spot.
+            if (activity.MaxParticipants is { } maxParticipants
+                && !subActivityIds.Any()
+                && command.Status == ParticipationStatus.Participating
+                && !existingParticipations.Any(up => up.SubActivityId == null && up.Status == ParticipationStatus.Participating))
+            {
+                var confirmedCount = await _friendoutDbContext.UserParticipation.CountAsync(up =>
+                    up.ActivityId == command.ActivityId &&
+                    up.SubActivityId == null &&
+                    up.Status == ParticipationStatus.Participating);
+
+                if (confirmedCount >= maxParticipants)
+                    return ServiceResult<UserActivityParticipationDto>.Failure("This activity is full");
+            }
 
             // ----------------
             // MAIN PARTICIPATION
@@ -193,6 +229,9 @@ public class ParticipantService : IParticipantService
 
                 await _friendoutDbContext.SaveChangesAsync();
             }
+
+            if (transaction is not null)
+                await transaction.CommitAsync();
 
             // ----------------
             // RETRIEVE PARTICIPATIONS FOR THIS ACTIVITY

@@ -110,6 +110,7 @@ namespace friendout_backend.Mappers
                 ChannelName = NormalizeOptional(request.VirtualChannelName),
 
                 EstimatedPrice = request.EstimatedPrice,
+                MaxParticipants = request.MaxParticipants,
                 RequiredEquipmentNames = NormalizeEquipmentNames(request.ResolveRequiredEquipmentNames()),
                 SubActivities = NormalizeSubActivities(request.StartAt, request.ResolveSubActivities()),
                 ActivityImage = activityImage
@@ -132,6 +133,7 @@ namespace friendout_backend.Mappers
                 ChannelName = NormalizeOptional(request.VirtualChannelName),
 
                 EstimatedPrice = request.EstimatedPrice,
+                MaxParticipants = request.MaxParticipants,
                 RequiredEquipmentNames = NormalizeEquipmentNames(request.ResolveRequiredEquipmentNames()),
                 SubActivities = NormalizeSubActivities(request.StartAt, request.ResolveSubActivities()),
                 ActivityImage = activityImage,

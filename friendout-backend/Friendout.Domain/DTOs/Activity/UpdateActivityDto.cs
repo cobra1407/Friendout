@@ -15,6 +15,7 @@ public class UpdateActivityDto
     public string? VirtualUrl { get; set; }
     public string? ChannelName { get; set; }
     public double? EstimatedPrice { get; set; }
+    public int? MaxParticipants { get; set; }
     public List<string> RequiredEquipmentNames { get; set; } = new();
     public List<CreateSubActivityDto> SubActivities { get; set; } = new();
     public FileUpload? ActivityImage { get; set; }

@@ -39,6 +39,9 @@ namespace Friendout.Domain.DTOs.Activity
         
         public double? EstimatedPrice { get; set; }
 
+        /// <summary>Optional cap on participants. Null = unlimited.</summary>
+        public int? MaxParticipants { get; set; }
+
         public List<string> RequiredEquipmentNames { get; set; } = new();
 
         public List<CreateSubActivityDto> SubActivities { get; set; } = new();
