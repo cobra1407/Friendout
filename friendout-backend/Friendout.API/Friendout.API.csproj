@@ -17,7 +17,7 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.12" />
-        <PackageReference Include="Quartz" Version="4.2.2" />
+        <PackageReference Include="Quartz" Version="4.3.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.2.3" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
