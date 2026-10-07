@@ -102,6 +102,10 @@ const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
   if (payload.estimatedPrice !== undefined) {
     formData.append("EstimatedPrice", String(payload.estimatedPrice));
   }
+  // Absent = unlimited. When editing, sending nothing resets the limit to null on the API side.
+  if (payload.maxParticipants !== undefined) {
+    formData.append("MaxParticipants", String(payload.maxParticipants));
+  }
 
   // Required Equipment Names
   if (payload.requiredEquipmentNames.length > 0) {
