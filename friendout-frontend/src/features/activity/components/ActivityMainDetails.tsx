@@ -221,6 +221,7 @@ export default function ActivityMainDetails({
                         )}
                     </div>
 
+
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Users className="w-3 h-3 text-muted-foreground mt-1" />

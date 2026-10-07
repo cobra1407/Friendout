@@ -46,6 +46,7 @@ const baseSchema = z.object({
   time:        z.string().min(1, "time_required").regex(/^\d{2}:\d{2}$/, "time_invalid_format"),
   endAt:       z.date().optional(),
   estimatedPrice: z.number().min(0).optional(),
+  maxParticipants: z.number().int("max_participants_invalid").min(1, "max_participants_invalid").max(10000, "max_participants_invalid").optional(),
   localisation: localisationSchema.nullable(),
     removeImage: z.boolean().optional().default(false),
   activityImage: z.instanceof(File).optional(),

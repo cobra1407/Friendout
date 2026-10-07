@@ -47,6 +47,8 @@ export const buildErrors = (issues: ZodIssueLike[]): FormErrors => {
                     ? "activity_form.toast.time_invalid_format"
                     : "activity_form.toast.time_required"
             )
+        } else if (p0 === "maxParticipants" && !errors.maxParticipants) {
+            errors.maxParticipants = getTranslation("activity_form.toast.max_participants_invalid")
         } else if (p0 === "localisation" && !errors.localisation) {
             errors.localisation = getTranslation(
                 msg === "location_required"

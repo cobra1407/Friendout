@@ -1,8 +1,9 @@
-/** Erreurs inline affichées sous chaque champ du formulaire d'activité. */
+/** Inline errors displayed below each field of the activity form. */
 export interface FormErrors {
     title?: string
     description?: string
     startAt?: string
     time?: string
+    maxParticipants?: string
     localisation?: string
 }

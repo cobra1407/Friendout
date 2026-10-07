@@ -108,7 +108,7 @@ const buildActivityFormData = (payload: CreateActivityPayload): FormData => {
     payload.requiredEquipmentNames.forEach((name, index) => {
       formData.append(`RequiredEquipmentNames[${index}]`, name);
     });
-    // Fallback JSON (à supprimer plus tard si le binding indexé suffit)
+    // Fallback JSON (to be removed later if indexed binding is sufficient)
     formData.append("RequiredEquipmentNamesJson", JSON.stringify(payload.requiredEquipmentNames));
   }
 
@@ -169,8 +169,8 @@ export async function getActivityById(id: string): Promise<ActivityDetails> {
   return mapActivityDetailsFromApi(response.data);
 }
 
-// La validation Zod est faite dans le formulaire (ActivityForm) avant l'appel API.
-// Ces fonctions reçoivent un payload déjà validé et construisent le FormData.
+// Zod validation is performed in the form component (ActivityForm) prior to the API call.
+// These functions accept a pre-validated payload and construct the FormData.
 export async function createActivity(payload: CreateActivityPayload): Promise<Activity> {
   const formData = buildActivityFormData(payload);
   const response = await api.post<ApiActivity>("/activities", formData);

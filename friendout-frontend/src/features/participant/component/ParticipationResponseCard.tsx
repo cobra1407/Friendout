@@ -6,10 +6,11 @@ type Props = {
     onResponse: (participationStatus: ParticipationStatus) => void;
     selectedStatus?: ParticipationStatus | null;
     title: string,
-    description?: string
+    description?: string,
+    isFull?: boolean
 };
 
-export default function ParticipationResponseCard({ onResponse, selectedStatus, title, description }: Props) {
+export default function ParticipationResponseCard({ onResponse, selectedStatus, title, description, isFull }: Props) {
     return (
         <Card>
             <CardHeader>
@@ -17,7 +18,7 @@ export default function ParticipationResponseCard({ onResponse, selectedStatus, 
                 {description && <p className="text-sm text-muted-foreground">{description}</p>}
             </CardHeader>
             <CardContent className="space-y-3">
-                <ParticipationButtons onResponse={onResponse} selectedStatus={selectedStatus} />
+                <ParticipationButtons onResponse={onResponse} selectedStatus={selectedStatus} isFull={isFull} />
             </CardContent>
         </Card>
     );

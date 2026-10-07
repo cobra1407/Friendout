@@ -23,6 +23,8 @@ export interface PublicActivity {
     startAt: string;
     endAt?: string | null;
     estimatedPrice?: number | null;
+    /** Maximum number of participants. null/undefined = unlimited. */
+    maxParticipants?: number | null;
     image?: Image | null;
     localisation?: Localisation | null;
     createdBy?: string;
