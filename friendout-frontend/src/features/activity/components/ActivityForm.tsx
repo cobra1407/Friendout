@@ -39,6 +39,8 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         calendarOpen, setCalendarOpen,
         time, setTime,
         estimatedPrice, setEstimatedPrice,
+        maxParticipants, setMaxParticipants,
+        registeredCount,
         localisationData, handleLocalisationChange,
         requiredEquipment, setRequiredEquipment,
         image,
@@ -124,7 +126,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                 <FieldError message={errors.description} />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Date */}
                                 <div className="space-y-1" ref={fieldRefs.startAt}>
                                     <Label>{getTranslation("activity_form.start_date_label")}</Label>
@@ -207,6 +209,35 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                         </Button>
                                     </div>
                                     <FieldError message={errors.time} />
+                                </div>
+
+                                {/* Max participants */}
+                                <div className="space-y-1" ref={fieldRefs.maxParticipants}>
+                                    <Label htmlFor="maxParticipants">{getTranslation("activity_form.max_participants_label")}</Label>
+                                    <Input
+                                        id="maxParticipants"
+                                        type="number"
+                                        inputMode="numeric"
+                                        min="1"
+                                        max="10000"
+                                        step="1"
+                                        value={maxParticipants}
+                                        onChange={(e) => { setMaxParticipants(e.target.value); clearError("maxParticipants") }}
+                                        placeholder={getTranslation("activity_form.max_participants_placeholder")}
+                                        aria-invalid={!!errors.maxParticipants}
+                                        className={errors.maxParticipants ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    />
+                                    {registeredCount > 0 && !errors.maxParticipants && (
+                                        <p className="text-xs text-muted-foreground">
+                                            {getTranslation(
+                                                registeredCount === 1
+                                                    ? "activity_form.max_participants_registered_hint_one"
+                                                    : "activity_form.max_participants_registered_hint",
+                                                { confirmed: registeredCount }
+                                            )}
+                                        </p>
+                                    )}
+                                    <FieldError message={errors.maxParticipants} />
                                 </div>
                             </div>
 

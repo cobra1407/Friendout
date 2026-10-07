@@ -19,6 +19,7 @@ import type { SubActivity } from "@/features/subActivity/types/subActivity.type"
 import type { Localisation } from "@/features/localisation/types/localisation.type"
 import type { FormErrors } from "@/features/activity/types/activityForm.type"
 import { getTranslation } from "@/i18n"
+import { ParticipationStatus } from "@/features/participant/enum/participationStatus.enum"
 
 interface UseActivityFormOptions {
     mode: "create" | "edit"
@@ -32,6 +33,7 @@ interface ActivityPayload {
     startAt: Date
     time: string
     estimatedPrice?: number
+    maxParticipants?: number
     localisation: Localisation | null
     activityImage?: File
     removeImage: boolean
@@ -41,23 +43,33 @@ interface ActivityPayload {
 
 export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFormOptions) {
     const navigate = useNavigate()
+
+    // In edit mode: number of already confirmed participants ("Participating" status on the main activity).
+    // The limit cannot drop below this value (the API will also reject it).
+    const registeredCount =
+        mode === "edit" && initialData && "participants" in initialData
+            ? (initialData.participants ?? []).filter(
+                (p) => !p.subActivityId && p.participationStatus === ParticipationStatus.Participating
+            ).length
+            : 0
     const timeInputRef = useRef<HTMLInputElement | null>(null)
 
     // Refs for each field that can have a validation error.
     // Used to scroll to the first error after a failed submit.
     const fieldRefs = {
-        title:        useRef<HTMLDivElement | null>(null),
-        description:  useRef<HTMLDivElement | null>(null),
-        startAt:      useRef<HTMLDivElement | null>(null),
-        time:         useRef<HTMLDivElement | null>(null),
-        localisation: useRef<HTMLDivElement | null>(null),
+        title:           useRef<HTMLDivElement | null>(null),
+        description:     useRef<HTMLDivElement | null>(null),
+        startAt:         useRef<HTMLDivElement | null>(null),
+        time:            useRef<HTMLDivElement | null>(null),
+        localisation:    useRef<HTMLDivElement | null>(null),
+        maxParticipants: useRef<HTMLDivElement | null>(null),
     }
 
     // Form state
     const [isLoading, setIsLoading] = useState(false)
     const [errors, setErrors] = useState<FormErrors>({})
 
-    // confirmation modale state
+    // Confirmation modal state
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [pendingPayload, setPendingPayload] = useState<ActivityPayload | null>(null)
 
@@ -75,6 +87,10 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
     const [time, setTime] = useState(initialData?.startAt ? formatToHHmm(initialData.startAt) : "")
     const [estimatedPrice, setEstimatedPrice] = useState(
         initialData?.estimatedPrice != null ? String(initialData.estimatedPrice) : ""
+    )
+    // Empty string = no limit (unlimited)
+    const [maxParticipants, setMaxParticipants] = useState(
+        initialData?.maxParticipants != null ? String(initialData.maxParticipants) : ""
     )
     const [localisationData, setLocalisationData] = useState<Localisation | null>(
         getInitialLocalisation(initialData)
@@ -182,7 +198,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         event.preventDefault()
         setErrors({})
 
-        // combine date and time into a single Date object
+        // Combine date and time into a single Date object
         const startAt = date ? new Date(date) : undefined
         if (startAt && time) {
             const [hours, minutes] = time.split(":").map(Number)
@@ -197,6 +213,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             startAt: startAt ?? new Date(0),
             time,
             estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : undefined,
+            maxParticipants: maxParticipants ? Number(maxParticipants) : undefined,
             localisation: localisationData,
             activityImage: imageFile ?? undefined,
             removeImage: shouldRemoveImage,
@@ -204,7 +221,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             subActivities,
         }
 
-        // Validation Zod
+        // Zod validation
         const schema = buildActivitySchema(
             mode,
             initialData?.startAt ? new Date(initialData.startAt) : undefined
@@ -214,7 +231,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             const newErrors = buildErrors(result.error.issues)
             setErrors(newErrors)
 
-            const errorOrder: (keyof typeof fieldRefs)[] = ['title', 'localisation', 'description', 'startAt', 'time']
+            const errorOrder: (keyof typeof fieldRefs)[] = ['title', 'localisation', 'description', 'startAt', 'time', 'maxParticipants']
             const firstErrorKey = errorOrder.find(key => newErrors[key as keyof FormErrors])
             if (firstErrorKey) {
                 setTimeout(() => {
@@ -227,7 +244,25 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             return
         }
 
-        // creation mode — call API directly
+        // Edit mode: immediately reject a limit lower than the current registered count
+        if (
+            mode === "edit" &&
+            payload.maxParticipants !== undefined &&
+            payload.maxParticipants < registeredCount
+        ) {
+            setErrors({
+                maxParticipants: getTranslation("activity_form.toast.max_participants_below_registered", {
+                    max: payload.maxParticipants,
+                    confirmed: registeredCount,
+                }),
+            })
+            setTimeout(() => {
+                fieldRefs.maxParticipants.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }, 50)
+            return
+        }
+
+        // Creation mode — call API directly
         if (mode === "create") {
             setIsLoading(true)
             try {
@@ -258,7 +293,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
     }
 
     return {
-        // État
+        // State
         isLoading,
         errors,
         title, setTitle,
@@ -267,6 +302,8 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         calendarOpen, setCalendarOpen,
         time, setTime,
         estimatedPrice, setEstimatedPrice,
+        maxParticipants, setMaxParticipants,
+        registeredCount,
         localisationData, setLocalisationData, handleLocalisationChange,
         requiredEquipment, setRequiredEquipment,
         image,

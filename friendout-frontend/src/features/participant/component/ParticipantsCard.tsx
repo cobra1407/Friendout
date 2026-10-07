@@ -5,14 +5,24 @@ import { ParticipationStatus } from "../enum/participationStatus.enum";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { getTranslation } from "@/i18n";
+import { SpotsIndicator } from "@/features/activity/components/SpotsIndicator";
 
 
 interface ParticipantsCardProps {
     participants: Participant[] | undefined;
     className?: string;
+    /** Participant limit (null/undefined = unlimited). */
+    maxParticipants?: number | null;
+    /** Confirmed participants for the main activity, counted towards the limit. */
+    confirmedParticipants?: number;
 }
 
-export default function ParticipantsCard({ participants, className }: ParticipantsCardProps) {
+export default function ParticipantsCard({
+    participants,
+    className,
+    maxParticipants,
+    confirmedParticipants = 0,
+}: ParticipantsCardProps) {
     const [participating, setParticipating] = useState<Participant[]>([]);
     const [maybe, setMaybe] = useState<Participant[]>([]);
     const [notParticipating, setNotParticipating] = useState<Participant[]>([]);
@@ -36,6 +46,9 @@ export default function ParticipantsCard({ participants, className }: Participan
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+                {maxParticipants != null && (
+                    <SpotsIndicator confirmed={confirmedParticipants} max={maxParticipants} />
+                )}
                 {participants && participants.length === 0 ? (
                     <div className="text-sm text-muted-foreground text-center py-2">
                         {getTranslation('participants.none_yet')}

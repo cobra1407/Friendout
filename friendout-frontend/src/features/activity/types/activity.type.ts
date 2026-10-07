@@ -18,5 +18,9 @@ export interface Activity {
     updatedAt: string;
     hasEquipment: boolean;
     nbParticipants: number;
+    /** Confirmed participants ("Participating" status) for the main activity: this is what counts toward the limit. */
+    nbConfirmedParticipants?: number;
+    /** Maximum number of participants. null/undefined = unlimited. */
+    maxParticipants?: number | null;
     comments?: Array<Comment>
 }

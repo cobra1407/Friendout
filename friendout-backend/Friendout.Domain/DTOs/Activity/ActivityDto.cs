@@ -15,10 +15,17 @@ public class ActivityDto
     public LocalisationDto? Localisation{ get; set; }
 
     public double? EstimatedPrice { get; set; }
+    public int? MaxParticipants { get; set; }
     public ImageDto? Image { get; set; }
     public string? CreatedBy { get; set; }
     
     public int NbParticipants { get; set; }
+
+    /// <summary>
+    /// Main-activity participants with status Participating. This is the number that counts
+    /// toward <see cref="MaxParticipants"/> (NbParticipants counts every status).
+    /// </summary>
+    public int NbConfirmedParticipants { get; set; }
     public bool HasEquipment { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

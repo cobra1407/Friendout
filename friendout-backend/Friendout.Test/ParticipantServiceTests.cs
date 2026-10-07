@@ -290,6 +290,180 @@ public class ParticipantServiceTests
             "User should have only one participation for the sub-activity");
     }
 
+    [Test]
+    public async Task SaveParticipationAsync_WhenActivityIsFull_RejectsNewParticipant()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_WhenActivityIsFull_RejectsNewParticipant));
+
+        var alice = new User { Id = "user-1", Name = "Alice", Email = "alice@example.com" };
+        var bob = new User { Id = "user-2", Name = "Bob", Email = "bob@example.com" };
+        var activity = CreateActivity("activity-full", alice);
+        activity.MaxParticipants = 1;
+
+        context.Users.AddRange(alice, bob);
+        context.Activities.Add(activity);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
+
+        var first = await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), alice.Id);
+        var second = await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), bob.Id);
+
+        first.IsSuccess.Should().BeTrue();
+        second.IsSuccess.Should().BeFalse();
+        second.ErrorMessage.Should().Be("This activity is full");
+        context.UserParticipation.Count(p => p.UserId == bob.Id).Should().Be(0);
+    }
+
+    [Test]
+    public async Task SaveParticipationAsync_WithoutLimit_AllowsAnyNumberOfParticipants()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_WithoutLimit_AllowsAnyNumberOfParticipants));
+
+        var creator = new User { Id = "creator", Name = "Creator", Email = "creator@example.com" };
+        var activity = CreateActivity("activity-unlimited", creator);
+        var users = Enumerable.Range(1, 5)
+            .Select(i => new User { Id = $"user-{i}", Name = $"User {i}", Email = $"user{i}@example.com" })
+            .ToList();
+
+        context.Users.Add(creator);
+        context.Users.AddRange(users);
+        context.Activities.Add(activity);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
+
+        foreach (var user in users)
+        {
+            var result = await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), user.Id);
+            result.IsSuccess.Should().BeTrue();
+        }
+
+        context.UserParticipation.Count(p => p.Status == ParticipationStatus.Participating).Should().Be(5);
+    }
+
+    [Test]
+    public async Task SaveParticipationAsync_WhenAlreadyParticipatingAndFull_CanStillResave()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_WhenAlreadyParticipatingAndFull_CanStillResave));
+
+        var alice = new User { Id = "user-1", Name = "Alice", Email = "alice@example.com" };
+        var activity = CreateActivity("activity-resave", alice);
+        activity.MaxParticipants = 1;
+
+        context.Users.Add(alice);
+        context.Activities.Add(activity);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
+
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), alice.Id)).IsSuccess.Should().BeTrue();
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), alice.Id)).IsSuccess.Should().BeTrue();
+
+        context.UserParticipation.Count().Should().Be(1);
+    }
+
+    [Test]
+    public async Task SaveParticipationAsync_MaybeDoesNotCountTowardLimit_ButBecomingParticipatingDoes()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_MaybeDoesNotCountTowardLimit_ButBecomingParticipatingDoes));
+
+        var alice = new User { Id = "user-1", Name = "Alice", Email = "alice@example.com" };
+        var bob = new User { Id = "user-2", Name = "Bob", Email = "bob@example.com" };
+        var activity = CreateActivity("activity-maybe", alice);
+        activity.MaxParticipants = 1;
+
+        context.Users.AddRange(alice, bob);
+        context.Activities.Add(activity);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
+
+        // Alice is only "Maybe": she doesn't take the spot, so Bob can.
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Maybe), alice.Id)).IsSuccess.Should().BeTrue();
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), bob.Id)).IsSuccess.Should().BeTrue();
+
+        // Now the spot is taken: Alice can't upgrade from Maybe to Participating.
+        var upgrade = await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), alice.Id);
+        upgrade.IsSuccess.Should().BeFalse();
+        upgrade.ErrorMessage.Should().Be("This activity is full");
+        context.UserParticipation.Single(p => p.UserId == alice.Id).Status.Should().Be(ParticipationStatus.Maybe);
+    }
+
+    [Test]
+    public async Task SaveParticipationAsync_WhenParticipantLeaves_FreesTheSpot()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_WhenParticipantLeaves_FreesTheSpot));
+
+        var alice = new User { Id = "user-1", Name = "Alice", Email = "alice@example.com" };
+        var bob = new User { Id = "user-2", Name = "Bob", Email = "bob@example.com" };
+        var activity = CreateActivity("activity-leave", alice);
+        activity.MaxParticipants = 1;
+
+        context.Users.AddRange(alice, bob);
+        context.Activities.Add(activity);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
+
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), alice.Id)).IsSuccess.Should().BeTrue();
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), bob.Id)).IsSuccess.Should().BeFalse();
+
+        // Alice leaves -> Bob can now join.
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.NotParticipating), alice.Id)).IsSuccess.Should().BeTrue();
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), bob.Id)).IsSuccess.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task SaveParticipationAsync_WhenMainActivityIsFull_StillAllowsSubActivityParticipation()
+    {
+        await using var context = TestDbContextFactory.CreateInMemoryContext(nameof(SaveParticipationAsync_WhenMainActivityIsFull_StillAllowsSubActivityParticipation));
+
+        var alice = new User { Id = "user-1", Name = "Alice", Email = "alice@example.com" };
+        var bob = new User { Id = "user-2", Name = "Bob", Email = "bob@example.com" };
+        var activity = CreateActivity("activity-sub", alice);
+        activity.MaxParticipants = 1;
+
+        var location = new Localisation { Id = "loc-sub-cap", Type = Friendout.Domain.Enums.LocalisationType.Address, DisplayName = "Sub" };
+        var sub = new SubActivity
+        {
+            Id = "sub-cap",
+            ActivityId = activity.Id,
+            Activity = activity,
+            Name = "Sub",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddMinutes(30),
+            Localisation = location,
+            LocalisationId = location.Id
+        };
+
+        context.Users.AddRange(alice, bob);
+        context.Activities.Add(activity);
+        context.SubActivities.Add(sub);
+        await context.SaveChangesAsync();
+
+        var service = new ParticipantService(context, TestLogger<ParticipantService>.Instance, new NoopActivitiesHubNotifier());
+
+        (await service.SaveParticipationAsync(Main(activity.Id, ParticipationStatus.Participating), alice.Id)).IsSuccess.Should().BeTrue();
+
+        // The cap applies to the main activity only: Bob can't join it, but the sub-activity is not capped.
+        var subResult = await service.SaveParticipationAsync(new UpdateParticipationCommand
+        {
+            ActivityId = activity.Id,
+            Status = ParticipationStatus.Participating,
+            SubActivityIds = new List<string> { sub.Id }
+        }, bob.Id);
+
+        subResult.IsSuccess.Should().BeTrue();
+    }
+
+    private static UpdateParticipationCommand Main(string activityId, ParticipationStatus status) => new()
+    {
+        ActivityId = activityId,
+        Status = status,
+        SubActivityIds = new List<string>()
+    };
+
     private static Activity CreateActivity(string activityId, User creator)
     {
         var startAt = DateTime.UtcNow.AddHours(1);

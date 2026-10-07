@@ -17,6 +17,8 @@ export interface ActivityDetails {
     endAt?: string | null;
     estimatedPrice?: number | null;
     totalPrice?: number | null;
+    /** Maximum number of participants. null/undefined = unlimited. */
+    maxParticipants?: number | null;
 
     image?: Image | null;
     localisation?: Localisation | null;

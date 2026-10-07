@@ -79,6 +79,14 @@ export function ActivityDetailsContent({
 
     const pricedSubActivitiesCount = activity.subActivities.filter((s) => s.price).length;
 
+    // Only confirmed main activity participants count against the limit
+    // ("Maybe", "No", and sub-activities don't take up space).
+    const confirmedParticipantsCount = activity.participants.filter(
+        (p) => !p.subActivityId && p.participationStatus === ParticipationStatus.Participating
+    ).length;
+    const maxParticipants = activity.maxParticipants ?? null;
+    const isFull = maxParticipants !== null && confirmedParticipantsCount >= maxParticipants;
+
     const mainDetailsProps = {
         title: activity.title,
         description: activity.description,
@@ -99,6 +107,7 @@ export function ActivityDetailsContent({
             title={getTranslation('activity.response_main_activity')}
             selectedStatus={activity.userMainParticipation?.status ?? null}
             onResponse={onMainParticipationChange}
+            isFull={isFull}
         />
     );
 
@@ -112,7 +121,11 @@ export function ActivityDetailsContent({
     ));
 
     const participantsCard = (
-        <ParticipantsCard participants={activity.participants} />
+        <ParticipantsCard
+            participants={activity.participants}
+            maxParticipants={maxParticipants}
+            confirmedParticipants={confirmedParticipantsCount}
+        />
     );
 
     const commentsSection = (

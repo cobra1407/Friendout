@@ -10,6 +10,7 @@ import { formatDate, formatTime } from '@/lib/utils/date.utils';
 import defaultActivityImage from '@/assets/images/default-activity-card.webp';
 import { resolveMediaUrl } from '@/lib/media';
 import { getTranslation } from '@/i18n';
+import { SpotsIndicator } from '@/features/activity/components/SpotsIndicator';
 
 interface ActivityCardProps {
     activity: Activity;
@@ -37,6 +38,9 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
     const localisationDisplayText = getLocalisationDisplayText(activity.localisation);
     const isGoogleMapsLink = localisationData?.type === LocalisationType.MapLink || !!localisationData?.mapLink;
     const subActivitiesCount = activity.subActivities?.length || 0;
+    const maxParticipants = activity.maxParticipants ?? null;
+    const confirmedParticipants = activity.nbConfirmedParticipants ?? 0;
+    const isFull = maxParticipants !== null && confirmedParticipants >= maxParticipants;
 
     return (
         <Card className={`flex flex-col max-h-[800px] max-w-[500px] hover:shadow-lg transition-shadow ${isPast ? 'opacity-75' : ''}`}>
@@ -45,6 +49,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                     {/* Badges */}
                     <div className="flex flex-wrap gap-2">
                         {isPast && <Badge variant="secondary">{getTranslation('activity.past')}</Badge>}
+                        {isFull && !isPast && <Badge variant="outline" className="border border-red-300 bg-red-100 font-semibold text-red-700 dark:border-red-700 dark:bg-red-950/60 dark:text-red-300">{getTranslation('activity.full')}</Badge>}
                         {activity.hasEquipment && (
                             <Badge variant="outline" className="text-xs bg-blue-500/15 text-blue-700 dark:text-blue-400 border-none">
                                 {getTranslation('activity.equipment_required')}
@@ -57,7 +62,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                         )}
                     </div>
 
-                    {/* Titre */}
+                    {/* Title */}
                     <CardTitle className="text-lg font-semibold line-clamp-2">
                         {activity.title}
                     </CardTitle>
@@ -76,7 +81,7 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                         loading="lazy"
                     />
 
-                    {/* Overlay si activité passée */}
+                    {/* Overlay for past activities */}
                     {isPast && (
                         <div className="absolute inset-0 bg-background/40 pointer-events-none" />
                     )}
@@ -154,13 +159,19 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-purple-600" />
-                            <span>
-                                {isLoading
-                                    ? getTranslation('common.loading')
-                                    : `${activity.nbParticipants ?? 0} ${(activity.nbParticipants ?? 0) !== 1 ? getTranslation('activity.participants') : getTranslation('activity.participant')}`}
-                            </span>
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                            {maxParticipants !== null && !isLoading ? (
+                                <SpotsIndicator confirmed={confirmedParticipants} max={maxParticipants} fullAsCount />
+                            ) : (
+                                <>
+                                    <Users className="w-4 h-4 text-purple-600" />
+                                    <span>
+                                        {isLoading
+                                            ? getTranslation('common.loading')
+                                            : `${activity.nbParticipants ?? 0} ${(activity.nbParticipants ?? 0) !== 1 ? getTranslation('activity.participants') : getTranslation('activity.participant')}`}
+                                    </span>
+                                </>
+                            )}
 
                         </div>
                     </div>
@@ -179,28 +190,37 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                 {/* Sub-activities preview */}
                 {activity.subActivities && activity.subActivities.length > 0 ? (
                     <div className="mt-3 pt-3 border-t">
-                        <div className="text-xs text-muted-foreground mb-2">{getTranslation('activity.sub_activities_label')}</div>
-                        <div className="space-y-1 overflow-auto">
+                        <div className="text-xs text-muted-foreground mb-2">
+                            {getTranslation('activity.sub_activities_label')}
+                        </div>
+                        <div className="space-y-1">
                             {activity.subActivities.slice(0, 2).map((subActivity) => (
-                                <div key={subActivity.id} className="text-xs bg-muted rounded px-2 py-1">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium">{subActivity.name}</span>
+                                <div key={subActivity.id} className="text-xs rounded px-2 py-1 bg-muted">
+                                    <div className="flex justify-between items-center gap-2 min-w-0">
+                                        <span className="font-medium truncate min-w-0 flex-1">
+                                            {subActivity.name}
+                                        </span>
+
+                                        {/* Price with shrink-0 to maintain its width */}
                                         {subActivity.price ? (
-                                            <span className="text-green-600 font-medium text-yellow-600 vertical-align">
+                                            <span className="font-medium text-yellow-600 shrink-0">
                                                 {Number(subActivity.price).toFixed(2)}€
                                             </span>
                                         ) : (
-                                            <span className="text-green-600 font-medium"> {getTranslation('common.free')} </span>
+                                            <span className="text-green-600 font-medium shrink-0">
+                                                {getTranslation('common.free')}
+                                            </span>
                                         )}
                                     </div>
-                                    <span className="text-muted-foreground text-xs">
+                                    <div className="text-muted-foreground text-xs truncate">
                                         {formatTime(subActivity.startTime.toString()) || getTranslation('activity.not_specified')}
                                         {subActivity.endTime
                                             ? ` - ${formatTime(subActivity.endTime.toString()) || getTranslation('activity.not_specified')}`
                                             : ` - ${getTranslation('activity.end_time_not_specified')}`}
-                                    </span>
+                                    </div>
                                 </div>
                             ))}
+
                             {activity.subActivities.length > 2 && (
                                 <div className="text-xs text-muted-foreground">
                                     +{activity.subActivities.length - 2} {getTranslation('activity.more_others')}...

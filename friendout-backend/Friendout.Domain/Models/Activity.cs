@@ -34,6 +34,14 @@ namespace Friendout.Domain.Models
         [Column("estimated_price")]
         public double? EstimatedPrice { get; set; }
 
+        /// <summary>
+        /// Maximum number of people who can be <c>Participating</c> in the main activity.
+        /// Null means no limit. Only main-activity participations with status Participating
+        /// count toward the cap (Maybe / NotParticipating and sub-activity participations don't).
+        /// </summary>
+        [Column("max_participants")]
+        public int? MaxParticipants { get; set; }
+
         [Column("image_id", TypeName = "varchar(191)")]
         public string? ImageId { get; set; }
 

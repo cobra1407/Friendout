@@ -23,6 +23,7 @@ public class PublicActivityDto
     public DateTime StartAt { get; set; }
     public DateTime? EndAt { get; set; }
     public double? EstimatedPrice { get; set; }
+    public int? MaxParticipants { get; set; }
 
     public ImageDto? Image { get; set; }
     public LocalisationDto? Localisation { get; set; }

@@ -219,6 +219,7 @@ public class ActivityService : IActivityService
                     StartAt = a.StartAt,
                     EndAt = a.EndAt,
                     EstimatedPrice = a.EstimatedPrice,
+                    MaxParticipants = a.MaxParticipants,
                     HasEquipment = a.ActivityEquipments != null && a.ActivityEquipments.Any(),
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
@@ -238,6 +239,7 @@ public class ActivityService : IActivityService
                         }
                     }).ToList(),
                     NbParticipants = a.UserParticipations.Select(u => u.UserId).Distinct().Count(),
+                    NbConfirmedParticipants = a.UserParticipations.Count(u => u.SubActivityId == null && u.Status == ParticipationStatus.Participating),
                     Localisation = new LocalisationDto
                     {
                         Type = a.Localisation.Type,
@@ -289,6 +291,7 @@ public class ActivityService : IActivityService
                     StartAt = a.StartAt,
                     EndAt = a.EndAt,
                     EstimatedPrice = a.EstimatedPrice,
+                    MaxParticipants = a.MaxParticipants,
                     TotalPrice = (a.EstimatedPrice ?? 0) + (a.SubActivities.Any() ? a.SubActivities.Sum(sa => sa.Price ?? 0) : 0),
                     CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     CreatedAt = a.CreatedAt,
@@ -404,6 +407,8 @@ public class ActivityService : IActivityService
                 return ServiceResult<ActivityDto>.Failure("La date de fin doit etre superieure ou egale a la date de debut.");
             if (createActivityDto.EstimatedPrice.HasValue && createActivityDto.EstimatedPrice.Value < 0)
                 return ServiceResult<ActivityDto>.Failure("Le prix estime ne peut pas etre negatif.");
+            if (createActivityDto.MaxParticipants.HasValue && createActivityDto.MaxParticipants.Value < 1)
+                return ServiceResult<ActivityDto>.Failure("Le nombre maximum de participants doit etre d'au moins 1.");
             if (createActivityDto.SubActivities.Any(sa => sa.Price.HasValue && sa.Price.Value < 0))
                 return ServiceResult<ActivityDto>.Failure("Le prix d'une sous-activite ne peut pas etre negatif.");
             if (createActivityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime))
@@ -465,7 +470,8 @@ public class ActivityService : IActivityService
                 Id = Guid.NewGuid().ToString(),
                 Title = createActivityDto.Title, Description = createActivityDto.Description,
                 StartAt = createActivityDto.StartAt, EndAt = createActivityDto.EndAt,
-                EstimatedPrice = createActivityDto.EstimatedPrice, ImageId = imageId,
+                EstimatedPrice = createActivityDto.EstimatedPrice,
+                MaxParticipants = createActivityDto.MaxParticipants, ImageId = imageId,
                 Localisation = localisation, CreatedBy = userId,
                 CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             };
@@ -526,6 +532,7 @@ public class ActivityService : IActivityService
                 {
                     Id = a.Id, Title = a.Title, Description = a.Description,
                     StartAt = a.StartAt, EndAt = a.EndAt, EstimatedPrice = a.EstimatedPrice,
+                    MaxParticipants = a.MaxParticipants,
                     CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
@@ -568,6 +575,7 @@ public class ActivityService : IActivityService
             if (activityDto.StartAt == default) return ServiceResult<ActivityDto>.Failure("La date de debut est invalide.");
             if (activityDto.EndAt < activityDto.StartAt) return ServiceResult<ActivityDto>.Failure("La date de fin doit etre superieure ou egale a la date de debut.");
             if (activityDto.EstimatedPrice.HasValue && activityDto.EstimatedPrice.Value < 0) return ServiceResult<ActivityDto>.Failure("Le prix estime ne peut pas etre negatif.");
+            if (activityDto.MaxParticipants.HasValue && activityDto.MaxParticipants.Value < 1) return ServiceResult<ActivityDto>.Failure("Le nombre maximum de participants doit etre d'au moins 1.");
             if (activityDto.SubActivities.Any(sa => sa.Price.HasValue && sa.Price.Value < 0)) return ServiceResult<ActivityDto>.Failure("Le prix d'une sous-activite ne peut pas etre negatif.");
             if (activityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime)) return ServiceResult<ActivityDto>.Failure("L'heure de fin d'une sous-activite doit etre strictement apres l'heure de debut.");
 
@@ -579,6 +587,21 @@ public class ActivityService : IActivityService
 
             if (activity is null) return ServiceResult<ActivityDto>.Failure("Activity not found.");
             if (!string.Equals(activity.CreatedBy, userId, StringComparison.Ordinal)) return ServiceResult<ActivityDto>.Failure("You are not allowed to update this activity.");
+
+            // Never let the organizer cap the activity below the number of people already
+            // confirmed, otherwise it would silently be over capacity. Done before any side
+            // effect (image upload/deletion below) so a refusal leaves everything untouched.
+            if (activityDto.MaxParticipants.HasValue)
+            {
+                var confirmedCount = await _friendoutDbContext.UserParticipation.CountAsync(up =>
+                    up.ActivityId == activity.Id &&
+                    up.SubActivityId == null &&
+                    up.Status == ParticipationStatus.Participating);
+
+                if (activityDto.MaxParticipants.Value < confirmedCount)
+                    return ServiceResult<ActivityDto>.Failure(
+                        $"Le nombre maximum de participants ne peut pas etre inferieur au nombre de participants deja inscrits ({confirmedCount}).");
+            }
 
             var requiredEquipmentNames = activityDto.RequiredEquipmentNames
                 .Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim())
@@ -658,6 +681,7 @@ public class ActivityService : IActivityService
             activity.StartAt = activityDto.StartAt;
             activity.EndAt = activityDto.EndAt;
             activity.EstimatedPrice = activityDto.EstimatedPrice;
+            activity.MaxParticipants = activityDto.MaxParticipants;
             activity.Localisation = localisation;
             activity.UpdatedAt = DateTime.UtcNow;
 
@@ -767,6 +791,7 @@ public class ActivityService : IActivityService
                 {
                     Id = a.Id, Title = a.Title, Description = a.Description,
                     StartAt = a.StartAt, EndAt = a.EndAt, EstimatedPrice = a.EstimatedPrice,
+                    MaxParticipants = a.MaxParticipants,
                     CreatedAt = a.CreatedAt, UpdatedAt = a.UpdatedAt, CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     SubActivities = a.SubActivities.Select(sa => new SubActivityDto
                     {
@@ -917,6 +942,7 @@ public class ActivityService : IActivityService
                     StartAt = a.StartAt,
                     EndAt = a.EndAt,
                     EstimatedPrice = a.EstimatedPrice,
+                    MaxParticipants = a.MaxParticipants,
                     CreatedBy = a.Creator != null ? a.Creator.Name : null,
                     ParticipantsCount = new PublicParticipantsCountDto
                     {

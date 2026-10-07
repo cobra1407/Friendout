@@ -18,6 +18,7 @@ import { getPublicActivity } from "@/features/activity/api/activityShare.api";
 import type { PublicActivity } from "@/features/activity/types/publicActivity.type";
 import { Header } from "@/components/header";
 import ActivityMainDetails from "@/features/activity/components/ActivityMainDetails";
+import { SpotsIndicator } from "@/features/activity/components/SpotsIndicator";
 import { PublicActivityParticipation } from "../components/PublicActitiyParticipation";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
@@ -169,6 +170,12 @@ export default function PublicActivityPage() {
                     </div>
 
                     <div className="space-y-6">
+                        {activity.maxParticipants != null && (
+                            <Card className="border-border/60 shadow-sm bg-white dark:bg-card rounded-2xl p-5">
+                                <SpotsIndicator confirmed={participatingCount} max={activity.maxParticipants} />
+                            </Card>
+                        )}
+
                         <PublicActivityParticipation
                             totalParticipants={totalParticipants}
                             participatingCount={participatingCount}

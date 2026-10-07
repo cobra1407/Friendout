@@ -80,6 +80,12 @@ public class CreateActivityRequest : IValidatableObject
         public double? EstimatedPrice { get; set; }
 
         /// <summary>
+        /// Optional cap on the number of participants (at least 1). Null means unlimited.
+        /// </summary>
+        [Range(1, 10000)]
+        public int? MaxParticipants { get; set; }
+
+        /// <summary>
         /// Optional list of required equipment names.
         /// </summary>
         public List<string>? RequiredEquipmentNames { get; set; }

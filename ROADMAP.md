@@ -12,6 +12,7 @@ If you'd like to contribute, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 Friendout already supports:
 
 - Activity creation, with public sharing via unguessable tokens
+- Optional maximum number of participants per activity (registration is refused once full, remaining spots are shown on cards and detail pages)
 - Sub-activities management
 - Virtual locations management
 - Real-time updates via WebSockets
@@ -40,10 +41,12 @@ Friendout already supports:
 
 Listed in suggested priority order (based on dependencies between them, not fixed in stone). Each one will get its own GitHub Issue — check the [Issues tab](../../issues) to see current status, or to pick one up.
 
-### 👥 Maximum Number of Participants
-- Organizer can cap the number of spots for an activity
-- Needs: waitlist behavior when full? Auto-close registration at the limit?
-- Small, self-contained — good starting point
+### ⏳ Waitlist / Spot Alerts
+- Follow-up to the maximum number of participants: when an activity is full, people can't join and nobody is told if a spot frees up
+- Minimal version: "Notify me if a spot opens" — everyone on the alert list is notified, first to click gets the spot
+- Full version: ordered waitlist with automatic promotion of the first person when someone leaves (or the organizer raises the limit), plus a notification
+- Needs: time limit to confirm after promotion? First come, first served? Do "Maybe" answers count toward the limit (currently they don't)?
+- Builds on the existing notification system (in-app + email)
 
 ### 💰 Approximate Price / Budget
 - Let organizers set a price range for an activity (e.g. "5–15 €")
