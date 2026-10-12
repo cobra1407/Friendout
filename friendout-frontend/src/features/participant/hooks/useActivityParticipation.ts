@@ -17,7 +17,7 @@ const handleParticipationError = (error: unknown) => {
         toast.error(getTranslation("participation.activity_full"));
         return;
     }
-    toast.error("Impossible de mettre à jour la participation");
+    toast.error(getTranslation("participation.update_error"));
 };
 
 export interface UseActivityParticipationParams {

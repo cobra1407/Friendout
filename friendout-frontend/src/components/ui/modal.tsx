@@ -1,6 +1,7 @@
 import * as React from "react"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { getTranslation } from "@/i18n"
 
 interface ModalProps {
     open: boolean
@@ -35,7 +36,7 @@ const Modal = ({ open, onClose, children, className }: ModalProps) => {
                     className="absolute top-4 right-4 opacity-70 hover:opacity-100 transition-opacity rounded-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
                 >
                     <X className="h-4 w-4 cursor-pointer" />
-                    <span className="sr-only">Close</span>
+                    <span className="sr-only">{getTranslation("common.close")}</span>
                 </button>
                 {children}
             </div>

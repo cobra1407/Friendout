@@ -104,7 +104,7 @@ export default function PublicActivityPage() {
 
     const mainDetailsProps = {
         title: activity.title,
-        description: activity.description || "Aucune description fournie.",
+        description: activity.description || getTranslation("public_activity_page.no_description"),
         startAt: activity.startAt,
         image: activity.image,
         localisation: activity.localisation,

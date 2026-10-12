@@ -1,5 +1,23 @@
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
+import { getTranslation } from "@/i18n";
+
+/**
+ * Generic labels the backend persists as `DisplayName` when it can't build a real one
+ * (see ActivityService.BuildLocalisationDisplayNameAsync). They are stored in French in the
+ * database, so they must be swapped for the user's language at display time instead of being
+ * shown as-is. Keyed by the exact stored string -> i18n key.
+ */
+const BACKEND_FALLBACK_LABEL_KEYS: Record<string, string> = {
+  "Lieu depuis Google Maps": "localisation.generic_maps_place",
+  "Lieu non specifie": "localisation.not_specified",
+  "Lieu virtuel": "enhanced_location_input.virtual_display_name",
+};
+
+export const localizeFallbackLabel = (label: string): string => {
+  const key = BACKEND_FALLBACK_LABEL_KEYS[label.trim()];
+  return key ? getTranslation(key) : label;
+};
 
 export const generateGoogleMapsUrl = (address: string): string => {
   const encodedAddress = encodeURIComponent(address);
@@ -73,26 +91,26 @@ export const extractLocationNameFromMapsUrl = (url: string): string => {
       return decodeURIComponent(destParam.replace(/\+/g, " "));
     }
 
-    return "Lieu depuis Google Maps";
+    return getTranslation("localisation.generic_maps_place");
   } catch {
-    return "Lieu depuis Google Maps";
+    return getTranslation("localisation.generic_maps_place");
   }
 };
 
 export const validateGoogleMapsUrl = (url: string): { isValid: boolean; error?: string } => {
   if (!url.trim()) {
-    return { isValid: false, error: "Le lien ne peut pas etre vide" };
+    return { isValid: false, error: getTranslation("localisation.error_link_empty") };
   }
 
   if (!isGoogleMapsLink(url)) {
-    return { isValid: false, error: "Ce n'est pas un lien Google Maps valide" };
+    return { isValid: false, error: getTranslation("localisation.error_not_maps_link") };
   }
 
   try {
     new URL(url);
     return { isValid: true };
   } catch {
-    return { isValid: false, error: "Le lien n'est pas une URL valide" };
+    return { isValid: false, error: getTranslation("localisation.error_invalid_url") };
   }
 };
 
@@ -105,31 +123,35 @@ export const validateOptionalUrl = (url: string): { isValid: boolean; error?: st
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return { isValid: false, error: "Le lien doit commencer par http:// ou https://" };
+      return { isValid: false, error: getTranslation("localisation.error_url_protocol") };
     }
     return { isValid: true };
   } catch {
-    return { isValid: false, error: "Le lien n'est pas une URL valide" };
+    return { isValid: false, error: getTranslation("localisation.error_invalid_url") };
   }
 };
 
 export const getLocalisationDisplayText = (localisation: Localisation | null | undefined): string => {
+  const notSpecified = getTranslation("localisation.not_specified");
+
   if (!localisation) {
-    return "Lieu non specifie";
+    return notSpecified;
   }
 
   if (localisation.type === LocalisationType.MapLink) {
-    if (localisation.displayName?.trim()) return localisation.displayName;
-    if (localisation.address?.trim()) return localisation.address;
+    if (localisation.displayName?.trim()) return localizeFallbackLabel(localisation.displayName);
+    if (localisation.address?.trim()) return localizeFallbackLabel(localisation.address);
     if (localisation.mapLink?.trim()) return extractLocationNameFromMapsUrl(localisation.mapLink);
-    return "Lieu non specifie";
+    return notSpecified;
   }
 
   if (localisation.type === LocalisationType.Virtual) {
-    return localisation.displayName || localisation.address || "Lieu virtuel";
+    const text = localisation.displayName || localisation.address;
+    return text ? localizeFallbackLabel(text) : getTranslation("enhanced_location_input.virtual_display_name");
   }
 
-  return localisation.address || localisation.displayName || "Lieu non specifie";
+  const text = localisation.address || localisation.displayName;
+  return text ? localizeFallbackLabel(text) : notSpecified;
 };
 
 export const getLocalisationUrl = (localisation: string, localisationData: Localisation | null | undefined): string => {

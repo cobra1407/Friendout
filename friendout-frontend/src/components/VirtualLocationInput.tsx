@@ -11,29 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
 import { validateOptionalUrl } from "@/lib/maps";
+import {
+    VIRTUAL_PLATFORMS,
+    getVirtualPlatformItemLabel,
+    getVirtualPlatformLabel,
+} from "@/features/localisation/utils/virtualPlatforms";
 import { getTranslation } from "@/i18n";
 
 interface VirtualLocationInputProps {
     value: Localisation | null;
     onChange: (localisationData: Localisation | null) => void;
 }
-
-const VIRTUAL_PLATFORMS = [
-    { value: "discord", label: "Discord", color: "bg-indigo-500" },
-    { value: "teamspeak", label: "TeamSpeak", color: "bg-blue-500" },
-    { value: "steam", label: "Steam", color: "bg-gray-700" },
-    { value: "battlenet", label: "Battle.net", color: "bg-blue-600" },
-    { value: "origin", label: "Origin", color: "bg-orange-500" },
-    { value: "uplay", label: "Ubisoft Connect", color: "bg-blue-500" },
-    { value: "epic", label: "Epic Games", color: "bg-black" },
-    { value: "gog", label: "GOG Galaxy", color: "bg-sky-700" },
-    { value: "other", label: getTranslation("virtual_location_input.platform_other"), color: "bg-gray-500" },
-] as const;
-
-const getPlatformLabel = (platform: string | undefined): string => {
-    if (!platform) return getTranslation("virtual_location_input.platform_other");
-    return VIRTUAL_PLATFORMS.find((item) => item.value === platform)?.label || platform;
-};
 
 export default function VirtualLocationInput({ value, onChange }: VirtualLocationInputProps) {
     const [isEditing, setIsEditing] = useState(true);
@@ -68,7 +56,7 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
         () => ({
             type: LocalisationType.Virtual,
             address: serverName.trim(),
-            displayName: channelName.trim() || `${getPlatformLabel(platform)} - ${serverName.trim()}`,
+            displayName: channelName.trim() || `${getVirtualPlatformLabel(platform)} - ${serverName.trim()}`,
             platform,
             serverInfo: invitationLink.trim() || undefined,
             virtualUrl: invitationLink.trim() || undefined,
@@ -116,7 +104,7 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                                 <ExternalLink className="w-4 h-4 text-white" />
                             </div>
                             <div className="space-y-1 min-w-0">
-                                <p className="text-sm font-medium">{getPlatformLabel(platform)}</p>
+                                <p className="text-sm font-medium">{getVirtualPlatformLabel(platform)}</p>
                                 <p className="text-sm text-muted-foreground truncate">{channelName || serverName}</p>
                                 {invitationLink && (
                                     <a
@@ -146,7 +134,7 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                             {getTranslation("virtual_location_input.badge_virtual")}
                         </Badge>
                         <Badge variant="secondary" className="text-xs">
-                            {getPlatformLabel(platform)}
+                            {getVirtualPlatformLabel(platform)}
                         </Badge>
                     </div>
                 </CardContent>
@@ -174,7 +162,7 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                                 <SelectItem key={item.value} value={item.value}>
                                     <div className="flex items-center gap-2">
                                         <div className={`w-3 h-3 rounded ${item.color}`} />
-                                        {item.label}
+                                        {getVirtualPlatformItemLabel(item)}
                                     </div>
                                 </SelectItem>
                             ))}

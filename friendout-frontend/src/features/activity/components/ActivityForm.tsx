@@ -21,8 +21,6 @@ import { useActivityForm } from "@/features/activity/hooks/useActivityForm"
 import { getTranslation, getLang } from "@/i18n"
 import { EditConfirmationModal } from "./EditConfirmationModal"
 
-const dateLocale = getLang() === "fr" ? fr : enUS
-
 interface ActivityFormProps {
     mode: "create" | "edit"
     initialData?: Activity | ActivityDetails
@@ -31,6 +29,10 @@ interface ActivityFormProps {
 }
 
 export default function ActivityForm({ mode, initialData, onBack, onSuccess }: ActivityFormProps) {
+    // Resolved on every render (not at module load) so it follows the language the user
+    // saved in their preferences, which only becomes known after the first render.
+    const dateLocale = getLang() === "fr" ? fr : enUS
+
     const {
         isLoading, errors,
         title, setTitle,

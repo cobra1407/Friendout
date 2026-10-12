@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { resolveMediaUrl } from "@/lib/media";
+import { getLocalisationDisplayText } from "@/lib/maps";
 
 import {
     normalizeLocalisation,
@@ -64,6 +65,7 @@ export default function ActivityMainDetails({
 }: ActivityMainDetailsProps) {
 
     const localisation = normalizeLocalisation(localisationProp);
+    const localisationDisplayText = getLocalisationDisplayText(localisation);
     const isGoogleMapsLink = localisation?.type === LocalisationType.MapLink;
 
 
@@ -125,7 +127,7 @@ export default function ActivityMainDetails({
                             </div>
                         )}
 
-                        <span className="flex-1 min-w-0 truncate" title={localisation?.displayName ?? localisation?.address ?? ""}>
+                        <span className="flex-1 min-w-0 truncate" title={localisationDisplayText}>
                             {localisation?.type === LocalisationType.Virtual && localisation.virtualUrl ? (
                                 <a
                                     href={localisation.virtualUrl}
@@ -133,10 +135,10 @@ export default function ActivityMainDetails({
                                     rel="noopener noreferrer"
                                     className="text-blue-700 dark:text-blue-400 hover:underline"
                                 >
-                                    {localisation?.displayName ?? localisation?.address ?? "-"}
+                                    {localisationDisplayText}
                                 </a>
                             ) : (
-                                localisation?.displayName ?? localisation?.address ?? "-"
+                                localisationDisplayText
                             )}
                         </span>
 

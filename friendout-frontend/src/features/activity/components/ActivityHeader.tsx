@@ -211,7 +211,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium">Google Calendar</p>
-                                                <p className="text-xs text-muted-foreground">Opens in browser</p>
+                                                <p className="text-xs text-muted-foreground">{getTranslation('activity.opens_in_browser')}</p>
                                             </div>
                                         </button>
 
@@ -224,7 +224,7 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium">Outlook</p>
-                                                <p className="text-xs text-muted-foreground">Opens in browser</p>
+                                                <p className="text-xs text-muted-foreground">{getTranslation('activity.opens_in_browser')}</p>
                                             </div>
                                         </button>
 
