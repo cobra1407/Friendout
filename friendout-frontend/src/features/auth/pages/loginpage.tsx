@@ -117,7 +117,7 @@ export const LoginPage = () => {
                                 {[defaultImage1, defaultImage2, defaultImage3].map((img, index) => (
                                     <CarouselItem key={index} className="h-full w-full border-none">
                                         <div className="h-full w-full flex items-center justify-center overflow-hidden">
-                                            <img src={img} alt={`Slide ${index + 1}`} className="h-full w-full object-cover object-center" />
+                                            <img src={img} alt={getTranslation("login_page.carousel_slide_alt", { index: index + 1 })} className="h-full w-full object-cover object-center" />
                                         </div>
                                     </CarouselItem>
                                 ))}

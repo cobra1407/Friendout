@@ -5,7 +5,8 @@
     "login_button": "Sign in with Discord",
     "login_button_google": "Sign in with Google",
     "request_access_link": "No access yet?",
-    "request_access_button": "Request access"
+    "request_access_button": "Request access",
+    "carousel_slide_alt": "Slide {{index}}"
   },
   "create_activity_page": {
     "create": {
@@ -83,6 +84,14 @@
         "edit_impossible": "Cannot edit this activity",
         "save_error": "Error while saving"
     }
+ },
+ "localisation": {
+    "generic_maps_place": "Place from Google Maps",
+    "not_specified": "Location not specified",
+    "error_link_empty": "The link can't be empty",
+    "error_not_maps_link": "This isn't a valid Google Maps link",
+    "error_invalid_url": "The link isn't a valid URL",
+    "error_url_protocol": "The link must start with http:// or https://"
  },
  "enhanced_location_input": {
     "label": "Location",
@@ -339,7 +348,9 @@
     "necessary_equipment": "Required equipment",
     "main_activity_label": "Main activity:",
     "sub_activities_count": "sub-activity(s)",
-    "share_link_error": "Error while generating the share link."
+    "share_link_error": "Error while generating the share link.",
+    "delete_error": "Error while deleting the activity.",
+    "opens_in_browser": "Opens in browser"
   },
   "comments": {
     "title": "Comments",
@@ -361,7 +372,7 @@
     "no_participants": "No participants yet",
     "unknown": "Unknown",
     "modal_title": "Participants",
-    "modal_description": "Participants for sub-activity \u00ab\u00a0{{name}}\u00a0\u00bb."
+    "modal_description": "Participants for sub-activity \u201c{{name}}\u201d."
   },
   "participation": {
     "i_participate": "I'm in",
@@ -370,7 +381,8 @@
     "closed": "Participations are now closed.",
     "full": "Activity full",
     "full_hint": "All spots are taken. You can still answer \"Maybe\".",
-    "activity_full": "This activity is full: the last spot was just taken."
+    "activity_full": "This activity is full: the last spot was just taken.",
+    "update_error": "Couldn't update your participation"
   },
   "sub_activity": {
     "details": "Activity details",
@@ -391,7 +403,8 @@
     "missing_equipment": "You're still missing quite a bit of equipment.",
     "owned": "Owned",
     "checked_count": " of {{total}} equipment checked",
-    "auto_saved": "Your selection is saved automatically"
+    "auto_saved": "Your selection is saved automatically",
+    "update_error": "Error while updating the equipment"
   },
   "equipment_manager": {
     "section_label": "Required equipment (optional)",
@@ -405,7 +418,7 @@
     "empty_examples": "Example: \"Helmet\", \"Hiking boots\", \"Swimsuit\"",
     "checklist_summary": "{{checked}} of {{total}} items checked",
     "error":{
-        "equipment_exist" : "Equipment already exist."
+        "equipment_exist" : "Equipment already exists."
     }
  },
   "equipment_list": {
@@ -472,7 +485,8 @@
     "participants_confirmed_sentence": "{{count}} participants",
     "participants_maybe_sentence_one": "{{count}} maybe participant",
     "participants_maybe_sentence": "{{count}} maybe participants",
-    "participants_none": "No participants yet"
+    "participants_none": "No participants yet",
+    "no_description": "No description provided."
   },
   "admin": {
     "settings": {
