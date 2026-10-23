@@ -32,10 +32,12 @@ export const ActivityToolbar = ({
 }: Props) => {
     const [localSearch, setLocalSearch] = useState(search);
 
-    // Sync prop search
-    useEffect(() => {
+    // Sync prop search (adjusted while rendering rather than in an effect, so there is no extra render pass)
+    const [prevSearch, setPrevSearch] = useState(search);
+    if (search !== prevSearch) {
+        setPrevSearch(search);
         setLocalSearch(search);
-    }, [search]);
+    }
 
     // Debounce
     useEffect(() => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { z } from "zod";
 import { PartyPopper, Send } from "lucide-react";
@@ -33,11 +33,17 @@ export const RequestAccessModal = ({ open, onClose, defaultEmail = "" }: Request
     const [submitted, setSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
+    // Pre-fill the email whenever the modal opens (or the suggested email changes). Done while
+    // rendering instead of in an effect so the field never flashes empty first.
+    const [prevOpen, setPrevOpen] = useState(open);
+    const [prevDefaultEmail, setPrevDefaultEmail] = useState(defaultEmail);
+    if (open !== prevOpen || defaultEmail !== prevDefaultEmail) {
+        setPrevOpen(open);
+        setPrevDefaultEmail(defaultEmail);
         if (open && defaultEmail) {
             setEmail(defaultEmail);
         }
-    }, [open, defaultEmail]);
+    }
 
     const handleClose = () => {
         setEmail("");
