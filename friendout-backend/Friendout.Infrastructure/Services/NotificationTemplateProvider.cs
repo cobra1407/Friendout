@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Friendout.Domain.Enums;
 using Friendout.Infrastructure.Interfaces;
@@ -23,6 +24,10 @@ namespace Friendout.Infrastructure.Services;
 /// </summary>
 public class NotificationTemplateProvider : INotificationTemplateProvider
 {
+    // Accepts "fr", "en", "pt-BR"... Uses \z (not $) so a trailing newline can't slip through.
+    private static readonly Regex SafeLocale =
+        new(@"^[a-z]{2,3}(-[A-Z]{2})?\z", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private readonly string _templatesPath;
     private readonly ILogger<NotificationTemplateProvider> _logger;
 
@@ -34,6 +39,13 @@ public class NotificationTemplateProvider : INotificationTemplateProvider
 
     public async Task<string> GetTemplateAsync(NotificationType type, string locale = "fr")
     {
+        // The locale becomes a folder and file name, so it must never contain path characters.
+        if (string.IsNullOrEmpty(locale) || !SafeLocale.IsMatch(locale))
+        {
+            _logger.LogWarning("Rejected invalid notification locale. Falling back to 'en'.");
+            locale = "en";
+        }
+
         var typeName = type.ToString().ToLowerInvariant();
 
         // 1. Exact match: e.g. fr/activityreminder.fr.html
