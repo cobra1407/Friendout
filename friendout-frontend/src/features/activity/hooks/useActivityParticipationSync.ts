@@ -111,25 +111,26 @@ export function useActivityParticipationSync(
         [setActivityDetails]
     );
 
+    // Extracted into locals so the memoization dependencies are exactly the values read
+    const userSubActivitiesParticipations = activityDetails?.userSubActivitiesParticipations;
+    const subActivitiesCount = activityDetails?.subActivities.length ?? 0;
+
     const getSubActivitySelectedStatus = useCallback(
         (subActivityId: string) =>
             getSubActivitySelectedStatusUtil(
-                activityDetails?.userSubActivitiesParticipations,
+                userSubActivitiesParticipations,
                 subActivityId
             ),
-        [activityDetails?.userSubActivitiesParticipations]
+        [userSubActivitiesParticipations]
     );
 
     const getSubActivitiesSelectedStatus = useCallback(
         () =>
             getSubActivitiesSelectedStatusUtil(
-                activityDetails?.userSubActivitiesParticipations,
-                activityDetails?.subActivities.length ?? 0
+                userSubActivitiesParticipations,
+                subActivitiesCount
             ),
-        [
-            activityDetails?.userSubActivitiesParticipations,
-            activityDetails?.subActivities.length,
-        ]
+        [userSubActivitiesParticipations, subActivitiesCount]
     );
 
     return {

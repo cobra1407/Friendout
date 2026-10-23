@@ -41,6 +41,8 @@ interface ActivityPayload {
     subActivities: SubActivity[]
 }
 
+type FieldKey = "title" | "description" | "startAt" | "time" | "localisation" | "maxParticipants"
+
 export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFormOptions) {
     const navigate = useNavigate()
 
@@ -54,15 +56,11 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             : 0
     const timeInputRef = useRef<HTMLInputElement | null>(null)
 
-    // Refs for each field that can have a validation error.
-    // Used to scroll to the first error after a failed submit.
-    const fieldRefs = {
-        title:           useRef<HTMLDivElement | null>(null),
-        description:     useRef<HTMLDivElement | null>(null),
-        startAt:         useRef<HTMLDivElement | null>(null),
-        time:            useRef<HTMLDivElement | null>(null),
-        localisation:    useRef<HTMLDivElement | null>(null),
-        maxParticipants: useRef<HTMLDivElement | null>(null),
+    // DOM element of each field that can have a validation error, registered through
+    // registerField(). Used to scroll to the first error after a failed submit.
+    const fieldElements = useRef<Partial<Record<FieldKey, HTMLDivElement | null>>>({})
+    const registerField = (key: FieldKey) => (element: HTMLDivElement | null) => {
+        fieldElements.current[key] = element
     }
 
     // Form state
@@ -231,11 +229,11 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
             const newErrors = buildErrors(result.error.issues)
             setErrors(newErrors)
 
-            const errorOrder: (keyof typeof fieldRefs)[] = ['title', 'localisation', 'description', 'startAt', 'time', 'maxParticipants']
+            const errorOrder: FieldKey[] = ['title', 'localisation', 'description', 'startAt', 'time', 'maxParticipants']
             const firstErrorKey = errorOrder.find(key => newErrors[key as keyof FormErrors])
             if (firstErrorKey) {
                 setTimeout(() => {
-                    fieldRefs[firstErrorKey].current?.scrollIntoView({
+                    fieldElements.current[firstErrorKey]?.scrollIntoView({
                         behavior: 'smooth',
                         block: 'center',
                     })
@@ -257,7 +255,7 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
                 }),
             })
             setTimeout(() => {
-                fieldRefs.maxParticipants.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                fieldElements.current.maxParticipants?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }, 50)
             return
         }
@@ -317,6 +315,6 @@ export function useActivityForm({ mode, initialData, onSuccess }: UseActivityFor
         handleSubmit,
         handleConfirmUpdate,
         handleCancelUpdate,
-        fieldRefs,
+        registerField,
     }
 }
