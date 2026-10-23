@@ -6,15 +6,14 @@ WORKDIR /app
 # --frozen-lockfile: ensures build reproducibility
 # approve-builds   : authorizes native scripts for esbuild and @parcel/watcher
 #                    (necessary for Vite to work correctly)
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
 
-# Install the exact pnpm version declared in the "packageManager" field
-# (strips an optional "+sha512..." suffix)
-RUN npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
+# Enable corepack and prepare pnpm using the version from package.json
+RUN corepack enable && corepack prepare --activate
 
 # onlyBuiltDependencies in package.json allows esbuild and @parcel/watcher
 # to run their native scripts without interaction.
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy the rest of the source code and build
 COPY . .
