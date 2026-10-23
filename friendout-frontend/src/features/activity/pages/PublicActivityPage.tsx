@@ -36,11 +36,8 @@ export default function PublicActivityPage() {
     }, [fetchMe]);
 
     useEffect(() => {
-        if (!shareToken) {
-            setNotFound(true);
-            setIsLoading(false);
-            return;
-        }
+        // Without a token there is nothing to fetch: the "not found" screen is derived below.
+        if (!shareToken) return;
 
         let cancelled = false;
 
@@ -73,8 +70,9 @@ export default function PublicActivityPage() {
     });
 
     const waitingForPrivateRedirect = !authLoading && isAuthenticated && !!activity;
+    const isFetchingActivity = isLoading && !!shareToken;
 
-    if (isLoading || authLoading || waitingForPrivateRedirect) {
+    if (isFetchingActivity || authLoading || waitingForPrivateRedirect) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-background">
                 <Spinner className="size-6 text-slate-600" />

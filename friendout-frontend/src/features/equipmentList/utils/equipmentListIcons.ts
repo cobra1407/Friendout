@@ -43,7 +43,7 @@ export type EquipmentListIconKey = typeof EQUIPMENT_LIST_ICON_KEYS[number];
 
 export const DEFAULT_EQUIPMENT_LIST_ICON: EquipmentListIconKey = "backpack";
 
-const ICON_COMPONENTS: Record<EquipmentListIconKey, LucideIcon> = {
+export const EQUIPMENT_LIST_ICONS: Record<EquipmentListIconKey, LucideIcon> = {
     backpack: Backpack,
     tent: Tent,
     mountain: Mountain,
@@ -66,7 +66,7 @@ const ICON_COMPONENTS: Record<EquipmentListIconKey, LucideIcon> = {
  * icon for unknown/legacy keys instead of throwing.
  */
 export function getEquipmentListIcon(key: string): LucideIcon {
-    return ICON_COMPONENTS[key as EquipmentListIconKey] ?? ICON_COMPONENTS[DEFAULT_EQUIPMENT_LIST_ICON];
+    return EQUIPMENT_LIST_ICONS[key as EquipmentListIconKey] ?? EQUIPMENT_LIST_ICONS[DEFAULT_EQUIPMENT_LIST_ICON];
 }
 
 interface EquipmentListIconColorClasses {

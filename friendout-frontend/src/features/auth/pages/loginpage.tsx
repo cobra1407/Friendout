@@ -21,10 +21,24 @@ const ACCESS_DENIED_CODES = ["discord_access_denied", "google_access_denied"];
 // data instead, since they can never log back in to do it from their account settings.
 const GUILD_ACCESS_REVOKED_CODE = "discord_guild_access_revoked";
 
+const readLoginErrorParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    return { errorCode: params.get("error_code"), email: params.get("email") };
+};
+
 export const LoginPage = () => {
-    const [requestModalOpen, setRequestModalOpen] = useState(false);
-    const [deletionModalOpen, setDeletionModalOpen] = useState(false);
-    const [deniedEmail, setDeniedEmail] = useState("");
+    // The backend redirects here with ?error_code=... after a failed login. Read it once, and
+    // derive the initial state of the modals from it instead of opening them from an effect.
+    const [{ errorCode, email: emailParam }] = useState(readLoginErrorParams);
+    const isAccessDenied = !!errorCode && ACCESS_DENIED_CODES.includes(errorCode);
+
+    // Auto-open the request modal when the user was denied access, or the account-deletion
+    // modal when they used to have access but it was revoked.
+    const [requestModalOpen, setRequestModalOpen] = useState(isAccessDenied);
+    const [deletionModalOpen, setDeletionModalOpen] = useState(errorCode === GUILD_ACCESS_REVOKED_CODE);
+    // Email the user just tried to sign in with (sent back by the backend after a Google
+    // whitelist rejection), used to pre-fill the access request form.
+    const [deniedEmail] = useState(isAccessDenied ? (emailParam ?? "") : "");
 
     // Defaults to both available while loading, so the buttons aren't both hidden during
     // the brief fetch — a provider disappears only once we know for sure it's disabled.
@@ -36,25 +50,10 @@ export const LoginPage = () => {
     const googleAvailable = loginMethods?.googleAvailable ?? true;
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const errorCode = params.get("error_code");
-        if (errorCode) {
-            const message = getTranslation(`errors.${errorCode}`);
-            toast.error(message !== `errors.${errorCode}` ? message : getTranslation("errors.unknown_error"));
-
-            // Auto-open the request modal when the user was denied access, or the
-            // account-deletion modal when they used to have access but it was revoked.
-            if (errorCode === GUILD_ACCESS_REVOKED_CODE) {
-                setDeletionModalOpen(true);
-            } else if (ACCESS_DENIED_CODES.includes(errorCode)) {
-                // Pre-fill the access request form with the email the user just tried to
-                // sign in with (sent back by the backend after a Google whitelist rejection),
-                const email = params.get("email");
-                if (email) setDeniedEmail(email);
-                setRequestModalOpen(true);
-            }
-        }
-    }, []);
+        if (!errorCode) return;
+        const message = getTranslation(`errors.${errorCode}`);
+        toast.error(message !== `errors.${errorCode}` ? message : getTranslation("errors.unknown_error"));
+    }, [errorCode]);
 
     const handleDiscordLogin = async () => {
         await authApi.discordLogin();

@@ -5,7 +5,6 @@ import { Calendar, Clock, MapPin, Euro, Users, ExternalLink, MessageCircle } fro
 import { type Activity } from '@/features/activity/types/activity.type';
 import { LocalisationType } from '@/features/localisation/types/localisation.type';
 import { getLocalisationDisplayText } from '@/lib/maps';
-import { useEffect, useState } from 'react';
 import { formatDate, formatTime } from '@/lib/utils/date.utils';
 import defaultActivityImage from '@/assets/images/default-activity-card.webp';
 import { resolveMediaUrl } from '@/lib/media';
@@ -18,14 +17,7 @@ interface ActivityCardProps {
 }
 
 export default function ActivityCard({ activity, onViewDetails }: ActivityCardProps) {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
     const isPast = new Date(activity.startAt) < new Date();
-
-    useEffect(() => {
-        if (activity) {
-            setIsLoading(false);
-        }
-    }, [activity]);
 
     const openInMaps = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -160,15 +152,13 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
 
                     <div className="flex items-center justify-between">
                         <div className="flex min-w-0 flex-1 items-center gap-2">
-                            {maxParticipants !== null && !isLoading ? (
+                            {maxParticipants !== null ? (
                                 <SpotsIndicator confirmed={confirmedParticipants} max={maxParticipants} fullAsCount />
                             ) : (
                                 <>
                                     <Users className="w-4 h-4 text-purple-600" />
                                     <span>
-                                        {isLoading
-                                            ? getTranslation('common.loading')
-                                            : `${activity.nbParticipants ?? 0} ${(activity.nbParticipants ?? 0) !== 1 ? getTranslation('activity.participants') : getTranslation('activity.participant')}`}
+                                        {`${activity.nbParticipants ?? 0} ${(activity.nbParticipants ?? 0) !== 1 ? getTranslation('activity.participants') : getTranslation('activity.participant')}`}
                                     </span>
                                 </>
                             )}

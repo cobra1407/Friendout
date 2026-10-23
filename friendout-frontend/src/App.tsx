@@ -35,7 +35,7 @@ function App() {
         if (!isPublicSharePage && !isAccountDeletionPage) {
             fetchMe();
         }
-    }, []);
+    }, [fetchMe, isPublicSharePage, isAccountDeletionPage]);
 
     // Starts/stops the shared SignalR connection
     useRealtimeConnection();

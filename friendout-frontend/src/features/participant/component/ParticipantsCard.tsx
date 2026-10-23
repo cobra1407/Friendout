@@ -2,7 +2,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import type { Participant } from "../types/Participant.type";
 import { ParticipationStatus } from "../enum/participationStatus.enum";
-import { useEffect, useState } from "react";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { getTranslation } from "@/i18n";
 import { SpotsIndicator } from "@/features/activity/components/SpotsIndicator";
@@ -23,19 +22,13 @@ export default function ParticipantsCard({
     maxParticipants,
     confirmedParticipants = 0,
 }: ParticipantsCardProps) {
-    const [participating, setParticipating] = useState<Participant[]>([]);
-    const [maybe, setMaybe] = useState<Participant[]>([]);
-    const [notParticipating, setNotParticipating] = useState<Participant[]>([]);
-    const getParticipantsByStatus = (participationStatus: ParticipationStatus) => {
-        if (!participants) return [];
-        return participants.filter((participant) => participant.participationStatus === participationStatus);
-    };
+    // Derived from the props on each render: no state or effect needed to keep them in sync.
+    const getParticipantsByStatus = (participationStatus: ParticipationStatus) =>
+        participants?.filter((participant) => participant.participationStatus === participationStatus) ?? [];
 
-    useEffect(() => {
-        setParticipating(getParticipantsByStatus(ParticipationStatus.Participating));
-        setMaybe(getParticipantsByStatus(ParticipationStatus.Maybe));
-        setNotParticipating(getParticipantsByStatus(ParticipationStatus.NotParticipating));
-    }, [participants]);
+    const participating = getParticipantsByStatus(ParticipationStatus.Participating);
+    const maybe = getParticipantsByStatus(ParticipationStatus.Maybe);
+    const notParticipating = getParticipantsByStatus(ParticipationStatus.NotParticipating);
 
     return (
         <Card className={className}>

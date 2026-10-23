@@ -296,10 +296,7 @@ export const useHealthCheck = () => {
     const [showChecking, setShowChecking] = useState(false);
 
     useEffect(() => {
-        if (!isLoading) {
-            setShowChecking(false);
-            return;
-        }
+        if (!isLoading) return;
         const timer = setTimeout(() => setShowChecking(true), CHECKING_REVEAL_DELAY_MS);
         return () => clearTimeout(timer);
     }, [isLoading]);

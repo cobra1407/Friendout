@@ -55,7 +55,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
         handleConfirmUpdate,
         handleCancelUpdate,
         showConfirmModal,
-        fieldRefs,
+        registerField,
     } = useActivityForm({ mode, initialData, onSuccess })
 
     return (
@@ -75,7 +75,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Title */}
-                                <div className="space-y-1" ref={fieldRefs.title}>
+                                <div className="space-y-1" ref={registerField("title")}>
                                     <Label htmlFor="title">{getTranslation("activity_form.title_label")}</Label>
                                     <Input
                                         id="title"
@@ -104,7 +104,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                             </div>
 
                             {/* Location */}
-                            <div className="space-y-1" ref={fieldRefs.localisation}>
+                            <div className="space-y-1" ref={registerField("localisation")}>
                                 <EnhancedLocationInput
                                     value={localisationData}
                                     onChange={handleLocalisationChange}
@@ -114,7 +114,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                             </div>
 
                             {/* Description */}
-                            <div className="space-y-1" ref={fieldRefs.description}>
+                            <div className="space-y-1" ref={registerField("description")}>
                                 <Label htmlFor="description">{getTranslation("activity_form.description_label")}</Label>
                                 <Textarea
                                     id="description"
@@ -130,7 +130,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Date */}
-                                <div className="space-y-1" ref={fieldRefs.startAt}>
+                                <div className="space-y-1" ref={registerField("startAt")}>
                                     <Label>{getTranslation("activity_form.start_date_label")}</Label>
                                     <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                                         <PopoverTrigger asChild>
@@ -167,7 +167,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                 </div>
 
                                 {/* Time */}
-                                <div className="space-y-1" ref={fieldRefs.time}>
+                                <div className="space-y-1" ref={registerField("time")}>
                                     <Label>{getTranslation("activity_form.start_time_label")}</Label>
                                     <div className="relative">
                                         <Input
@@ -214,7 +214,7 @@ export default function ActivityForm({ mode, initialData, onBack, onSuccess }: A
                                 </div>
 
                                 {/* Max participants */}
-                                <div className="space-y-1" ref={fieldRefs.maxParticipants}>
+                                <div className="space-y-1" ref={registerField("maxParticipants")}>
                                     <Label htmlFor="maxParticipants">{getTranslation("activity_form.max_participants_label")}</Label>
                                     <Input
                                         id="maxParticipants"

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Modal, ModalHeader, ModalTitle, ModalDescription } from "@/components/ui/modal";
-import { getEquipmentListIcon, getEquipmentListIconColorClasses } from "@/features/equipmentList/utils/equipmentListIcons";
+import { getEquipmentListIconColorClasses } from "@/features/equipmentList/utils/equipmentListIcons";
+import { EquipmentListIcon } from "@/features/equipmentList/components/EquipmentListIcon";
 import type { EquipmentList } from "@/features/equipmentList/types/equipmentList.type";
 import { getTranslation } from "@/i18n";
 
@@ -17,7 +18,6 @@ interface EquipmentListViewModalProps {
 export function EquipmentListViewModal({ list, onClose }: EquipmentListViewModalProps) {
     if (!list) return null;
 
-    const Icon = getEquipmentListIcon(list.icon);
     const colors = getEquipmentListIconColorClasses(list.icon);
 
     return (
@@ -25,7 +25,7 @@ export function EquipmentListViewModal({ list, onClose }: EquipmentListViewModal
             <ModalHeader>
                 <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-9 h-9 rounded-full shrink-0 ${colors.bg} ${colors.icon}`}>
-                        <Icon className="w-[18px] h-[18px]" />
+                        <EquipmentListIcon iconKey={list.icon} className="w-[18px] h-[18px]" />
                     </div>
                     <ModalTitle>{list.name}</ModalTitle>
                 </div>

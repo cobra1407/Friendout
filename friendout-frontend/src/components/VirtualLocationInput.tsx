@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MessageCircle, ExternalLink, Pencil, X, AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,32 +23,41 @@ interface VirtualLocationInputProps {
     onChange: (localisationData: Localisation | null) => void;
 }
 
+const getFieldsFromValue = (value: Localisation | null) => {
+    if (!value || value.type !== LocalisationType.Virtual) {
+        return { isEditing: true, platform: "", serverName: "", invitationLink: "", channelName: "" };
+    }
+
+    return {
+        isEditing: !(value.platform && value.address),
+        platform: value.platform || "",
+        serverName: value.address || "",
+        invitationLink: value.serverInfo || value.virtualUrl || "",
+        channelName: value.channelName || "",
+    };
+};
+
 export default function VirtualLocationInput({ value, onChange }: VirtualLocationInputProps) {
-    const [isEditing, setIsEditing] = useState(true);
-    const [platform, setPlatform] = useState("");
-    const [serverName, setServerName] = useState("");
-    const [invitationLink, setInvitationLink] = useState("");
+    const initialFields = getFieldsFromValue(value);
+    const [isEditing, setIsEditing] = useState(initialFields.isEditing);
+    const [platform, setPlatform] = useState(initialFields.platform);
+    const [serverName, setServerName] = useState(initialFields.serverName);
+    const [invitationLink, setInvitationLink] = useState(initialFields.invitationLink);
     const [invitationLinkError, setInvitationLinkError] = useState("");
-    const [channelName, setChannelName] = useState("");
+    const [channelName, setChannelName] = useState(initialFields.channelName);
 
-    useEffect(() => {
-        if (!value || value.type !== LocalisationType.Virtual) {
-            setIsEditing(true);
-            setPlatform("");
-            setServerName("");
-            setInvitationLink("");
-            setInvitationLinkError("");
-            setChannelName("");
-            return;
-        }
-
-        setPlatform(value.platform || "");
-        setServerName(value.address || "");
-        setInvitationLink(value.serverInfo || value.virtualUrl || "");
+    // Re-sync the fields when the parent hands us a different value
+    const [prevValue, setPrevValue] = useState(value);
+    if (value !== prevValue) {
+        setPrevValue(value);
+        const fields = getFieldsFromValue(value);
+        setIsEditing(fields.isEditing);
+        setPlatform(fields.platform);
+        setServerName(fields.serverName);
+        setInvitationLink(fields.invitationLink);
         setInvitationLinkError("");
-        setChannelName(value.channelName || "");
-        setIsEditing(!(value.platform && value.address));
-    }, [value]);
+        setChannelName(fields.channelName);
+    }
 
     const canSave = platform.length > 0 && serverName.trim().length > 0 && !invitationLinkError;
 

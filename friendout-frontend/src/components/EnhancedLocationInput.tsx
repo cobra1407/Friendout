@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertCircle, ExternalLink, Link, MapPin, MessageCircle } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -66,6 +66,12 @@ const getLocalisationFromMapsLink = (mapsLink: string): Localisation => {
     };
 };
 
+const getMapsLinkError = (link: string): string => {
+    if (!link.trim()) return "";
+    const validation = validateGoogleMapsUrl(link);
+    return validation.isValid ? "" : validation.error || "";
+};
+
 export default function EnhancedLocationInput({
     value,
     onChange,
@@ -75,45 +81,33 @@ export default function EnhancedLocationInput({
     const [activeTab, setActiveTab] = useState<LocalisationTab>(tabFromType(value?.type));
     const [addressValue, setAddressValue] = useState(value?.type === LocalisationTypeEnum.Address ? value.address || "" : "");
     const [mapsLinkValue, setMapsLinkValue] = useState(value?.type === LocalisationTypeEnum.MapLink ? value.mapLink || "" : "");
-    const [mapsLinkError, setMapsLinkError] = useState("");
+    const [mapsLinkError, setMapsLinkError] = useState(() =>
+        value?.type === LocalisationTypeEnum.MapLink ? getMapsLinkError(value.mapLink || "") : ""
+    );
 
-    useEffect(() => {
+    const [prevValue, setPrevValue] = useState(value);
+    if (value !== prevValue) {
+        setPrevValue(value);
+
         if (!value) {
             setActiveTab(TAB_VALUES.address);
             setAddressValue("");
             setMapsLinkValue("");
             setMapsLinkError("");
-            return;
-        }
+        } else {
+            setActiveTab(tabFromType(value.type));
 
-        setActiveTab(tabFromType(value.type));
-
-        if (value.type === LocalisationTypeEnum.Address) {
-            setAddressValue(value.address || "");
-            setMapsLinkError("");
-        }
-
-        if (value.type === LocalisationTypeEnum.MapLink) {
-            setMapsLinkValue(value.mapLink || "");
-            if (value.mapLink?.trim()) {
-                const validation = validateGoogleMapsUrl(value.mapLink);
-                setMapsLinkError(validation.isValid ? "" : validation.error || "");
-            } else {
+            if (value.type === LocalisationTypeEnum.Address) {
+                setAddressValue(value.address || "");
                 setMapsLinkError("");
             }
+
+            if (value.type === LocalisationTypeEnum.MapLink) {
+                setMapsLinkValue(value.mapLink || "");
+                setMapsLinkError(getMapsLinkError(value.mapLink || ""));
+            }
         }
-    }, [value]);
-
-    useEffect(() => {
-        if (activeTab !== TAB_VALUES.address) return;
-        if (!isGoogleMapsLink(addressValue)) return;
-
-        setMapsLinkValue(addressValue);
-        setActiveTab(TAB_VALUES.mapsLink);
-        const validation = validateGoogleMapsUrl(addressValue);
-        setMapsLinkError(validation.isValid ? "" : validation.error || "");
-        onChange(getLocalisationFromMapsLink(addressValue));
-    }, [activeTab, addressValue, onChange]);
+    }
 
     const showAddressMapButton = useMemo(() => isValidAddress(addressValue), [addressValue]);
     const canOpenMapsLink = mapsLinkValue.trim().length > 0 && mapsLinkError.length === 0;
@@ -146,6 +140,18 @@ export default function EnhancedLocationInput({
 
     const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const nextValue = event.target.value;
+
+        // A Google Maps link pasted into the address field belongs in the "Maps link" tab:
+        // move it there instead of keeping it as a plain address.
+        if (isGoogleMapsLink(nextValue)) {
+            setAddressValue("");
+            setMapsLinkValue(nextValue);
+            setMapsLinkError(getMapsLinkError(nextValue));
+            setActiveTab(TAB_VALUES.mapsLink);
+            onChange(getLocalisationFromMapsLink(nextValue));
+            return;
+        }
+
         setAddressValue(nextValue);
         onChange(getLocalisationFromAddress(nextValue));
     };
