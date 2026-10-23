@@ -25,8 +25,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create the uploads folder (mounted volume in production)
-RUN mkdir -p /app/uploads
+# Create the uploads folder (mounted volume in production) and give it to the
+# non-root user the container runs as. An existing named volume keeps its
+# previous ownership, see the migration note in the pull request.
+RUN mkdir -p /app/uploads && chown app:app /app/uploads
 
 COPY --from=build /app/publish .
 
@@ -37,5 +39,9 @@ ENV ASPNETCORE_URLS=http://+:8080
 # Default value for Dockerfile — overridden by docker-compose.yml
 # (Development locally, Production if HTTPS is available).
 ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Run as the unprivileged "app" user (UID 1654) shipped with the official .NET images.
+# Kestrel listens on 8080 (> 1024), so no extra capability is needed.
+USER app
 
 ENTRYPOINT ["dotnet", "Friendout.API.dll"]

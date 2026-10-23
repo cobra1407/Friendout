@@ -20,7 +20,7 @@ COPY . .
 RUN pnpm run build
 
 # ─── Step 2: Serve with Nginx ──────────────────────────────────────────────────────────────────────────────────────────
-FROM nginx:1.27-alpine AS final
+FROM nginxinc/nginx-unprivileged:1.30-alpine AS final
 
 # Copy the built files
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -28,6 +28,10 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy the custom Nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+# Unprivileged nginx image: runs as the "nginx" user (UID 101) and listens on 8080
+# instead of 80, since a non-root process cannot bind ports below 1024.
+EXPOSE 8080
+
+USER nginx
 
 CMD ["nginx", "-g", "daemon off;"]
