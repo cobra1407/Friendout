@@ -13,7 +13,7 @@ RUN corepack enable && corepack prepare --activate
 
 # onlyBuiltDependencies in package.json allows esbuild and @parcel/watcher
 # to run their native scripts without interaction.
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the source code and build
 COPY . .
