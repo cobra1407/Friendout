@@ -2,14 +2,15 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# Install pnpm (project uses pnpm-lock.yaml)
-RUN npm install -g pnpm@10.12.4
-
 # Copy manifests and install dependencies
 # --frozen-lockfile: ensures build reproducibility
 # approve-builds   : authorizes native scripts for esbuild and @parcel/watcher
 #                    (necessary for Vite to work correctly)
 COPY package.json pnpm-lock.yaml ./
+
+# Enable corepack and prepare pnpm using the version from package.json
+RUN corepack enable && corepack prepare --activate
+
 # onlyBuiltDependencies in package.json allows esbuild and @parcel/watcher
 # to run their native scripts without interaction.
 RUN pnpm install --frozen-lockfile
