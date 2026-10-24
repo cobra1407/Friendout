@@ -6,6 +6,10 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    # Wait 7 days before proposing a freshly published version, so a compromised
+    # or yanked release has time to be caught. Security updates are not delayed.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     versioning-strategy: increase-if-necessary
     commit-message:
@@ -24,6 +28,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
@@ -41,3 +47,5 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    cooldown:
+      default-days: 7
