@@ -49,9 +49,10 @@ public class NotificationTemplateProvider : INotificationTemplateProvider
         var typeName = type.ToString().ToLowerInvariant();
 
         // 1. Exact match: e.g. fr/activityreminder.fr.html
+        // locale was validated against SafeLocale above, so it cannot contain path separators or "..".
         var exactPath = Path.Combine(_templatesPath, locale, $"{typeName}.{locale}.html");
         if (File.Exists(exactPath))
-            return await File.ReadAllTextAsync(exactPath);
+            return await File.ReadAllTextAsync(exactPath); // nosemgrep: csharp.lang.security.filesystem.unsafe-path-combine.unsafe-path-combine
 
         _logger.LogWarning("Template not found: {File}. Trying English fallback.", exactPath);
 
