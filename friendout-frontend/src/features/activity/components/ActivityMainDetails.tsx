@@ -85,10 +85,10 @@ export default function ActivityMainDetails({
     return (
         <Card>
             <CardHeader>
-                <div className="flex justify-between items-start">
-                    <CardTitle className="text-2xl">{title}</CardTitle>
+                <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-2xl min-w-0 break-all">{title}</CardTitle>
                     {isPast(startAt) && (
-                        <Badge variant="secondary">{getTranslation("activity.past")}</Badge>
+                        <Badge variant="secondary" className="shrink-0">{getTranslation("activity.past")}</Badge>
                     )}
                 </div>
             </CardHeader>

@@ -110,9 +110,9 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
     return (
         <header className="bg-background shadow-sm border-b">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
+                <div className="flex items-center justify-between h-16 gap-2">
                     {/* Title + Back button */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                         <Button
                             variant="ghost"
                             onClick={onBack}
@@ -121,13 +121,13 @@ export default function ActivityHeader({ activity, currentUserId, onBack, onEdit
                             <ArrowLeft className="w-4 h-4" />
                             <span className="hidden sm:inline">{getTranslation('common.back')}</span>
                         </Button>
-                        <h1 className="text-xl font-semibold line-clamp-2">
+                        <h1 className="text-xl font-semibold truncate" title={activity.title}>
                             {activity.title}
                         </h1>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
 
                         {/* ── Mobile : everything in a single ⋯ dropdown ── */}
                         <div className="flex sm:hidden">
