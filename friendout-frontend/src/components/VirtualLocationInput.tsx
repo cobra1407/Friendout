@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MessageCircle, ExternalLink, Pencil, X, AlertCircle } from "lucide-react";
+import { MessageCircle, ExternalLink, Pencil, X, AlertCircle, Check, ChevronDown } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
 import { validateOptionalUrl } from "@/lib/maps";
+import { openExternalUrl, toSafeHttpUrl } from "@/lib/safeUrl";
 import {
     VIRTUAL_PLATFORMS,
     getVirtualPlatformItemLabel,
@@ -45,6 +47,7 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
     const [invitationLink, setInvitationLink] = useState(initialFields.invitationLink);
     const [invitationLinkError, setInvitationLinkError] = useState("");
     const [channelName, setChannelName] = useState(initialFields.channelName);
+    const [platformOpen, setPlatformOpen] = useState(false);
 
     // Re-sync the fields when the parent hands us a different value
     const [prevValue, setPrevValue] = useState(value);
@@ -59,7 +62,12 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
         setChannelName(fields.channelName);
     }
 
-    const canSave = platform.length > 0 && serverName.trim().length > 0 && !invitationLinkError;
+    const invitationLinkValidation = validateOptionalUrl(invitationLink);
+    const visibleInvitationLinkError = invitationLinkError || (invitationLinkValidation.isValid ? "" : invitationLinkValidation.error || "");
+    const safeInvitationLink = toSafeHttpUrl(invitationLink);
+    const selectedPlatform = VIRTUAL_PLATFORMS.find((item) => item.value === platform);
+
+    const canSave = platform.length > 0 && serverName.trim().length > 0 && !visibleInvitationLinkError;
 
     const localisationPayload = useMemo<Localisation>(
         () => ({
@@ -115,9 +123,9 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                             <div className="space-y-1 min-w-0">
                                 <p className="text-sm font-medium">{getVirtualPlatformLabel(platform)}</p>
                                 <p className="text-sm text-muted-foreground truncate">{channelName || serverName}</p>
-                                {invitationLink && (
+                                {safeInvitationLink && (
                                     <a
-                                        href={invitationLink}
+                                        href={safeInvitationLink}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-xs text-blue-700 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
@@ -162,21 +170,51 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
             <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="virtual-platform">{getTranslation("virtual_location_input.platform_label")}</Label>
-                    <Select value={platform} onValueChange={setPlatform}>
-                        <SelectTrigger id="virtual-platform">
-                            <SelectValue placeholder={getTranslation("virtual_location_input.platform_placeholder")} />
-                        </SelectTrigger>
-                        <SelectContent>
+                    {/* Popover instead of a Radix Select: the Select repositions/resizes its list
+                        while opening, which caused a visible glitch in this form. */}
+                    <Popover open={platformOpen} onOpenChange={setPlatformOpen}>
+                        <PopoverTrigger asChild>
+                            <button
+                                id="virtual-platform"
+                                type="button"
+                                role="combobox"
+                                aria-expanded={platformOpen}
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+                            >
+                                {selectedPlatform ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className={`w-3 h-3 rounded ${selectedPlatform.color}`} />
+                                        {getVirtualPlatformItemLabel(selectedPlatform)}
+                                    </span>
+                                ) : (
+                                    <span className="text-muted-foreground">
+                                        {getTranslation("virtual_location_input.platform_placeholder")}
+                                    </span>
+                                )}
+                                <ChevronDown className="h-4 w-4 opacity-50" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-1">
                             {VIRTUAL_PLATFORMS.map((item) => (
-                                <SelectItem key={item.value} value={item.value}>
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-3 h-3 rounded ${item.color}`} />
-                                        {getVirtualPlatformItemLabel(item)}
-                                    </div>
-                                </SelectItem>
+                                <button
+                                    key={item.value}
+                                    type="button"
+                                    onClick={() => {
+                                        setPlatform(item.value);
+                                        setPlatformOpen(false);
+                                    }}
+                                    className={cn(
+                                        "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-left cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                                        platform === item.value && "bg-accent/50"
+                                    )}
+                                >
+                                    <span className={`w-3 h-3 rounded ${item.color}`} />
+                                    <span className="flex-1">{getVirtualPlatformItemLabel(item)}</span>
+                                    {platform === item.value && <Check className="h-4 w-4" />}
+                                </button>
                             ))}
-                        </SelectContent>
-                    </Select>
+                        </PopoverContent>
+                    </Popover>
                 </div>
 
                 <div className="space-y-2">
@@ -209,12 +247,12 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                             placeholder={getTranslation("virtual_location_input.invitation_link_placeholder")}
                             className="flex-1"
                         />
-                        {invitationLink.trim().length > 0 && !invitationLinkError && (
+                        {safeInvitationLink && !visibleInvitationLinkError && (
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(invitationLink, "_blank", "noopener,noreferrer")}
+                                onClick={() => openExternalUrl(safeInvitationLink)}
                                 className="flex items-center gap-1 px-2 sm:px-3"
                                 title={getTranslation("virtual_location_input.invitation_link_test_title")}
                             >
@@ -222,10 +260,10 @@ export default function VirtualLocationInput({ value, onChange }: VirtualLocatio
                             </Button>
                         )}
                     </div>
-                    {invitationLinkError && (
+                    {visibleInvitationLinkError && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>{invitationLinkError}</AlertDescription>
+                            <AlertDescription>{visibleInvitationLinkError}</AlertDescription>
                         </Alert>
                     )}
                 </div>

@@ -1,5 +1,6 @@
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
+import { toSafeHttpUrl } from "@/lib/safeUrl";
 
 /**
  * Normalizes a localisation object from the API.
@@ -56,8 +57,9 @@ export const pickLocalisation = <
 export const getGoogleMapsUrl = (localisation?: Localisation | null): string => {
   if (!localisation) return "https://www.google.com/maps";
 
-  const raw = localisation.mapLink?.trim();
-  if (raw && /^https?:\/\//i.test(raw)) return raw;
+  // toSafeHttpUrl rejects javascript:, data:, etc. (including values stored before server-side validation).
+  const safeMapLink = toSafeHttpUrl(localisation.mapLink);
+  if (safeMapLink) return safeMapLink;
 
   const address = localisation.address?.trim();
   if (!address) return "https://www.google.com/maps";

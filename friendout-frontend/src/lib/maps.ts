@@ -1,6 +1,7 @@
 import { LocalisationType } from "@/features/localisation/types/localisation.type";
 import type { Localisation } from "@/features/localisation/types/localisation.type";
 import { getTranslation } from "@/i18n";
+import { toSafeHttpUrl } from "@/lib/safeUrl";
 
 /**
  * Generic labels the backend persists as `DisplayName` when it can't build a real one
@@ -160,11 +161,11 @@ export const getLocalisationUrl = (localisation: string, localisationData: Local
   }
 
   if (localisationData.type === LocalisationType.MapLink) {
-    return localisationData.mapLink || generateGoogleMapsUrl(localisationData.address || localisation);
+    return toSafeHttpUrl(localisationData.mapLink) || generateGoogleMapsUrl(localisationData.address || localisation);
   }
 
   if (localisationData.type === LocalisationType.Virtual) {
-    return localisationData.virtualUrl || "#";
+    return toSafeHttpUrl(localisationData.virtualUrl) || "#";
   }
 
   return generateGoogleMapsUrl(localisationData.address || localisation);

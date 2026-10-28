@@ -11,6 +11,7 @@ import { ParticipantsModal } from "@/features/participant/component/modal/Partic
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getTranslation } from "@/i18n";
 import { getLocalisationDisplayText } from "@/lib/maps";
+import { openExternalUrl } from "@/lib/safeUrl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -70,8 +71,7 @@ const SubActivityDetailsCard = ({ subActivity, maxVisibleParticipants, onRespons
     const endLabel = canShowEndInfo && endAt ? toHourLabel(endAt) : null;
 
     const openInMaps = () => {
-        if (!localisationData?.mapLink) return;
-        window.open(localisationData.mapLink, "_blank");
+        openExternalUrl(localisationData?.mapLink);
     };
 
     return (

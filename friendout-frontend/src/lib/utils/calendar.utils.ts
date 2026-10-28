@@ -8,6 +8,19 @@ interface CalendarEvent {
 }
 
 /**
+ * Escapes a TEXT value for an .ics file (RFC 5545 §3.3.11).
+ * Without it, a title or location containing a line break could inject extra
+ * iCalendar properties (e.g. an attacker-controlled URL or ATTACH) into the exported file.
+ */
+function escapeIcsText(value: string): string {
+    return value
+        .replace(/\\/g, "\\\\")
+        .replace(/\r\n|\r|\n/g, "\\n")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+}
+
+/**
  * Formats a date string to the iCalendar format (YYYYMMDDTHHmmssZ).
  */
 function toIcsDate(dateStr: string): string {
@@ -41,9 +54,9 @@ export function downloadIcs(event: CalendarEvent): void {
         `DTSTAMP:${now}`,
         `DTSTART:${start}`,
         `DTEND:${end}`,
-        `SUMMARY:${event.title}`,
-        `DESCRIPTION:${event.description.replace(/\n/g, "\\n")}`,
-        `LOCATION:${location}`,
+        `SUMMARY:${escapeIcsText(event.title)}`,
+        `DESCRIPTION:${escapeIcsText(event.description)}`,
+        `LOCATION:${escapeIcsText(location)}`,
         "END:VEVENT",
         "END:VCALENDAR",
     ].join("\r\n")
@@ -52,7 +65,7 @@ export function downloadIcs(event: CalendarEvent): void {
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = `${event.title.replace(/\s+/g, "-")}.ics`
+    link.download = `${event.title.replace(/[^\p{L}\p{N}_-]+/gu, "-").slice(0, 80) || "activity"}.ics`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

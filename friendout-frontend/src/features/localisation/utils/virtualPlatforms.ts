@@ -3,12 +3,11 @@ import { getTranslation } from "@/i18n";
 export const VIRTUAL_PLATFORMS = [
     { value: "discord", label: "Discord", color: "bg-indigo-500" },
     { value: "teamspeak", label: "TeamSpeak", color: "bg-blue-500" },
-    { value: "steam", label: "Steam", color: "bg-gray-700" },
-    { value: "battlenet", label: "Battle.net", color: "bg-blue-600" },
-    { value: "origin", label: "Origin", color: "bg-orange-500" },
-    { value: "uplay", label: "Ubisoft Connect", color: "bg-blue-500" },
-    { value: "epic", label: "Epic Games", color: "bg-black" },
-    { value: "gog", label: "GOG Galaxy", color: "bg-sky-700" },
+    { value: "googlemeet", label: "Google Meet", color: "bg-green-600" },
+    { value: "zoom", label: "Zoom", color: "bg-sky-600" },
+    { value: "teams", label: "Microsoft Teams", color: "bg-violet-600" },
+    { value: "webex", label: "Webex", color: "bg-emerald-600" },
+    { value: "jitsi", label: "Jitsi Meet", color: "bg-slate-600" },
     { value: "other", label: null, color: "bg-gray-500" },
 ] as const;
 
