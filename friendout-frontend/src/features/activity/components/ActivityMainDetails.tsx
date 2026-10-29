@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { resolveMediaUrl } from "@/lib/media";
 import { getLocalisationDisplayText } from "@/lib/maps";
+import { openExternalUrl, toSafeHttpUrl } from "@/lib/safeUrl";
 
 import {
     normalizeLocalisation,
@@ -67,11 +68,11 @@ export default function ActivityMainDetails({
     const localisation = normalizeLocalisation(localisationProp);
     const localisationDisplayText = getLocalisationDisplayText(localisation);
     const isGoogleMapsLink = localisation?.type === LocalisationType.MapLink;
-
+    // Never trust the stored value: only http(s) links may reach href / window.open.
+    const safeVirtualUrl = toSafeHttpUrl(localisation?.virtualUrl);
 
     const openInMaps = () => {
-        const mapsUrl = getGoogleMapsUrl(localisation);
-        window.open(mapsUrl, "_blank", "noopener,noreferrer");
+        openExternalUrl(getGoogleMapsUrl(localisation));
     };
 
     const linkifyOptions = {
@@ -128,9 +129,9 @@ export default function ActivityMainDetails({
                         )}
 
                         <span className="flex-1 min-w-0 truncate" title={localisationDisplayText}>
-                            {localisation?.type === LocalisationType.Virtual && localisation.virtualUrl ? (
+                            {localisation?.type === LocalisationType.Virtual && safeVirtualUrl ? (
                                 <a
-                                    href={localisation.virtualUrl}
+                                    href={safeVirtualUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-700 dark:text-blue-400 hover:underline"
@@ -143,11 +144,11 @@ export default function ActivityMainDetails({
                         </span>
 
                         {localisation?.type === LocalisationType.Virtual ? (
-                            localisation.virtualUrl ? (
+                            safeVirtualUrl ? (
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => window.open(localisation.virtualUrl, "_blank", "noopener,noreferrer")}
+                                    onClick={() => openExternalUrl(safeVirtualUrl)}
                                     className="flex items-center gap-1 shrink-0"
                                     title={getTranslation("activity.join_virtual_place")}
                                 >

@@ -178,6 +178,14 @@ public class ActivityService : IActivityService
         return null;
     }
 
+    /// <summary>
+    /// True when any user-supplied URL of a localisation is unsafe: the Maps link must be an
+    /// http(s) URL, the virtual (invitation) link must be http(s) on a trusted platform.
+    /// Must be applied to the main activity AND to every sub-activity.
+    /// </summary>
+    private static bool HasUnsafeLocalisationUrls(string? mapLink, string? virtualUrl)
+        => !UrlSafety.IsHttpUrl(mapLink) || !UrlSafety.IsTrustedVirtualUrl(virtualUrl);
+
     public async Task<ServiceResult<List<ActivityDto>>> GetActivitiesAsync(string userId, ActivityFilterDto filter)
     {
         try
@@ -414,6 +422,11 @@ public class ActivityService : IActivityService
             if (createActivityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime))
                 return ServiceResult<ActivityDto>.Failure("L'heure de fin d'une sous-activite doit etre strictement apres l'heure de debut.");
 
+            // Validate every URL before any side effect (image upload, DB writes).
+            if (HasUnsafeLocalisationUrls(createActivityDto.MapLink, createActivityDto.VirtualUrl) ||
+                createActivityDto.SubActivities.Any(sa => HasUnsafeLocalisationUrls(sa.MapLink, sa.VirtualUrl)))
+                return ServiceResult<ActivityDto>.Failure("localisation.error_url_protocol");
+
             var requiredEquipmentNames = createActivityDto.RequiredEquipmentNames
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Select(name => name.Trim())
@@ -446,6 +459,7 @@ public class ActivityService : IActivityService
             }
 
             Localisation localisation;
+
             if (!string.IsNullOrEmpty(createActivityDto.Address) || !string.IsNullOrEmpty(createActivityDto.MapLink) || !string.IsNullOrEmpty(createActivityDto.VirtualUrl))
             {
                 var type = !string.IsNullOrEmpty(createActivityDto.Address) ? LocalisationType.Address
@@ -579,6 +593,11 @@ public class ActivityService : IActivityService
             if (activityDto.SubActivities.Any(sa => sa.Price.HasValue && sa.Price.Value < 0)) return ServiceResult<ActivityDto>.Failure("Le prix d'une sous-activite ne peut pas etre negatif.");
             if (activityDto.SubActivities.Any(sa => sa.EndTime <= sa.StartTime)) return ServiceResult<ActivityDto>.Failure("L'heure de fin d'une sous-activite doit etre strictement apres l'heure de debut.");
 
+            // Validate every URL before any side effect (image upload/deletion, DB writes).
+            if (HasUnsafeLocalisationUrls(activityDto.MapLink, activityDto.VirtualUrl) ||
+                activityDto.SubActivities.Any(sa => HasUnsafeLocalisationUrls(sa.MapLink, sa.VirtualUrl)))
+                return ServiceResult<ActivityDto>.Failure("localisation.error_url_protocol");
+
             var activity = await _friendoutDbContext.Activities
                 .Include(a => a.Localisation).Include(a => a.Image)
                 .Include(a => a.SubActivities).Include(a => a.ActivityEquipments)
@@ -655,6 +674,7 @@ public class ActivityService : IActivityService
             }
 
             Localisation localisation;
+
             if (!string.IsNullOrWhiteSpace(activityDto.Address) || !string.IsNullOrWhiteSpace(activityDto.MapLink) || !string.IsNullOrWhiteSpace(activityDto.VirtualUrl))
             {
                 var type = !string.IsNullOrWhiteSpace(activityDto.Address) ? LocalisationType.Address

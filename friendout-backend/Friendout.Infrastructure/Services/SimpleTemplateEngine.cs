@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using Friendout.Infrastructure.Interfaces;
 
@@ -33,8 +34,10 @@ public class SimpleTemplateEngine : ITemplateEngine
             var pair = data.FirstOrDefault(kv =>
                 string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase));
 
-            // Return the value if found, or leave the placeholder intact
-            return pair.Key is not null ? pair.Value : match.Value;
+            // Return the value if found, or leave the placeholder intact.
+            // Values are user-controlled (activity title, address, names...) and the output is
+            // HTML, so they are HTML-encoded to prevent markup injection in emails.
+            return pair.Key is not null ? WebUtility.HtmlEncode(pair.Value) : match.Value;
         });
     }
 }

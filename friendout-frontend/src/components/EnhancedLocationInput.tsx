@@ -16,6 +16,7 @@ import {
     validateGoogleMapsUrl,
 } from "@/lib/maps";
 import { getTranslation } from "@/i18n";
+import { openExternalUrl } from "@/lib/safeUrl";
 
 import VirtualLocationInput from "./VirtualLocationInput";
 
@@ -206,7 +207,7 @@ export default function EnhancedLocationInput({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(generateGoogleMapsUrl(addressValue), "_blank")}
+                                onClick={() => openExternalUrl(generateGoogleMapsUrl(addressValue))}
                                 className="flex items-center gap-1 px-2 sm:px-3"
                                 title={getTranslation("enhanced_location_input.address_open_maps_title")}
                             >
@@ -231,7 +232,7 @@ export default function EnhancedLocationInput({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(mapsLinkValue, "_blank")}
+                                onClick={() => openExternalUrl(mapsLinkValue)}
                                 className="flex items-center gap-1 px-2 sm:px-3"
                                 title={getTranslation("enhanced_location_input.maps_link_test_title")}
                             >

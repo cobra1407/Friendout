@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Euro, Users, ExternalLink, MessageCircle } fro
 import { type Activity } from '@/features/activity/types/activity.type';
 import { LocalisationType } from '@/features/localisation/types/localisation.type';
 import { getLocalisationDisplayText } from '@/lib/maps';
+import { openExternalUrl, toSafeHttpUrl } from '@/lib/safeUrl';
 import { formatDate, formatTime } from '@/lib/utils/date.utils';
 import defaultActivityImage from '@/assets/images/default-activity-card.webp';
 import { resolveMediaUrl } from '@/lib/media';
@@ -21,12 +22,12 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
 
     const openInMaps = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!activity.localisation.mapLink) return;
-
-        window.open(activity.localisation.mapLink, '_blank');
+        openExternalUrl(activity.localisation?.mapLink);
     };
 
     const localisationData = activity.localisation ?? null;
+    // Never trust the stored value: only http(s) links may reach href / window.open.
+    const safeVirtualUrl = toSafeHttpUrl(localisationData?.virtualUrl);
     const localisationDisplayText = getLocalisationDisplayText(activity.localisation);
     const isGoogleMapsLink = localisationData?.type === LocalisationType.MapLink || !!localisationData?.mapLink;
     const subActivitiesCount = activity.subActivities?.length || 0;
@@ -100,9 +101,9 @@ export default function ActivityCard({ activity, onViewDetails }: ActivityCardPr
                             <MapPin className="w-4 h-4 text-red-700 shrink-0" />
                         )}
                         <span className="truncate flex-1 min-w-0" title={localisationDisplayText}>
-                            {localisationData?.type === LocalisationType.Virtual && localisationData.virtualUrl ? (
+                            {localisationData?.type === LocalisationType.Virtual && safeVirtualUrl ? (
                                 <a
-                                    href={localisationData.virtualUrl}
+                                    href={safeVirtualUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
