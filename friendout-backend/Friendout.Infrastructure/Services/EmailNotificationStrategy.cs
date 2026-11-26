@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Friendout.Domain.Enums;
 using Friendout.Infrastructure.Interfaces;
 using Friendout.Infrastructure.Options;
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.DependencyInjection;
