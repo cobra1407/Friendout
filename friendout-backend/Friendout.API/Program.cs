@@ -83,19 +83,25 @@ builder.Services.AddRateLimiter(options =>
                 SegmentsPerWindow = 6,
             }));
 
-    options.AddSlidingWindowLimiter("auth", policy =>
-    {
-        policy.PermitLimit = 10;
-        policy.Window = TimeSpan.FromMinutes(1);
-        policy.SegmentsPerWindow = 6;
-    });
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+            }));
 
-    options.AddSlidingWindowLimiter("public-share", policy =>
-    {
-        policy.PermitLimit = 60;
-        policy.Window = TimeSpan.FromMinutes(1);
-        policy.SegmentsPerWindow = 6;
-    });
+    options.AddPolicy("public-share", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+            }));
 });
 
 // -------------------------------------------------------
